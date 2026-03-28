@@ -1,0 +1,208 @@
+syntax = "proto3";
+
+// ========================================================
+// PACKAGE
+// ========================================================
+
+// Namespace của service
+package key;
+
+
+// ========================================================
+// SERVICE DEFINITION
+// ========================================================
+
+
+
+// Key Service là một dịch vụ thuộc tầng Base Platform trong hệ thống microservice.
+// Dịch vụ này chịu trách nhiệm quản lý khóa mật mã phục vụ cho việc xác thực và bảo mật giữa các service.
+service KeyService {
+
+  // --------------------------------------------------------
+  // Lấy key CURRENT
+  // --------------------------------------------------------
+  // Dùng bởi Identity Service để ký JWT
+  // Đây là key đang active tại thời điểm hiện tại
+  //
+  // Lưu ý:
+  // - Luôn có đúng 1 CURRENT key tại một thời điểm
+  // - Private key chỉ dùng nội bộ (không expose ra ngoài)
+  //
+  rpc GetCurrentKey (GetCurrentKeyRequest) returns (GetKeyResponse);
+
+
+  // --------------------------------------------------------
+  // Lấy key NEXT
+  // --------------------------------------------------------
+  // Dùng để preload trước khi rotation xảy ra
+  //
+  // Flow:
+  // - Identity load NEXT vào RAM
+  // - Khi tới activate_at → switch sang NEXT
+  //
+  // Mục tiêu:
+  // - tránh downtime khi rotate key
+  //
+  rpc GetNextKey (GetNextKeyRequest) returns (GetKeyResponse);
+
+
+  // --------------------------------------------------------
+  // Lấy key theo ID (kid)
+  // --------------------------------------------------------
+  // Dùng cho:
+  // - debug
+  // - audit
+  // - re-sync khi cần
+  //
+  // Không dùng trong flow chính
+  //
+  rpc GetKeyById (GetKeyByIdRequest) returns (GetKeyResponse);
+}
+
+
+// ========================================================
+// ENUMS
+// ========================================================
+
+// --------------------------------------------------------
+// Thuật toán của key
+// --------------------------------------------------------
+// Không dùng string để tránh sai sót runtime
+//
+enum KeyAlgorithm {
+  KEY_ALGORITHM_UNSPECIFIED = 0; // default
+
+  RSA = 1;       // RSA (RS256, RS512...)
+  EC = 2;        // Elliptic Curve (ES256...)
+  // ED25519 = 3; // có thể mở rộng sau
+}
+
+
+// --------------------------------------------------------
+// Trạng thái của key trong lifecycle
+// --------------------------------------------------------
+// Quy ước:
+// - CURRENT: dùng để ký JWT
+// - NEXT: preload, sẽ trở thành CURRENT
+// - OLD: chỉ dùng để verify JWT cũ
+//
+enum KeyStatus {
+  KEY_STATUS_UNSPECIFIED = 0;
+
+  CURRENT = 1;
+  NEXT = 2;
+  OLD = 3;
+}
+
+
+// ========================================================
+// REQUEST MESSAGES
+// ========================================================
+
+// --------------------------------------------------------
+// Request: lấy CURRENT key
+// --------------------------------------------------------
+message GetCurrentKeyRequest {
+
+  // Tên service yêu cầu key
+  //
+  // Ví dụ:
+  // - identity-service
+  // - payment-service
+  //
+  // Lý do:
+  // - mỗi service có key riêng (multi-tenant design)
+  //
+  string service = 1;
+}
+
+
+// --------------------------------------------------------
+// Request: lấy NEXT key
+// --------------------------------------------------------
+message GetNextKeyRequest {
+
+  // Tên service (giống GetCurrentKey)
+  string service = 1;
+}
+
+
+// --------------------------------------------------------
+// Request: lấy key theo kid
+// --------------------------------------------------------
+message GetKeyByIdRequest {
+
+  // Key ID (ví dụ: identity-key-001)
+  string kid = 1;
+}
+
+
+// ========================================================
+// RESPONSE MESSAGES
+// ========================================================
+
+// --------------------------------------------------------
+// Response chung cho key
+// --------------------------------------------------------
+message GetKeyResponse {
+
+  // ------------------------------------------------------
+  // Metadata
+  // ------------------------------------------------------
+
+  // Key ID (duy nhất trong phạm vi service)
+  string kid = 1;
+
+  // Thuật toán
+  KeyAlgorithm algorithm = 2;
+
+  // Trạng thái lifecycle
+  KeyStatus status = 3;
+
+
+  // ------------------------------------------------------
+  // Key data
+  // ------------------------------------------------------
+
+  // Public key (PEM hoặc JWK format)
+  //
+  // Dùng cho:
+  // - verify JWT
+  // - expose qua JWKS (REST)
+  //
+  string public_key = 4;
+
+
+  // Private key (ENCRYPTED)
+  //
+  // ⚠️ CHỈ dùng nội bộ (Key Service → Identity Service)
+  // ⚠️ KHÔNG expose ra bên ngoài
+  //
+  // Yêu cầu:
+  // - phải được mã hóa bằng master key
+  //
+  string private_key = 5;
+
+
+  // ------------------------------------------------------
+  // Lifecycle timestamps
+  // ------------------------------------------------------
+
+  // Thời điểm tạo key (epoch millis)
+  int64 created_at = 6;
+
+  // Thời điểm key trở thành CURRENT
+  //
+  // Dùng để:
+  // - điều khiển rotation
+  // - tránh phụ thuộc clock local
+  //
+  int64 activate_at = 7;
+
+  // Thời điểm hết hạn
+  //
+  // Sau thời điểm này:
+  // - key có thể chuyển sang OLD hoặc bị xóa
+  //
+  int64 expires_at = 8;
+}
