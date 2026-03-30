@@ -1,0 +1,136 @@
+key-service
+│
+├─ pom.xml                               ✅ NOW (đã ổn)
+│
+├─ src
+│
+│  ├─ main
+│  │
+│  │  ├─ java
+│  │  │
+│  │  │  └─ vn/xime/key
+│  │  │
+│  │  │      ├─ KeyServiceApplication.java       ✅ NOW (entry point)
+│  │  │
+│  │  │
+│  │  │      ├─ config
+│  │  │      │
+│  │  │      │   ├─ security
+│  │  │      │   │   └─ InternalSecurityConfig   🟡 SOON (basic thôi, chưa cần mTLS)
+│  │  │      │   │
+│  │  │      │   ├─ grpc
+│  │  │      │   │   └─ GrpcServerConfig        ✅ NOW
+│  │  │      │   │
+│  │  │      │   └─ cache
+│  │  │      │       └─ CacheConfig             ❌ FUTURE (chưa cần cache)
+│  │  │
+│  │  │
+│  │  │      ├─ api
+│  │  │      │
+│  │  │      │   ├─ grpc
+│  │  │      │   │   └─ KeyGrpcService          ✅ NOW (GetCurrent / GetNext)
+│  │  │      │   │
+│  │  │      │   └─ rest
+│  │  │      │       └─ JwksController          ✅ NOW (/.well-known/jwks.json)
+│  │  │
+│  │  │
+│  │  │      ├─ application
+│  │  │      │
+│  │  │      │   ├─ usecase
+│  │  │      │   │
+│  │  │      │   │   ├─ GenerateKeyUseCase      ✅ NOW
+│  │  │      │   │   ├─ GetKeyUseCase           ✅ NOW
+│  │  │      │   │   ├─ RotateKeyUseCase        ❌ FUTURE (chưa cần rotation)
+│  │  │      │   │   └─ PromoteKeyUseCase       ❌ FUTURE
+│  │  │      │
+│  │  │      │
+│  │  │      │   ├─ port
+│  │  │      │   │
+│  │  │      │   │   ├─ KeyGenerator            ✅ NOW (RSA)
+│  │  │      │   │   ├─ KeyEncryptionService    ✅ NOW (AES encrypt private key)
+│  │  │      │   │   ├─ KeyRepository           ✅ NOW
+│  │  │      │   │   └─ EventPublisher          ❌ FUTURE (event system chưa có)
+│  │  │      │
+│  │  │      │
+│  │  │      │   └─ dto
+│  │  │      │
+│  │  │      │       ├─ KeyDto                 🟡 SOON (dùng basic)
+│  │  │      │       └─ JwksDto                ✅ NOW
+│  │  │
+│  │  │
+│  │  │      ├─ domain
+│  │  │      │
+│  │  │      │   ├─ key
+│  │  │      │   │
+│  │  │      │   │   ├─ Key                    ✅ NOW (aggregate root)
+│  │  │      │   │   ├─ KeyStatus              ✅ NOW
+│  │  │      │   │   ├─ KeyAlgorithm           🟡 SOON (hiện chỉ cần RSA)
+│  │  │      │   │
+│  │  │      │   │   ├─ KeyRepository          ✅ NOW (domain interface)
+│  │  │      │   │
+│  │  │      │   │   ├─ policy
+│  │  │      │   │   │   ├─ KeyRotationPolicy  ❌ FUTURE
+│  │  │      │   │   │   └─ KeyValidationPolicy❌ FUTURE
+│  │  │      │   │
+│  │  │      │   │   └─ service
+│  │  │      │   │       └─ KeyLifecycleManager 🟡 SOON (logic đơn giản trước)
+│  │  │      │
+│  │  │      │
+│  │  │      │   └─ event
+│  │  │      │
+│  │  │      │       ├─ KeyCreatedEvent        ❌ FUTURE
+│  │  │      │       ├─ KeyPromotedEvent       ❌ FUTURE
+│  │  │      │       └─ KeyRotatedEvent        ❌ FUTURE
+│  │  │
+│  │  │
+│  │  │      ├─ infrastructure
+│  │  │      │
+│  │  │      │   ├─ persistence
+│  │  │      │   │
+│  │  │      │   │   ├─ entity
+│  │  │      │   │   │   └─ KeyEntity          ✅ NOW
+│  │  │      │   │
+│  │  │      │   │   ├─ repository
+│  │  │      │   │   │   └─ JpaKeyRepository   ✅ NOW
+│  │  │      │   │
+│  │  │      │   │   └─ mapper
+│  │  │      │   │       └─ KeyMapper          🟡 SOON (có thể đơn giản hóa)
+│  │  │      │
+│  │  │      │
+│  │  │      │   ├─ crypto
+│  │  │      │   │
+│  │  │      │   │   ├─ RsaKeyGenerator        ✅ NOW
+│  │  │      │   │   ├─ EcKeyGenerator         ❌ FUTURE
+│  │  │      │   │   └─ AesKeyEncryptionService✅ NOW
+│  │  │      │
+│  │  │      │
+│  │  │      │   ├─ jwk
+│  │  │      │   │
+│  │  │      │   │   └─ JwkConverter           ✅ NOW
+│  │  │      │
+│  │  │      │
+│  │  │      │   ├─ scheduler
+│  │  │      │   │
+│  │  │      │   │   └─ KeyRotationJob         ❌ FUTURE (chưa cần auto rotation)
+│  │  │      │
+│  │  │      │
+│  │  │      │   └─ security
+│  │  │      │       └─ InternalApiKeyFilter   🟡 SOON (basic API key trước)
+│  │  │
+│  │  │
+│  │  │      └─ common
+│  │  │          ├─ exception                  🟡 SOON (dùng basic)
+│  │  │          ├─ util                       🟡 SOON
+│  │  │          └─ constants                  🟡 SOON
+│  │
+│  │
+│  │  ├─ proto
+│  │  │   └─ key.proto                        ✅ NOW (grpc contract)
+│  │
+│  │
+│  │  └─ resources
+│  │      ├─ application.yml                  ✅ NOW
+│  │      └─ db/migration                     ✅ NOW (Flyway)
+│
+│
+│  └─ test                                     🟡 SOON (viết sau khi chạy được)
