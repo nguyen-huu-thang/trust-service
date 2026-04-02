@@ -36,3 +36,22 @@ KEY SERVICE – PUBLIC KEY DISTRIBUTION
 * Có thể dùng hybrid:
   → internal: gRPC
   → external: JWKS
+
+
+
+
+External Service (Identity / other service)
+        ↓
+gRPC call
+        ↓
+api/grpc/KeyGrpcService
+        ↓
+application/usecase (GetKeyUseCase / GenerateKeyUseCase)
+        ↓
+domain (Key, KeyRepository interface)
+        ↓
+infrastructure/persistence (KeyRepositoryImpl)
+        ↓
+JpaKeyRepository (Spring Data)
+        ↓
+PostgreSQL

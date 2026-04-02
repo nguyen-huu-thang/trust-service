@@ -14,14 +14,27 @@ public class KeyMapper {
     public static Key toDomain(KeyEntity entity) {
         if (entity == null) return null;
 
+        KeyAlgorithm algorithm = entity.getAlgorithm() != null
+                ? KeyAlgorithm.valueOf(entity.getAlgorithm())
+                : null;
+
+        KeyStatus status = null;
+        if (entity.getStatus() != null) {
+            try {
+                status = KeyStatus.valueOf(entity.getStatus());
+            } catch (IllegalArgumentException ignored) {
+                // fallback: ignore invalid status
+            }
+        }
+
         return new Key(
                 entity.getKid(),
                 entity.getServiceName(),
                 entity.getPublicKey(),
                 entity.getPrivateKeyEncrypted(),
-                KeyAlgorithm.valueOf(entity.getAlgorithm()),
+                algorithm,
                 entity.getKeySize(),
-                KeyStatus.valueOf(entity.getStatus()),
+                status,
                 entity.getCreatedAt(),
                 entity.getActivateAt(),
                 entity.getExpiresAt(),
@@ -44,10 +57,15 @@ public class KeyMapper {
         entity.setPublicKey(domain.getPublicKey());
         entity.setPrivateKeyEncrypted(domain.getPrivateKeyEncrypted());
 
-        entity.setAlgorithm(domain.getAlgorithm().name());
+        entity.setAlgorithm(domain.getAlgorithm() != null
+                ? domain.getAlgorithm().name()
+                : null);
+
         entity.setKeySize(domain.getKeySize());
 
-        entity.setStatus(domain.getStatus().name());
+        entity.setStatus(domain.getStatus() != null
+                ? domain.getStatus().name()
+                : null);
 
         entity.setCreatedAt(domain.getCreatedAt());
         entity.setActivateAt(domain.getActivateAt());

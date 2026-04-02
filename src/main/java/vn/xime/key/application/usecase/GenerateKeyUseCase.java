@@ -6,10 +6,18 @@ import vn.xime.key.domain.key.*;
 
 import java.security.KeyPair;
 import java.time.Instant;
-import java.util.Optional;
+import java.time.Duration;
+import java.util.Comparator;
+import java.util.List;
 import java.util.UUID;
 
 public class GenerateKeyUseCase {
+
+    private static final int KEY_SIZE = 2048;
+
+    // ⚠️ config nên external sau
+    private static final Duration KEY_ACTIVATION_DELAY = Duration.ofMinutes(5);
+    private static final Duration JWT_TTL = Duration.ofHours(1);
 
     private final KeyRepository keyRepository;
     private final KeyGenerator keyGenerator;
@@ -25,73 +33,89 @@ public class GenerateKeyUseCase {
         this.encryptionService = encryptionService;
     }
 
-    // =========================
+    // =====================================================
     // MAIN LOGIC
-    // =========================
+    // =====================================================
 
     public Key execute(String serviceName) {
 
-        // 1. Check existing CURRENT
-        Optional<Key> currentOpt = keyRepository.findCurrent(serviceName);
+        Instant now = Instant.now();
 
-        // 2. Generate RSA key pair
-        KeyPair keyPair = keyGenerator.generate(2048);
+        // 1. Load all existing keys
+        List<Key> existingKeys = keyRepository.findAllByService(serviceName);
+
+        // 2. Find latest key (the one with highest activateAt)
+        Key latestKey = existingKeys.stream()
+                .filter(k -> !k.isDeleted())
+                .filter(k -> k.getActivateAt() != null)
+                .max(Comparator.comparing(Key::getActivateAt))
+                .orElse(null);
+
+        // 3. Generate new key pair
+        KeyPair keyPair = keyGenerator.generate(KEY_SIZE);
 
         String publicKey = encodePublicKey(keyPair);
         String privateKeyRaw = encodePrivateKey(keyPair);
 
-        // 3. Encrypt private key
+        // 4. Encrypt private key
         String privateKeyEncrypted = encryptionService.encrypt(privateKeyRaw);
 
-        // 4. Build Key domain object
-        Key newKey = buildKey(
-                serviceName,
-                publicKey,
-                privateKeyEncrypted,
-                currentOpt.isEmpty()
-        );
+        // 5. Decide activateAt
+        Instant activateAt;
 
-        // 5. Save
-        keyRepository.save(newKey);
+        if (latestKey == null) {
+            // first key → active ngay
+            activateAt = now;
+        } else {
+            // schedule key mới
+            activateAt = latestKey.getActivateAt().plus(KEY_ACTIVATION_DELAY);
+        }
 
-        return newKey;
-    }
-
-    // =========================
-    // BUILD KEY
-    // =========================
-
-    private Key buildKey(
-            String serviceName,
-            String publicKey,
-            String privateKeyEncrypted,
-            boolean isFirstKey
-    ) {
-
-        Instant now = Instant.now();
-
-        KeyStatus status = isFirstKey
-                ? KeyStatus.CURRENT
-                : KeyStatus.NEXT;
-
-        return new Key(
+        // 6. Build new key
+        Key newKey = new Key(
                 generateKid(serviceName),
                 serviceName,
                 publicKey,
                 privateKeyEncrypted,
                 KeyAlgorithm.RSA,
-                2048,
-                status,
+                KEY_SIZE,
+                KeyStatus.NEXT, // metadata only
                 now,
-                isFirstKey ? now : null, // CURRENT activate ngay
-                null,                   // chưa cần expires
+                activateAt,
+                null,
                 false
         );
+
+        // 7. Update previous key (set expiresAt)
+        if (latestKey != null) {
+            Instant expiresAt = activateAt.plus(JWT_TTL);
+
+            Key updatedOldKey = new Key(
+                    latestKey.getKid(),
+                    latestKey.getServiceName(),
+                    latestKey.getPublicKey(),
+                    latestKey.getPrivateKeyEncrypted(),
+                    latestKey.getAlgorithm(),
+                    latestKey.getKeySize(),
+                    latestKey.getStatus(),
+                    latestKey.getCreatedAt(),
+                    latestKey.getActivateAt(),
+                    expiresAt,
+                    latestKey.isDeleted()
+            );
+
+            keyRepository.save(updatedOldKey);
+        }
+
+        // 8. Save new key
+        keyRepository.save(newKey);
+
+        return newKey;
     }
 
-    // =========================
+    // =====================================================
     // HELPER
-    // =========================
+    // =====================================================
 
     private String generateKid(String serviceName) {
         return serviceName + "-" + UUID.randomUUID();

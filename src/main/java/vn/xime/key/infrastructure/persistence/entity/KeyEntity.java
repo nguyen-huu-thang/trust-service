@@ -4,7 +4,15 @@ import jakarta.persistence.*;
 import java.time.Instant;
 
 @Entity
-@Table(name = "keys")
+@Table(
+name = "keys",
+indexes = {
+@Index(name = "idx_keys_service", columnList = "service_name"),
+@Index(name = "idx_keys_kid", columnList = "kid", unique = true),
+@Index(name = "idx_keys_activate_at", columnList = "activate_at"),
+@Index(name = "idx_keys_expires_at", columnList = "expires_at")
+}
+)
 public class KeyEntity {
 
     @Id
@@ -42,19 +50,32 @@ public class KeyEntity {
     private Integer keySize;
 
     // =========================
-    // Lifecycle
+    // Lifecycle (TIME-BASED)
     // =========================
 
-    @Column(name = "status", nullable = false)
+    /**
+     * Chỉ mang tính metadata (không dùng cho logic chính)
+     * Có thể bỏ trong tương lai
+     */
+    @Column(name = "status")
     private String status;
 
-    @Column(name = "created_at", nullable = false)
+    /**
+     * Thời điểm tạo key
+     */
+    @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
-    @Column(name = "activate_at")
+    /**
+     * Thời điểm bắt đầu SIGN
+     */
+    @Column(name = "activate_at", nullable = false)
     private Instant activateAt;
 
-    @Column(name = "expires_at")
+    /**
+     * Thời điểm NGỪNG VERIFY (quan trọng nhất)
+     */
+    @Column(name = "expires_at", nullable = false)
     private Instant expiresAt;
 
     // =========================

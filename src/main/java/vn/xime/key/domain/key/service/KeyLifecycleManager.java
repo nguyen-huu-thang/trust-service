@@ -2,11 +2,47 @@ package vn.xime.key.domain.key.service;
 
 import vn.xime.key.domain.key.Key;
 import vn.xime.key.domain.key.KeyRepository;
-import vn.xime.key.domain.key.KeyStatus;
 
 import java.time.Instant;
-import java.util.Optional;
+import java.util.Comparator;
+import java.util.List;
 
+/**
+
+* Domain Service: KeyLifecycleManager
+*
+* =========================
+* Vai trò:
+* =========================
+* * Chứa toàn bộ business logic về lifecycle của key
+* * Quyết định:
+* * key nào dùng để SIGN
+* * key nào dùng để VERIFY
+* * key nào là NEXT (preload)
+*
+* =========================
+* Triết lý thiết kế:
+* =========================
+* ❌ Không dùng CURRENT / NEXT / OLD
+* ✅ Dùng time-based:
+*
+* activateAt → bắt đầu SIGN
+* expiresAt  → NGỪNG VERIFY
+*
+* =========================
+* Nguyên tắc:
+* =========================
+* SIGN:
+* → chọn key có activateAt <= now gần nhất
+*
+* VERIFY:
+* → chấp nhận tất cả key chưa expiresAt
+*
+* NEXT:
+* → key có activateAt > now gần nhất
+*
+
+*/
 public class KeyLifecycleManager {
 
     private final KeyRepository keyRepository;
@@ -15,41 +51,122 @@ public class KeyLifecycleManager {
         this.keyRepository = keyRepository;
     }
 
+    // =====================================================
+    // LOAD DATA
+    // =====================================================
+
     /**
-     * Lấy current key (đơn giản cho MVP)
+     * Load toàn bộ key của service
+     *
+     * ⚠️ Chỉ gọi DB 1 lần để tránh:
+     * - multiple queries
+     * - inconsistent snapshot
+     *
+     * Domain sẽ filter lifecycle sau
      */
-    public Key getCurrentKey(String serviceName) {
-        return keyRepository.findCurrent(serviceName)
+    public List<Key> loadKeys(String serviceName) {
+        return keyRepository.findAllByService(serviceName)
+                .stream()
+                .filter(k -> !k.isDeleted())
+                .toList();
+    }
+
+    // =====================================================
+    // VERIFY
+    // =====================================================
+
+    /**
+     * Lấy tất cả key có thể dùng để VERIFY
+     *
+     * Điều kiện:
+     * - chưa bị delete
+     * - expiresAt > now
+     *
+     * ⚠️ VERIFY KHÔNG phụ thuộc CURRENT/NEXT
+     *
+     * → chỉ cần:
+     *    token.kid → tìm key → verify
+     */
+    public List<Key> getKeysForVerify(List<Key> keys, Instant now) {
+        return keys.stream()
+                .filter(k -> k.isUsableForVerify(now))
+                .toList();
+    }
+
+    // =====================================================
+    // SIGN
+    // =====================================================
+
+    /**
+     * Lấy key dùng để SIGN JWT
+     *
+     * Logic:
+     * - activateAt <= now
+     * - chưa expired
+     * - chọn key có activateAt gần nhất
+     *
+     * → đảm bảo không bị:
+     *   - dùng key cũ
+     *   - dùng key chưa active
+     */
+    public Key getKeyForSign(List<Key> keys, Instant now) {
+        return keys.stream()
+                .filter(k -> k.isUsableForSign(now))
+                .max(Comparator.comparing(Key::getActivateAt))
                 .orElseThrow(() -> new IllegalStateException(
-                        "No CURRENT key found for service: " + serviceName
+                        "No active key found for signing"
                 ));
     }
 
+    // =====================================================
+    // NEXT (PRELOAD)
+    // =====================================================
+
     /**
-     * Promote NEXT -> CURRENT (future dùng)
+     * Lấy key tiếp theo (NEXT)
+     *
+     * Dùng để:
+     * - preload tại Identity Service
+     * - chuẩn bị trước khi rotation
+     *
+     * Logic:
+     * - activateAt > now
+     * - chọn key gần nhất
+     *
+     * ⚠️ Không bắt buộc phải có
      */
-    public void promoteNext(String serviceName) {
-        Optional<Key> currentOpt = keyRepository.findCurrent(serviceName);
-        Optional<Key> nextOpt = keyRepository.findNext(serviceName);
-
-        if (currentOpt.isEmpty() || nextOpt.isEmpty()) {
-            throw new IllegalStateException("Cannot promote key");
-        }
-
-        Key current = currentOpt.get();
-        Key next = nextOpt.get();
-
-        current.markAsOld();
-        next.markAsCurrent();
-
-        keyRepository.save(current);
-        keyRepository.save(next);
+    public Key getNextKey(List<Key> keys, Instant now) {
+        return keys.stream()
+                .filter(k -> k.getActivateAt() != null && k.getActivateAt().isAfter(now))
+                .min(Comparator.comparing(Key::getActivateAt))
+                .orElse(null);
     }
 
+    // =====================================================
+    // CLEANUP
+    // =====================================================
+
     /**
-     * Check active key theo thời gian (future)
+     * Xóa (soft delete) các key đã hết hạn VERIFY
+     *
+     * Điều kiện:
+     * - now >= expiresAt
+     *
+     * ⚠️ Không xóa ngay khi rotate
+     * → phải giữ để verify JWT cũ
+     *
+     * Flow:
+     * - markDeleted
+     * - save lại DB
      */
-    public boolean shouldActivate(Key key, Instant now) {
-        return key.getActivateAt() != null && !now.isBefore(key.getActivateAt());
+    public void cleanupExpiredKeys(String serviceName, Instant now) {
+        List<Key> keys = loadKeys(serviceName);
+
+        keys.stream()
+                .filter(k -> k.isExpiredForVerify(now))
+                .forEach(k -> {
+                    k.markDeleted();
+                    keyRepository.save(k);
+                });
     }
 }

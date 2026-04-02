@@ -14,10 +14,20 @@ public class Key {
     private final KeyAlgorithm algorithm;
     private final int keySize;
 
+    // Status chỉ mang tính hỗ trợ (không phải nguồn quyết định chính)
     private KeyStatus status;
 
     private final Instant createdAt;
+
+    /**
+     * Thời điểm bắt đầu dùng để SIGN
+     */
     private final Instant activateAt;
+
+    /**
+     * Thời điểm NGỪNG VERIFY
+     * (quan trọng nhất)
+     */
     private final Instant expiresAt;
 
     private boolean deleted;
@@ -52,22 +62,41 @@ public class Key {
     // Business Logic
     // =========================
 
-    public boolean isCurrent() {
-        return this.status == KeyStatus.CURRENT;
+    /**
+     * Có thể dùng để SIGN không
+     */
+    public boolean isUsableForSign(Instant now) {
+        return !deleted
+                && activateAt != null
+                && !now.isBefore(activateAt)
+                && !isExpiredForVerify(now); // chưa hết verify thì vẫn sign được (giả định)
     }
 
-    public boolean isNext() {
-        return this.status == KeyStatus.NEXT;
-    }
-
-    public boolean isOld() {
-        return this.status == KeyStatus.OLD;
-    }
-
-    public boolean isActive(Instant now) {
-        return (activateAt == null || !now.isBefore(activateAt))
+    /**
+     * Có thể dùng để VERIFY không
+     */
+    public boolean isUsableForVerify(Instant now) {
+        return !deleted
                 && (expiresAt == null || now.isBefore(expiresAt));
     }
+
+    /**
+     * Đã hết hạn VERIFY chưa
+     */
+    public boolean isExpiredForVerify(Instant now) {
+        return expiresAt != null && !now.isBefore(expiresAt);
+    }
+
+    /**
+     * Active theo thời gian (dùng cho SIGN)
+     */
+    public boolean isActivated(Instant now) {
+        return activateAt != null && !now.isBefore(activateAt);
+    }
+
+    // =========================
+    // Lifecycle helpers
+    // =========================
 
     public void markAsCurrent() {
         this.status = KeyStatus.CURRENT;
@@ -130,7 +159,7 @@ public class Key {
     }
 
     // =========================
-    // Equality (based on kid)
+    // Equality
     // =========================
 
     @Override

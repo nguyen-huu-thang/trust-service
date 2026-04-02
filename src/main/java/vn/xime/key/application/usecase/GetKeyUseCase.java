@@ -1,5 +1,9 @@
 package vn.xime.key.application.usecase;
 
+import vn.xime.key.application.dto.request.GetKeysRequestDto;
+import vn.xime.key.application.dto.response.GetKeysResponseDto;
+import vn.xime.key.application.dto.response.PrivateKeyDto;
+import vn.xime.key.application.dto.response.PublicKeyDto;
 import vn.xime.key.application.port.KeyEncryptionService;
 import vn.xime.key.domain.key.Key;
 import vn.xime.key.domain.key.KeyRepository;
@@ -19,44 +23,70 @@ public class GetKeyUseCase {
         this.encryptionService = encryptionService;
     }
 
-    // =========================
-    // 1. Dùng cho Identity (cần private key)
-    // =========================
+    // =====================================================
+    // MAIN USE CASE (GetKeys)
+    // =====================================================
 
-    public Key getCurrentKeyWithPrivate(String serviceName) {
+    public GetKeysResponseDto getKeys(GetKeysRequestDto request) {
 
-        Key key = keyRepository.findCurrent(serviceName)
-                .orElseThrow(() -> new IllegalStateException(
-                        "No CURRENT key for service: " + serviceName
-                ));
+        List<Key> keys = keyRepository.findAllByService(request.getService())
+                .stream()
+                .filter(k -> !k.isDeleted())
+                .toList();
 
-        // decrypt private key trước khi trả
+        // =========================
+        // Identity → cần private key
+        // =========================
+        if (request.isIncludePrivate()) {
+
+            List<PrivateKeyDto> privateKeys = keys.stream()
+                    .map(this::toPrivateDto)
+                    .toList();
+
+            return new GetKeysResponseDto(
+                    null,
+                    privateKeys
+            );
+        }
+
+        // =========================
+        // Verify service → chỉ public key
+        // =========================
+        List<PublicKeyDto> publicKeys = keys.stream()
+                .map(this::toPublicDto)
+                .toList();
+
+        return new GetKeysResponseDto(
+                publicKeys,
+                null
+        );
+    }
+
+    // =====================================================
+    // MAPPER
+    // =====================================================
+
+    private PublicKeyDto toPublicDto(Key key) {
+        return new PublicKeyDto(
+                key.getKid(),
+                key.getPublicKey(),
+                key.getActivateAt(),
+                key.getExpiresAt()
+        );
+    }
+
+    private PrivateKeyDto toPrivateDto(Key key) {
+
         String decryptedPrivateKey = encryptionService.decrypt(
                 key.getPrivateKeyEncrypted()
         );
 
-        // ⚠️ tạo object mới (không mutate domain)
-        return new Key(
+        return new PrivateKeyDto(
                 key.getKid(),
-                key.getServiceName(),
                 key.getPublicKey(),
-                decryptedPrivateKey, // trả raw private key
-                key.getAlgorithm(),
-                key.getKeySize(),
-                key.getStatus(),
-                key.getCreatedAt(),
+                decryptedPrivateKey,
                 key.getActivateAt(),
-                key.getExpiresAt(),
-                key.isDeleted()
+                key.getExpiresAt()
         );
-    }
-
-    // =========================
-    // 2. Dùng cho service verify JWT
-    // =========================
-
-    public List<Key> getPublicKeys(String serviceName) {
-        return keyRepository.findPublicKeys(serviceName);
-        // CURRENT + OLD
     }
 }

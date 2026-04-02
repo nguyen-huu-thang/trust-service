@@ -2,8 +2,13 @@ package vn.xime.key.api.grpc;
 
 import org.springframework.stereotype.Service;
 import io.grpc.stub.StreamObserver;
+
+import vn.xime.key.application.dto.request.GetKeysRequestDto;
+import vn.xime.key.application.dto.response.GetKeysResponseDto;
+import vn.xime.key.application.dto.response.PrivateKeyDto;
+import vn.xime.key.application.dto.response.PublicKeyDto;
 import vn.xime.key.application.usecase.GetKeyUseCase;
-import vn.xime.key.domain.key.Key;
+
 import vn.xime.key.proto.*;
 
 import java.util.List;
@@ -17,27 +22,58 @@ public class KeyGrpcService extends KeyServiceGrpc.KeyServiceImplBase {
         this.getKeyUseCase = getKeyUseCase;
     }
 
-    // =========================
-    // Identity → lấy private key
-    // =========================
+    // =====================================================
+    // GetKeys (API chính)
+    // =====================================================
 
     @Override
-    public void getCurrentKey(
-            GetKeyRequest request,
-            StreamObserver<KeyResponse> responseObserver
+    public void getKeys(
+            GetKeysRequest request,
+            StreamObserver<GetKeysResponse> responseObserver
     ) {
         try {
-            Key key = getKeyUseCase.getCurrentKeyWithPrivate(
-                    request.getServiceName()
+            // =========================
+            // 1. Map proto → DTO request
+            // =========================
+
+            GetKeysRequestDto dtoRequest = new GetKeysRequestDto(
+                    request.getService(),
+                    request.getIncludePrivate()
             );
 
-            KeyResponse response = KeyResponse.newBuilder()
-                    .setKid(key.getKid())
-                    .setPublicKey(key.getPublicKey())
-                    .setPrivateKey(key.getPrivateKeyEncrypted()) // đã decrypt ở usecase
-                    .build();
+            // =========================
+            // 2. Call use case
+            // =========================
 
-            responseObserver.onNext(response);
+            GetKeysResponseDto dtoResponse = getKeyUseCase.getKeys(dtoRequest);
+
+            // =========================
+            // 3. Map DTO → proto response
+            // =========================
+
+            GetKeysResponse.Builder responseBuilder = GetKeysResponse.newBuilder();
+
+            // ---- Public keys ----
+            if (dtoResponse.getPublicKeys() != null) {
+                for (PublicKeyDto key : dtoResponse.getPublicKeys()) {
+                    responseBuilder.addKeys(
+                            toProtoPublic(key, request.getService())
+                    );
+                }
+            }
+
+            // ---- Private keys ----
+            if (dtoResponse.getPrivateKeys() != null) {
+                for (PrivateKeyDto key : dtoResponse.getPrivateKeys()) {
+                    responseBuilder.addKeys(
+                            toProtoPrivate(key, request.getService())
+                    );
+                }
+            }
+
+            responseBuilder.setTotal(responseBuilder.getKeysCount());
+
+            responseObserver.onNext(responseBuilder.build());
             responseObserver.onCompleted();
 
         } catch (Exception e) {
@@ -45,36 +81,55 @@ public class KeyGrpcService extends KeyServiceGrpc.KeyServiceImplBase {
         }
     }
 
-    // =========================
-    // Service khác → lấy public key
-    // =========================
+    // =====================================================
+    // GetKeyById (tạm thời chưa implement)
+    // =====================================================
 
     @Override
-    public void getPublicKeys(
-            GetPublicKeysRequest request,
-            StreamObserver<PublicKeysResponse> responseObserver
+    public void getKeyById(
+            GetKeyByIdRequest request,
+            StreamObserver<GetKeyResponse> responseObserver
     ) {
-        try {
-            List<Key> keys = getKeyUseCase.getPublicKeys(
-                    request.getServiceName()
-            );
+        responseObserver.onError(
+                new UnsupportedOperationException("Not implemented yet")
+        );
+    }
 
-            PublicKeysResponse.Builder builder = PublicKeysResponse.newBuilder();
+    // =====================================================
+    // MAPPER: DTO → PROTO
+    // =====================================================
 
-            for (Key key : keys) {
-                builder.addKeys(
-                        PublicKey.newBuilder()
-                                .setKid(key.getKid())
-                                .setPublicKey(key.getPublicKey())
-                                .build()
-                );
-            }
+    private GetKeyResponse toProtoPublic(PublicKeyDto key, String service) {
+        return GetKeyResponse.newBuilder()
+                .setKid(key.getKid())
+                .setService(service)
+                .setPublicKey(key.getPublicKey())
+                .setActivateAt(toTimestamp(key.getActivateAt()))
+                .setExpiresAt(toTimestamp(key.getExpiresAt()))
+                .build();
+    }
 
-            responseObserver.onNext(builder.build());
-            responseObserver.onCompleted();
+    private GetKeyResponse toProtoPrivate(PrivateKeyDto key, String service) {
+        return GetKeyResponse.newBuilder()
+                .setKid(key.getKid())
+                .setService(service)
+                .setPublicKey(key.getPublicKey())
+                .setPrivateKey(key.getPrivateKey())
+                .setActivateAt(toTimestamp(key.getActivateAt()))
+                .setExpiresAt(toTimestamp(key.getExpiresAt()))
+                .build();
+    }
 
-        } catch (Exception e) {
-            responseObserver.onError(e);
-        }
+    // =====================================================
+    // Helper: Instant → protobuf Timestamp
+    // =====================================================
+
+    private com.google.protobuf.Timestamp toTimestamp(java.time.Instant instant) {
+        if (instant == null) return null;
+
+        return com.google.protobuf.Timestamp.newBuilder()
+                .setSeconds(instant.getEpochSecond())
+                .setNanos(instant.getNano())
+                .build();
     }
 }
