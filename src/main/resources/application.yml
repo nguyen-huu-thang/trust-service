@@ -5,7 +5,7 @@ spring:
   datasource:
     url: jdbc:postgresql://localhost:5432/key_service
     username: thang
-    password: 123456
+    password: 
 
   jpa:
     hibernate:
@@ -24,7 +24,7 @@ logging:
 
 key:
   encryption:
-    secret: QlLW7cokIMS0yMki/JuRk3OvUnt/nBw+qkvCqXbWyg8=
+    secret: ???
 
 server:
   port: 8081
