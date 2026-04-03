@@ -165,13 +165,13 @@ message GetKeyResponse {
   // =========================
 
   // Public key (PEM / JWK)
-  string public_key = 4;
+  optional string public_key = 4;
 
   // Private key (encrypted)
   //
   // ⚠️ CHỈ trả khi include_private = true
   // ⚠️ Chỉ dành cho Identity Service
-  string private_key = 5;
+  optional string private_key = 5;
 
 
   // =========================

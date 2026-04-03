@@ -113,7 +113,6 @@ public class KeyGrpcService extends KeyServiceGrpc.KeyServiceImplBase {
         return GetKeyResponse.newBuilder()
                 .setKid(key.getKid())
                 .setService(service)
-                .setPublicKey(key.getPublicKey())
                 .setPrivateKey(key.getPrivateKey())
                 .setActivateAt(toTimestamp(key.getActivateAt()))
                 .setExpiresAt(toTimestamp(key.getExpiresAt()))
