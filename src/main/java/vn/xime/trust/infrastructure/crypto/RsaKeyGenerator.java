@@ -1,0 +1,21 @@
+package vn.xime.trust.infrastructure.crypto;
+
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.security.NoSuchAlgorithmException;
+
+import vn.xime.trust.application.port.KeyGenerator;
+
+public class RsaKeyGenerator implements KeyGenerator {
+
+    @Override
+    public KeyPair generate(int keySize) {
+        try {
+            KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA");
+            generator.initialize(keySize);
+            return generator.generateKeyPair();
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException("Failed to generate RSA key", e);
+        }
+    }
+}

@@ -1,0 +1,227 @@
+===============================
+SERVICES TABLE
+==============
+
+## services
+
+id VARCHAR(100) PRIMARY KEY
+
+name VARCHAR(100) NOT NULL
+tenant_id VARCHAR(100) NOT NULL
+
+status VARCHAR(20) NOT NULL
+
+created_at TIMESTAMP NOT NULL
+
+-- indexes
+CREATE INDEX idx_services_tenant
+ON services(tenant_id);
+
+==================================================
+
+===============================
+KEYS TABLE
+==========
+
+## keys
+
+id BIGSERIAL PRIMARY KEY
+
+-- identify
+kid VARCHAR(100) UNIQUE NOT NULL
+service_id VARCHAR(100) NOT NULL
+
+-- key data
+public_key TEXT NOT NULL
+private_key_encrypted TEXT NOT NULL
+
+-- crypto
+algorithm VARCHAR(20) NOT NULL        -- RSA, EC
+key_size INT NOT NULL
+
+-- hỗ trợ đọc trạng thái tốt hơn, không liên quan logic
+status VARCHAR(10)
+
+-- lifecycle (QUAN TRỌNG)
+created_at TIMESTAMP NOT NULL
+
+activate_at TIMESTAMP NOT NULL        -- SIGN start
+expires_at TIMESTAMP NOT NULL         -- VERIFY end
+
+-- control
+is_deleted BOOLEAN DEFAULT FALSE
+
+-- concurrency control
+version BIGINT DEFAULT 0
+
+-- constraints
+UNIQUE(service_id, activate_at)
+
+FOREIGN KEY (service_id)
+REFERENCES services(id)
+
+-- indexes (QUAN TRỌNG)
+CREATE INDEX idx_keys_service_active
+ON keys(service_id, is_deleted, expires_at);
+
+CREATE INDEX idx_keys_service_activate
+ON keys(service_id, activate_at DESC);
+
+CREATE INDEX idx_keys_kid
+ON keys(kid);
+
+==================================================
+
+## key_access_logs
+
+id BIGSERIAL PRIMARY KEY
+
+kid VARCHAR(100)
+service_id VARCHAR(100)
+
+client_service_id VARCHAR(100)
+
+action VARCHAR(50)
+
+include_private BOOLEAN
+
+requested_at TIMESTAMP NOT NULL
+
+ip_address VARCHAR(50)
+
+-- result
+success BOOLEAN
+error_message TEXT
+
+-- indexes
+CREATE INDEX idx_key_access_logs_service_time
+ON key_access_logs(service_id, requested_at DESC);
+
+==================================================
+
+## key_policies
+
+id BIGSERIAL PRIMARY KEY
+
+service_id VARCHAR(100) UNIQUE NOT NULL
+
+-- config rotation
+key_lifetime_seconds BIGINT NOT NULL
+jwt_ttl_seconds BIGINT NOT NULL
+
+-- buffer
+preload_seconds BIGINT NOT NULL
+
+created_at TIMESTAMP
+updated_at TIMESTAMP
+
+FOREIGN KEY (service_id)
+REFERENCES services(id)
+
+==================================================
+
+## key_events
+
+id BIGSERIAL PRIMARY KEY
+
+kid VARCHAR(100)
+service_id VARCHAR(100)
+
+event_type VARCHAR(50)
+
+created_at TIMESTAMP
+
+metadata JSONB
+
+-- indexes
+CREATE INDEX idx_key_events_service_time
+ON key_events(service_id, created_at DESC);
+
+==================================================
+
+===============================
+CERTIFICATES TABLE
+==================
+
+## certificates
+
+id BIGSERIAL PRIMARY KEY
+
+service_id VARCHAR(100) NOT NULL
+
+kid VARCHAR(100) UNIQUE NOT NULL
+
+public_cert TEXT NOT NULL
+private_key_encrypted TEXT NOT NULL
+
+issued_at TIMESTAMP NOT NULL
+expires_at TIMESTAMP NOT NULL
+
+status VARCHAR(20) NOT NULL
+
+FOREIGN KEY (service_id)
+REFERENCES services(id)
+
+-- indexes
+CREATE INDEX idx_cert_service_expire
+ON certificates(service_id, expires_at);
+
+CREATE INDEX idx_cert_kid
+ON certificates(kid);
+
+==================================================
+
+===============================
+CERT REFRESH TOKENS
+===================
+
+## cert_refresh_tokens
+
+id BIGSERIAL PRIMARY KEY
+
+service_id VARCHAR(100) NOT NULL
+
+token_hash TEXT NOT NULL
+
+bound_kid VARCHAR(100) NOT NULL
+
+issued_at TIMESTAMP NOT NULL
+expires_at TIMESTAMP NOT NULL
+used_at TIMESTAMP
+
+issued_by VARCHAR(100)
+
+FOREIGN KEY (service_id)
+REFERENCES services(id)
+
+-- indexes
+CREATE INDEX idx_refresh_token_hash
+ON cert_refresh_tokens(token_hash);
+
+CREATE INDEX idx_refresh_service_used
+ON cert_refresh_tokens(service_id, used_at);
+
+==================================================
+
+===============================
+CERT EVENTS
+===========
+
+## cert_events
+
+id BIGSERIAL PRIMARY KEY
+
+service_id VARCHAR(100)
+kid VARCHAR(100)
+
+event_type VARCHAR(50)
+
+created_at TIMESTAMP
+
+metadata JSONB
+
+-- indexes
+CREATE INDEX idx_cert_events_service_time
+ON cert_events(service_id, created_at DESC);
+
+==================================================

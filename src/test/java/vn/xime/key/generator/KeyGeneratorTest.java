@@ -4,12 +4,12 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import vn.xime.key.application.port.KeyEncryptionService;
-import vn.xime.key.application.port.KeyGenerator;
-import vn.xime.key.domain.key.Key;
-import vn.xime.key.domain.key.KeyAlgorithm;
-import vn.xime.key.domain.key.KeyRepository;
-import vn.xime.key.domain.key.KeyStatus;
+import vn.xime.trust.application.port.KeyEncryptionService;
+import vn.xime.trust.application.port.KeyGenerator;
+import vn.xime.trust.domain.key.Key;
+import vn.xime.trust.domain.key.KeyAlgorithm;
+import vn.xime.trust.domain.key.KeyRepository;
+import vn.xime.trust.domain.key.KeyStatus;
 
 import java.security.KeyPair;
 import java.time.Instant;
