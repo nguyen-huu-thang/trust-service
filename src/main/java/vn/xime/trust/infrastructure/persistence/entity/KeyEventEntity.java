@@ -4,50 +4,29 @@ import jakarta.persistence.*;
 import java.time.Instant;
 
 @Entity
-@Table(
-    name = "key_events",
-    indexes = {
-        @Index(name = "idx_key_events_service_time", columnList = "service_name, created_at")
-    }
-)
+@Table(name = "key_events")
 public class KeyEventEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // =========================
-    // Key Info
-    // =========================
-
     @Column(name = "kid")
     private String kid;
 
-    @Column(name = "service_name")
-    private String serviceName;
+    @Column(name = "service_id")
+    private String serviceId;
 
-    // =========================
-    // Event
-    // =========================
-
-    /**
-     * CREATED / ROTATED / DELETED / EMERGENCY_ROTATION
-     */
     @Column(name = "event_type")
     private String eventType;
 
     @Column(name = "created_at")
     private Instant createdAt;
 
-    /**
-     * JSON metadata (PostgreSQL JSONB)
-     */
     @Column(name = "metadata", columnDefinition = "jsonb")
     private String metadata;
 
-    // =========================
-    // Getter / Setter
-    // =========================
+    // ===== getter/setter =====
 
     public Long getId() {
         return id;
@@ -61,12 +40,12 @@ public class KeyEventEntity {
         this.kid = kid;
     }
 
-    public String getServiceName() {
-        return serviceName;
+    public String getServiceId() {
+        return serviceId;
     }
 
-    public void setServiceName(String serviceName) {
-        this.serviceName = serviceName;
+    public void setServiceId(String serviceId) {
+        this.serviceId = serviceId;
     }
 
     public String getEventType() {

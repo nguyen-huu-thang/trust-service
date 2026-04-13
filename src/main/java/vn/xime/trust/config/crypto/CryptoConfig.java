@@ -4,8 +4,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import vn.xime.trust.application.port.KeyEncryptionService;
-import vn.xime.trust.application.port.KeyGenerator;
+import vn.xime.trust.application.port.out.KeyEncryptionService;
+import vn.xime.trust.application.port.out.KeyGenerator;
 import vn.xime.trust.infrastructure.crypto.AesKeyEncryptionService;
 import vn.xime.trust.infrastructure.crypto.RsaKeyGenerator;
 

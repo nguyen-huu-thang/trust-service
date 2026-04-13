@@ -4,50 +4,24 @@ import jakarta.persistence.*;
 import java.time.Instant;
 
 @Entity
-@Table(
-    name = "key_policies",
-    uniqueConstraints = {
-        @UniqueConstraint(name = "uk_key_policies_service", columnNames = "service_name")
-    }
-)
+@Table(name = "key_policies")
 public class KeyPolicyEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // =========================
-    // Identify
-    // =========================
+    @Column(name = "service_id", nullable = false, unique = true)
+    private String serviceId;
 
-    @Column(name = "service_name", nullable = false, unique = true)
-    private String serviceName;
-
-    // =========================
-    // Rotation Config
-    // =========================
-
-    /**
-     * Lifetime của key (vd: 30 ngày)
-     */
     @Column(name = "key_lifetime_seconds", nullable = false)
     private Long keyLifetimeSeconds;
 
-    /**
-     * TTL của JWT (vd: 3600s)
-     */
     @Column(name = "jwt_ttl_seconds", nullable = false)
     private Long jwtTtlSeconds;
 
-    /**
-     * Preload NEXT key trước bao lâu
-     */
     @Column(name = "preload_seconds", nullable = false)
     private Long preloadSeconds;
-
-    // =========================
-    // Audit
-    // =========================
 
     @Column(name = "created_at")
     private Instant createdAt;
@@ -55,20 +29,18 @@ public class KeyPolicyEntity {
     @Column(name = "updated_at")
     private Instant updatedAt;
 
-    // =========================
-    // Getter / Setter
-    // =========================
+    // ===== getter/setter =====
 
     public Long getId() {
         return id;
     }
 
-    public String getServiceName() {
-        return serviceName;
+    public String getServiceId() {
+        return serviceId;
     }
 
-    public void setServiceName(String serviceName) {
-        this.serviceName = serviceName;
+    public void setServiceId(String serviceId) {
+        this.serviceId = serviceId;
     }
 
     public Long getKeyLifetimeSeconds() {

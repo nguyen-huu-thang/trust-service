@@ -6,7 +6,7 @@ import javax.crypto.SecretKey;
 import javax.crypto.spec.GCMParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
 
-import vn.xime.trust.application.port.KeyEncryptionService;
+import vn.xime.trust.application.port.out.KeyEncryptionService;
 
 import java.security.SecureRandom;
 import java.util.Base64;

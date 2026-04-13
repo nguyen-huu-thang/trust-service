@@ -4,44 +4,24 @@ import jakarta.persistence.*;
 import java.time.Instant;
 
 @Entity
-@Table(
-name = "keys",
-indexes = {
-@Index(name = "idx_keys_service", columnList = "service_name"),
-@Index(name = "idx_keys_kid", columnList = "kid", unique = true),
-@Index(name = "idx_keys_activate_at", columnList = "activate_at"),
-@Index(name = "idx_keys_expires_at", columnList = "expires_at")
-}
-)
+@Table(name = "keys")
 public class KeyEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // =========================
-    // Identify
-    // =========================
-
-    @Column(name = "kid", nullable = false, unique = true)
+    @Column(name = "kid", unique = true, nullable = false)
     private String kid;
 
-    @Column(name = "service_name", nullable = false)
-    private String serviceName;
+    @Column(name = "service_id", nullable = false)
+    private String serviceId;
 
-    // =========================
-    // Key Data
-    // =========================
-
-    @Column(name = "public_key", nullable = false, columnDefinition = "TEXT")
+    @Column(name = "public_key", columnDefinition = "TEXT", nullable = false)
     private String publicKey;
 
-    @Column(name = "private_key_encrypted", nullable = false, columnDefinition = "TEXT")
+    @Column(name = "private_key_encrypted", columnDefinition = "TEXT", nullable = false)
     private String privateKeyEncrypted;
-
-    // =========================
-    // Crypto
-    // =========================
 
     @Column(name = "algorithm", nullable = false)
     private String algorithm;
@@ -49,45 +29,19 @@ public class KeyEntity {
     @Column(name = "key_size", nullable = false)
     private Integer keySize;
 
-    // =========================
-    // Lifecycle (TIME-BASED)
-    // =========================
-
-    /**
-     * Chỉ mang tính metadata (không dùng cho logic chính)
-     * Có thể bỏ trong tương lai
-     */
-    @Column(name = "status")
-    private String status;
-
-    /**
-     * Thời điểm tạo key
-     */
-    @Column(name = "created_at", nullable = false, updatable = false)
+    @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
-    /**
-     * Thời điểm bắt đầu SIGN
-     */
     @Column(name = "activate_at", nullable = false)
     private Instant activateAt;
 
-    /**
-     * Thời điểm NGỪNG VERIFY (quan trọng nhất)
-     */
     @Column(name = "expires_at", nullable = false)
     private Instant expiresAt;
 
-    // =========================
-    // Control
-    // =========================
+    @Column(name = "is_deleted")
+    private Boolean isDeleted;
 
-    @Column(name = "is_deleted", nullable = false)
-    private boolean isDeleted = false;
-
-    // =========================
-    // Getter / Setter
-    // =========================
+    // ===== getter/setter =====
 
     public Long getId() {
         return id;
@@ -101,12 +55,12 @@ public class KeyEntity {
         this.kid = kid;
     }
 
-    public String getServiceName() {
-        return serviceName;
+    public String getServiceId() {
+        return serviceId;
     }
 
-    public void setServiceName(String serviceName) {
-        this.serviceName = serviceName;
+    public void setServiceId(String serviceId) {
+        this.serviceId = serviceId;
     }
 
     public String getPublicKey() {
@@ -141,14 +95,6 @@ public class KeyEntity {
         this.keySize = keySize;
     }
 
-    public String getStatus() {
-        return status;
-    }
-
-    public void setStatus(String status) {
-        this.status = status;
-    }
-
     public Instant getCreatedAt() {
         return createdAt;
     }
@@ -173,11 +119,11 @@ public class KeyEntity {
         this.expiresAt = expiresAt;
     }
 
-    public boolean isDeleted() {
+    public Boolean getIsDeleted() {
         return isDeleted;
     }
 
-    public void setDeleted(boolean deleted) {
+    public void setIsDeleted(Boolean deleted) {
         isDeleted = deleted;
     }
 }

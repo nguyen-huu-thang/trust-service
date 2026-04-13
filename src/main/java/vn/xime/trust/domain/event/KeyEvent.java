@@ -1,31 +1,55 @@
 package vn.xime.trust.domain.event;
 
 import java.time.Instant;
+import java.util.Map;
+import java.util.Objects;
 
-/**
- * Base Domain Event
- */
-public abstract class KeyEvent {
+public class KeyEvent {
 
     private final String kid;
-    private final String serviceName;
+    private final String serviceId;
+
+    private final KeyEventType eventType;
+
     private final Instant createdAt;
 
-    protected KeyEvent(String kid, String serviceName, Instant createdAt) {
+    private final Map<String, Object> metadata;
+
+    public KeyEvent(
+            String kid,
+            String serviceId,
+            KeyEventType eventType,
+            Instant createdAt,
+            Map<String, Object> metadata
+    ) {
         this.kid = kid;
-        this.serviceName = serviceName;
-        this.createdAt = createdAt;
+        this.serviceId = serviceId;
+        this.eventType = Objects.requireNonNull(eventType);
+        this.createdAt = Objects.requireNonNull(createdAt);
+        this.metadata = metadata;
     }
+
+    // =========================
+    // GETTERS
+    // =========================
 
     public String getKid() {
         return kid;
     }
 
-    public String getServiceName() {
-        return serviceName;
+    public String getServiceId() {
+        return serviceId;
+    }
+
+    public KeyEventType getEventType() {
+        return eventType;
     }
 
     public Instant getCreatedAt() {
         return createdAt;
+    }
+
+    public Map<String, Object> getMetadata() {
+        return metadata;
     }
 }

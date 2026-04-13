@@ -6,9 +6,9 @@ import vn.xime.trust.application.dto.request.GetKeysRequestDto;
 import vn.xime.trust.application.dto.response.GetKeysResponseDto;
 import vn.xime.trust.application.dto.response.PrivateKeyDto;
 import vn.xime.trust.application.dto.response.PublicKeyDto;
-import vn.xime.trust.application.port.KeyEncryptionService;
-import vn.xime.trust.domain.key.Key;
-import vn.xime.trust.domain.key.KeyRepository;
+import vn.xime.trust.application.port.out.KeyEncryptionService;
+import vn.xime.trust.domain.model.Key;
+import vn.xime.trust.domain.repository.KeyRepository;
 
 public class GetKeyUseCase {
 

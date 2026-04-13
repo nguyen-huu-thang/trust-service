@@ -1,62 +1,48 @@
 package vn.xime.trust.infrastructure.persistence.repository;
 
-import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
+import org.springframework.stereotype.Repository;
+import vn.xime.trust.domain.model.Key;
+import vn.xime.trust.domain.repository.KeyRepository;
+import vn.xime.trust.infrastructure.persistence.mapper.KeyMapper;
 
-import vn.xime.trust.infrastructure.persistence.entity.KeyEntity;
-
-import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
-public interface JpaKeyRepository extends JpaRepository<KeyEntity, Long> {
+@Repository
+public class JpaKeyRepository implements KeyRepository {
 
-    /**
-     * Lấy tất cả key của service (chưa bị delete)
-     */
-    List<KeyEntity> findByServiceNameAndIsDeletedFalse(String serviceName);
+    private final SpringDataKeyRepository repo;
 
-    /**
-     * Lấy key theo kid
-     */
-    Optional<KeyEntity> findByKidAndIsDeletedFalse(String kid);
+    public JpaKeyRepository(SpringDataKeyRepository repo) {
+        this.repo = repo;
+    }
 
-    /**
-     * Lấy key dùng để SIGN
-     * (activate_at gần nhất <= now)
-     */
-    @Query("""
-    SELECT k FROM KeyEntity k
-    WHERE k.serviceName = :serviceName
-    AND k.isDeleted = false
-    AND k.activateAt <= :now
-    ORDER BY k.activateAt DESC
-    LIMIT 1
-    """)
-    Optional<KeyEntity> findKeyForSign(String serviceName, Instant now);
+    @Override
+    public Key save(Key key) {
+        var entity = KeyMapper.toEntity(key);
+        var saved = repo.save(entity);
+        return KeyMapper.toDomain(saved);
+    }
 
-    /**
-     * Lấy NEXT key (preload)
-     */
-    @Query("""
-    SELECT k FROM KeyEntity k
-    WHERE k.serviceName = :serviceName
-    AND k.isDeleted = false
-    AND k.activateAt > :now
-    ORDER BY k.activateAt ASC
-    LIMIT 1
-    """)
-    Optional<KeyEntity> findNextKey(String serviceName, Instant now);
+    @Override
+    public Optional<Key> findByKid(String kid) {
+        return repo.findByKid(kid)
+                .map(KeyMapper::toDomain);
+    }
 
-    /**
-     * Lấy key dùng để VERIFY
-     */
-    @Query("""
-    SELECT k FROM KeyEntity k
-    WHERE k.serviceName = :serviceName
-    AND k.isDeleted = false
-    AND (k.expiresAt IS NULL OR k.expiresAt > :now)
-    """)
-    List<KeyEntity> findKeysForVerify(String serviceName, Instant now);
+    @Override
+    public List<Key> findByServiceId(String serviceId) {
+        return repo.findByServiceId(serviceId)
+                .stream()
+                .map(KeyMapper::toDomain)
+                .toList();
+    }
 
+    @Override
+    public List<Key> findActiveKeys(String serviceId) {
+        return repo.findByServiceIdAndIsDeletedFalse(serviceId)
+                .stream()
+                .map(KeyMapper::toDomain)
+                .toList();
+    }
 }

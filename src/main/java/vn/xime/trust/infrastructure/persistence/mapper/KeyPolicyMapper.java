@@ -1,6 +1,6 @@
 package vn.xime.trust.infrastructure.persistence.mapper;
 
-import vn.xime.trust.domain.key.KeyPolicy;
+import vn.xime.trust.domain.policy.KeyPolicy;
 import vn.xime.trust.infrastructure.persistence.entity.KeyPolicyEntity;
 
 public class KeyPolicyMapper {
@@ -9,16 +9,11 @@ public class KeyPolicyMapper {
     // Entity -> Domain
     // =========================
 
-    public static KeyPolicy toDomain(KeyPolicyEntity entity) {
-        if (entity == null) return null;
-
+    public static KeyPolicy toDomain(KeyPolicyEntity e) {
         return new KeyPolicy(
-                entity.getServiceName(),
-                entity.getKeyLifetimeSeconds(),
-                entity.getJwtTtlSeconds(),
-                entity.getPreloadSeconds(),
-                entity.getCreatedAt(),
-                entity.getUpdatedAt()
+                e.getKeyLifetimeSeconds(),
+                e.getJwtTtlSeconds(),
+                e.getPreloadSeconds()
         );
     }
 
@@ -26,19 +21,14 @@ public class KeyPolicyMapper {
     // Domain -> Entity
     // =========================
 
-    public static KeyPolicyEntity toEntity(KeyPolicy domain) {
-        if (domain == null) return null;
+    public static KeyPolicyEntity toEntity(KeyPolicy d, String serviceId) {
+        KeyPolicyEntity e = new KeyPolicyEntity();
 
-        KeyPolicyEntity entity = new KeyPolicyEntity();
+        e.setServiceId(serviceId);
+        e.setKeyLifetimeSeconds(d.getKeyLifetimeSeconds());
+        e.setJwtTtlSeconds(d.getJwtTtlSeconds());
+        e.setPreloadSeconds(d.getPreloadSeconds());
 
-        entity.setServiceName(domain.getServiceName());
-        entity.setKeyLifetimeSeconds(domain.getKeyLifetimeSeconds());
-        entity.setJwtTtlSeconds(domain.getJwtTtlSeconds());
-        entity.setPreloadSeconds(domain.getPreloadSeconds());
-
-        entity.setCreatedAt(domain.getCreatedAt());
-        entity.setUpdatedAt(domain.getUpdatedAt());
-
-        return entity;
+        return e;
     }
 }

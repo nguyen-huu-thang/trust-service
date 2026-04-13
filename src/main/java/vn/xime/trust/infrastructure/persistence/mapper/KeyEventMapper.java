@@ -1,24 +1,37 @@
 package vn.xime.trust.infrastructure.persistence.mapper;
 
+import vn.xime.trust.domain.event.KeyEvent;
 import vn.xime.trust.infrastructure.persistence.entity.KeyEventEntity;
 
 public class KeyEventMapper {
 
-    public static KeyEventEntity toEntity(
-            String kid,
-            String serviceName,
-            String eventType,
-            String metadata,
-            java.time.Instant createdAt
-    ) {
-        KeyEventEntity entity = new KeyEventEntity();
+    // =========================
+    // Entity -> Domain
+    // =========================
 
-        entity.setKid(kid);
-        entity.setServiceName(serviceName);
-        entity.setEventType(eventType);
-        entity.setMetadata(metadata);
-        entity.setCreatedAt(createdAt);
+    public static KeyEvent toDomain(KeyEvent e) {
+        return new KeyEvent(
+                e.getKid(),
+                e.getServiceId(),
+                e.getEventType(),
+                e.getCreatedAt(),
+                e.getMetadata()
+        );
+    }
 
-        return entity;
+    // =========================
+    // Domain -> Entity
+    // =========================
+
+    public static KeyEventEntity toEntity(KeyEvent d) {
+        KeyEventEntity e = new KeyEventEntity();
+
+        e.setKid(d.getKid());
+        e.setServiceId(d.getServiceId());
+        e.setEventType(d.getEventType());
+        e.setCreatedAt(d.getCreatedAt());
+        e.setMetadata(d.getMetadata());
+
+        return e;
     }
 }

@@ -7,9 +7,13 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.UUID;
 
-import vn.xime.trust.application.port.KeyEncryptionService;
-import vn.xime.trust.application.port.KeyGenerator;
-import vn.xime.trust.domain.key.*;
+import vn.xime.trust.application.port.out.KeyEncryptionService;
+import vn.xime.trust.application.port.out.KeyGenerator;
+import vn.xime.trust.domain.*;
+import vn.xime.trust.domain.model.Key;
+import vn.xime.trust.domain.model.KeyAlgorithm;
+import vn.xime.trust.domain.model.KeyStatus;
+import vn.xime.trust.domain.repository.KeyRepository;
 
 public class GenerateKeyUseCase {
 

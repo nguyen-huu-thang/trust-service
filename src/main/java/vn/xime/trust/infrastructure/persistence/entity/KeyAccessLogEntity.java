@@ -4,50 +4,24 @@ import jakarta.persistence.*;
 import java.time.Instant;
 
 @Entity
-@Table(
-    name = "key_access_logs",
-    indexes = {
-        @Index(name = "idx_key_access_logs_service_time", columnList = "service_name, requested_at")
-    }
-)
+@Table(name = "key_access_logs")
 public class KeyAccessLogEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    // =========================
-    // Key Info
-    // =========================
-
     @Column(name = "kid")
     private String kid;
 
-    @Column(name = "service_name")
-    private String serviceName;
+    @Column(name = "service_id")
+    private String serviceId;
 
-    // =========================
-    // Caller Info
-    // =========================
-
-    @Column(name = "client_service")
-    private String clientService;
-
-    /**
-     * GET_KEYS / GET_KEY_BY_ID
-     */
     @Column(name = "action")
     private String action;
 
-    /**
-     * Có lấy private key không
-     */
     @Column(name = "include_private")
-    private boolean includePrivate;
-
-    // =========================
-    // Request Info
-    // =========================
+    private Boolean includePrivate;
 
     @Column(name = "requested_at", nullable = false)
     private Instant requestedAt;
@@ -55,19 +29,13 @@ public class KeyAccessLogEntity {
     @Column(name = "ip_address")
     private String ipAddress;
 
-    // =========================
-    // Result
-    // =========================
-
     @Column(name = "success")
-    private boolean success;
+    private Boolean success;
 
     @Column(name = "error_message", columnDefinition = "TEXT")
     private String errorMessage;
 
-    // =========================
-    // Getter / Setter
-    // =========================
+    // ===== getter/setter =====
 
     public Long getId() {
         return id;
@@ -81,20 +49,12 @@ public class KeyAccessLogEntity {
         this.kid = kid;
     }
 
-    public String getServiceName() {
-        return serviceName;
+    public String getServiceId() {
+        return serviceId;
     }
 
-    public void setServiceName(String serviceName) {
-        this.serviceName = serviceName;
-    }
-
-    public String getClientService() {
-        return clientService;
-    }
-
-    public void setClientService(String clientService) {
-        this.clientService = clientService;
+    public void setServiceId(String serviceId) {
+        this.serviceId = serviceId;
     }
 
     public String getAction() {
@@ -105,11 +65,11 @@ public class KeyAccessLogEntity {
         this.action = action;
     }
 
-    public boolean isIncludePrivate() {
+    public Boolean getIncludePrivate() {
         return includePrivate;
     }
 
-    public void setIncludePrivate(boolean includePrivate) {
+    public void setIncludePrivate(Boolean includePrivate) {
         this.includePrivate = includePrivate;
     }
 
@@ -129,11 +89,11 @@ public class KeyAccessLogEntity {
         this.ipAddress = ipAddress;
     }
 
-    public boolean isSuccess() {
+    public Boolean getSuccess() {
         return success;
     }
 
-    public void setSuccess(boolean success) {
+    public void setSuccess(Boolean success) {
         this.success = success;
     }
 

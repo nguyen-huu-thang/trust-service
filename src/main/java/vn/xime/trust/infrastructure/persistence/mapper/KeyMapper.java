@@ -1,8 +1,7 @@
 package vn.xime.trust.infrastructure.persistence.mapper;
 
-import vn.xime.trust.domain.key.Key;
-import vn.xime.trust.domain.key.KeyAlgorithm;
-import vn.xime.trust.domain.key.KeyStatus;
+import vn.xime.trust.domain.model.Key;
+import vn.xime.trust.domain.model.KeyAlgorithm;
 import vn.xime.trust.infrastructure.persistence.entity.KeyEntity;
 
 public class KeyMapper {
@@ -11,34 +10,18 @@ public class KeyMapper {
     // Entity -> Domain
     // =========================
 
-    public static Key toDomain(KeyEntity entity) {
-        if (entity == null) return null;
-
-        KeyAlgorithm algorithm = entity.getAlgorithm() != null
-                ? KeyAlgorithm.valueOf(entity.getAlgorithm())
-                : null;
-
-        KeyStatus status = null;
-        if (entity.getStatus() != null) {
-            try {
-                status = KeyStatus.valueOf(entity.getStatus());
-            } catch (IllegalArgumentException ignored) {
-                // fallback: ignore invalid status
-            }
-        }
-
+    public static Key toDomain(KeyEntity e) {
         return new Key(
-                entity.getKid(),
-                entity.getServiceName(),
-                entity.getPublicKey(),
-                entity.getPrivateKeyEncrypted(),
-                algorithm,
-                entity.getKeySize(),
-                status,
-                entity.getCreatedAt(),
-                entity.getActivateAt(),
-                entity.getExpiresAt(),
-                entity.isDeleted()
+                e.getKid(),
+                e.getServiceId(),
+                e.getPublicKey(),
+                e.getPrivateKeyEncrypted(),
+                KeyAlgorithm.valueOf(e.getAlgorithm()),
+                e.getKeySize(),
+                e.getCreatedAt(),
+                e.getActivateAt(),
+                e.getExpiresAt(),
+                Boolean.TRUE.equals(e.getIsDeleted())
         );
     }
 
@@ -46,33 +29,20 @@ public class KeyMapper {
     // Domain -> Entity
     // =========================
 
-    public static KeyEntity toEntity(Key domain) {
-        if (domain == null) return null;
+    public static KeyEntity toEntity(Key d) {
+        KeyEntity e = new KeyEntity();
 
-        KeyEntity entity = new KeyEntity();
+        e.setKid(d.getKid());
+        e.setServiceId(d.getServiceId());
+        e.setPublicKey(d.getPublicKey());
+        e.setPrivateKeyEncrypted(d.getPrivateKeyEncrypted());
+        e.setAlgorithm(d.getAlgorithm().name());
+        e.setKeySize(d.getKeySize());
+        e.setCreatedAt(d.getCreatedAt());
+        e.setActivateAt(d.getActivateAt());
+        e.setExpiresAt(d.getExpiresAt());
+        e.setIsDeleted(d.isDeleted());
 
-        entity.setKid(domain.getKid());
-        entity.setServiceName(domain.getServiceName());
-
-        entity.setPublicKey(domain.getPublicKey());
-        entity.setPrivateKeyEncrypted(domain.getPrivateKeyEncrypted());
-
-        entity.setAlgorithm(domain.getAlgorithm() != null
-                ? domain.getAlgorithm().name()
-                : null);
-
-        entity.setKeySize(domain.getKeySize());
-
-        entity.setStatus(domain.getStatus() != null
-                ? domain.getStatus().name()
-                : null);
-
-        entity.setCreatedAt(domain.getCreatedAt());
-        entity.setActivateAt(domain.getActivateAt());
-        entity.setExpiresAt(domain.getExpiresAt());
-
-        entity.setDeleted(domain.isDeleted());
-
-        return entity;
+        return e;
     }
 }

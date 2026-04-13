@@ -1,0 +1,84 @@
+syntax = "proto3";
+
+package trust.internal;
+
+option java_package = "vn.xime.key.grpc.internal";
+option java_multiple_files = true;
+
+// =========================
+// INTERNAL COMMAND SERVICE
+// =========================
+
+// Dành cho CLI tool nội bộ, không public ra ngoài.
+service InternalCommandService {
+
+  // Tạo key mới (activate_at trong tương lai)
+  rpc GenerateKey (GenerateKeyRequest) returns (GenerateKeyResponse);
+
+  // Rotate key (tạo key mới + set activate_at)
+  rpc RotateKey (RotateKeyRequest) returns (RotateKeyResponse);
+
+  // Lấy danh sách key (internal view, có thể đầy đủ hơn public)
+  rpc GetKeys (GetKeysRequest) returns (GetKeysResponse);
+
+  // Health check đơn giản cho internal
+  rpc Health (HealthRequest) returns (HealthResponse);
+}
+
+
+// =========================
+// REQUEST / RESPONSE
+// =========================
+
+message GenerateKeyRequest {
+  string service_name = 1;
+  string algorithm = 2;   // "RSA", "EC"
+  int32 key_size = 3;     // 2048, 4096...
+  int64 activate_at = 4;  // epoch millis
+}
+
+message GenerateKeyResponse {
+  string kid = 1;
+  string status = 2;      // CREATED
+}
+
+message RotateKeyRequest {
+  string service_name = 1;
+  int64 activate_at = 2;  // thời điểm bắt đầu sign
+}
+
+message RotateKeyResponse {
+  string new_kid = 1;
+  string status = 2;      // ROTATED
+}
+
+message GetKeysRequest {
+  string service_name = 1;
+}
+
+message GetKeysResponse {
+  repeated KeyDto keys = 1;
+}
+
+message HealthRequest {}
+
+message HealthResponse {
+  string status = 1;      // OK
+}
+
+
+// =========================
+// DTO
+// =========================
+
+message KeyDto {
+  string kid = 1;
+  string service_name = 2;
+
+  string algorithm = 3;
+  int32 key_size = 4;
+
+  int64 created_at = 5;
+  int64 activate_at = 6;
+  int64 expires_at = 7;
+}

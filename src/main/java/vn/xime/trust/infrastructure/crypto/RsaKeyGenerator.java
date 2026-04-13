@@ -4,7 +4,7 @@ import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.NoSuchAlgorithmException;
 
-import vn.xime.trust.application.port.KeyGenerator;
+import vn.xime.trust.application.port.out.KeyGenerator;
 
 public class RsaKeyGenerator implements KeyGenerator {
 
