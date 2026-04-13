@@ -1,32 +1,85 @@
 package vn.xime.trust.infrastructure.persistence.entity;
 
 import jakarta.persistence.*;
+
 import java.time.Instant;
 
 @Entity
-@Table(name = "key_events")
+@Table(
+        name = "key_events",
+        indexes = {
+                @Index(
+                        name = "idx_key_events_service_time",
+                        columnList = "service_id,created_at DESC"
+                )
+        }
+)
 public class KeyEventEntity {
+
+    // =========================
+    // ID
+    // =========================
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "kid")
+    // =========================
+    // Reference (NO RELATION)
+    // =========================
+
+    /**
+     * Không dùng ManyToOne
+     * → event phải độc lập
+     */
+    @Column(name = "kid", length = 100)
     private String kid;
 
-    @Column(name = "service_id")
+    @Column(name = "service_id", length = 100)
     private String serviceId;
 
-    @Column(name = "event_type")
+    // =========================
+    // Event
+    // =========================
+
+    @Column(name = "event_type", length = 50)
     private String eventType;
 
-    @Column(name = "created_at")
+    // =========================
+    // Time
+    // =========================
+
+    @Column(
+            name = "created_at",
+            columnDefinition = "TIMESTAMP WITH TIME ZONE"
+    )
     private Instant createdAt;
 
+    // =========================
+    // Metadata (JSONB)
+    // =========================
+
+    /**
+     * Lưu JSON dạng string (simple & safe)
+     * Có thể nâng cấp sang Map + converter sau
+     */
     @Column(name = "metadata", columnDefinition = "jsonb")
     private String metadata;
 
-    // ===== getter/setter =====
+    // =========================
+    // Lifecycle hooks
+    // =========================
+
+    @PrePersist
+    public void prePersist() {
+        if (createdAt == null) {
+            createdAt = Instant.now();
+        }
+    }
+
+    // =========================
+    // Getter / Setter
+    // =========================
 
     public Long getId() {
         return id;

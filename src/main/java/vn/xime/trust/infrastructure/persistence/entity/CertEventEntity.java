@@ -1,32 +1,81 @@
 package vn.xime.trust.infrastructure.persistence.entity;
 
 import jakarta.persistence.*;
+
 import java.time.Instant;
 
 @Entity
-@Table(name = "cert_events")
+@Table(
+        name = "cert_events",
+        indexes = {
+                @Index(
+                        name = "idx_cert_events_service_time",
+                        columnList = "service_id,created_at DESC"
+                )
+        }
+)
 public class CertEventEntity {
+
+    // =========================
+    // ID
+    // =========================
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "service_id")
+    // =========================
+    // Reference (NO RELATION)
+    // =========================
+
+    /**
+     * Không dùng ManyToOne
+     * → event phải độc lập
+     */
+    @Column(name = "service_id", length = 100)
     private String serviceId;
 
-    @Column(name = "kid")
+    @Column(name = "kid", length = 100)
     private String kid;
 
-    @Column(name = "event_type")
+    // =========================
+    // Event
+    // =========================
+
+    @Column(name = "event_type", length = 50)
     private String eventType;
 
-    @Column(name = "created_at")
+    // =========================
+    // Time
+    // =========================
+
+    @Column(
+            name = "created_at",
+            columnDefinition = "TIMESTAMP WITH TIME ZONE"
+    )
     private Instant createdAt;
+
+    // =========================
+    // Metadata (JSONB)
+    // =========================
 
     @Column(name = "metadata", columnDefinition = "jsonb")
     private String metadata;
 
-    // ===== getter/setter =====
+    // =========================
+    // Lifecycle hooks
+    // =========================
+
+    @PrePersist
+    public void prePersist() {
+        if (createdAt == null) {
+            createdAt = Instant.now();
+        }
+    }
+
+    // =========================
+    // Getter / Setter
+    // =========================
 
     public Long getId() {
         return id;

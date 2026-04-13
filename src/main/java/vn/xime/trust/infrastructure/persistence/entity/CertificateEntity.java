@@ -1,38 +1,122 @@
 package vn.xime.trust.infrastructure.persistence.entity;
 
 import jakarta.persistence.*;
+
 import java.time.Instant;
 
 @Entity
-@Table(name = "certificates")
+@Table(
+        name = "certificates",
+        uniqueConstraints = {
+                @UniqueConstraint(
+                        name = "uk_cert_service_issued",
+                        columnNames = {"service_id", "issued_at"}
+                )
+        },
+        indexes = {
+                @Index(name = "idx_cert_kid", columnList = "kid"),
+                @Index(name = "idx_cert_service_expire", columnList = "service_id,expires_at")
+        }
+)
 public class CertificateEntity {
+
+    // =========================
+    // ID
+    // =========================
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "service_id", nullable = false)
+    // =========================
+    // Ownership
+    // =========================
+
+    /**
+     * Không dùng ManyToOne
+     * → giữ boundary microservice
+     */
+    @Column(name = "service_id", nullable = false, length = 100)
     private String serviceId;
 
-    @Column(name = "kid", nullable = false, unique = true)
+    // =========================
+    // Identity
+    // =========================
+
+    @Column(name = "kid", nullable = false, unique = true, length = 100)
     private String kid;
 
-    @Column(name = "public_cert", columnDefinition = "TEXT", nullable = false)
+    // =========================
+    // Certificate data
+    // =========================
+
+    @Column(name = "public_cert", nullable = false, columnDefinition = "TEXT")
     private String publicCert;
 
-    @Column(name = "private_key_encrypted", columnDefinition = "TEXT", nullable = false)
+    @Column(name = "private_key_encrypted", nullable = false, columnDefinition = "TEXT")
     private String privateKeyEncrypted;
 
-    @Column(name = "issued_at", nullable = false)
+    // =========================
+    // Lifecycle (CRITICAL)
+    // =========================
+
+    @Column(
+            name = "issued_at",
+            nullable = false,
+            columnDefinition = "TIMESTAMP WITH TIME ZONE"
+    )
     private Instant issuedAt;
 
-    @Column(name = "expires_at", nullable = false)
+    @Column(
+            name = "expires_at",
+            nullable = false,
+            columnDefinition = "TIMESTAMP WITH TIME ZONE"
+    )
     private Instant expiresAt;
 
-    @Column(name = "status", nullable = false)
+    /**
+     * ACTIVE / EXPIRED / REVOKED (future)
+     */
+    @Column(name = "status", nullable = false, length = 20)
     private String status;
 
-    // ===== getter/setter =====
+    // =========================
+    // Lifecycle hooks
+    // =========================
+
+    @PrePersist
+    public void prePersist() {
+
+        if (issuedAt == null) {
+            issuedAt = Instant.now();
+        }
+
+        validate();
+    }
+
+    @PreUpdate
+    public void preUpdate() {
+        validate();
+    }
+
+    private void validate() {
+
+        if (issuedAt == null || expiresAt == null) {
+            throw new IllegalArgumentException("issued_at and expires_at must not be null");
+        }
+
+        if (!expiresAt.isAfter(issuedAt)) {
+            throw new IllegalArgumentException("expires_at must be after issued_at");
+        }
+
+        if (status == null || status.isBlank()) {
+            throw new IllegalArgumentException("status must not be empty");
+        }
+    }
+
+    // =========================
+    // Getter / Setter
+    // =========================
 
     public Long getId() {
         return id;
@@ -72,10 +156,6 @@ public class CertificateEntity {
 
     public Instant getIssuedAt() {
         return issuedAt;
-    }
-
-    public void setIssuedAt(Instant issuedAt) {
-        this.issuedAt = issuedAt;
     }
 
     public Instant getExpiresAt() {

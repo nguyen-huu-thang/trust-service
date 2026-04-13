@@ -1,47 +1,135 @@
 package vn.xime.trust.infrastructure.persistence.entity;
 
 import jakarta.persistence.*;
+
 import java.time.Instant;
 
 @Entity
-@Table(name = "keys")
+@Table(
+        name = "keys",
+        uniqueConstraints = {
+                @UniqueConstraint(
+                        name = "uk_keys_service_activate",
+                        columnNames = {"service_id", "activate_at"}
+                )
+        },
+        indexes = {
+                @Index(name = "idx_keys_kid", columnList = "kid"),
+                @Index(name = "idx_keys_service_active", columnList = "service_id,is_deleted,expires_at"),
+                @Index(name = "idx_keys_service_activate", columnList = "service_id,activate_at DESC")
+        }
+)
 public class KeyEntity {
+
+    // =========================
+    // ID
+    // =========================
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "kid", unique = true, nullable = false)
+    // =========================
+    // Identify
+    // =========================
+
+    @Column(name = "kid", nullable = false, unique = true, length = 100)
     private String kid;
 
-    @Column(name = "service_id", nullable = false)
+    /**
+     * Giữ dạng String (KHÔNG map ManyToOne)
+     * → đúng boundary microservice
+     */
+    @Column(name = "service_id", nullable = false, length = 100)
     private String serviceId;
 
-    @Column(name = "public_key", columnDefinition = "TEXT", nullable = false)
+    // =========================
+    // Key data
+    // =========================
+
+    @Column(name = "public_key", nullable = false, columnDefinition = "TEXT")
     private String publicKey;
 
-    @Column(name = "private_key_encrypted", columnDefinition = "TEXT", nullable = false)
+    @Column(name = "private_key_encrypted", nullable = false, columnDefinition = "TEXT")
     private String privateKeyEncrypted;
 
-    @Column(name = "algorithm", nullable = false)
+    // =========================
+    // Crypto
+    // =========================
+
+    @Column(name = "algorithm", nullable = false, length = 20)
     private String algorithm;
 
     @Column(name = "key_size", nullable = false)
     private Integer keySize;
 
-    @Column(name = "created_at", nullable = false)
+    // =========================
+    // Lifecycle (QUAN TRỌNG NHẤT)
+    // =========================
+
+    @Column(
+            name = "created_at",
+            nullable = false,
+            columnDefinition = "TIMESTAMP WITH TIME ZONE"
+    )
     private Instant createdAt;
 
-    @Column(name = "activate_at", nullable = false)
+    @Column(
+            name = "activate_at",
+            nullable = false,
+            columnDefinition = "TIMESTAMP WITH TIME ZONE"
+    )
     private Instant activateAt;
 
-    @Column(name = "expires_at", nullable = false)
+    @Column(
+            name = "expires_at",
+            nullable = false,
+            columnDefinition = "TIMESTAMP WITH TIME ZONE"
+    )
     private Instant expiresAt;
 
-    @Column(name = "is_deleted")
-    private Boolean isDeleted;
+    // =========================
+    // Control
+    // =========================
 
-    // ===== getter/setter =====
+    @Column(name = "is_deleted", nullable = false)
+    private Boolean isDeleted = false;
+
+    // =========================
+    // Lifecycle hooks (VERY IMPORTANT)
+    // =========================
+
+    @PrePersist
+    public void prePersist() {
+        if (createdAt == null) {
+            createdAt = Instant.now();
+        }
+
+        if (isDeleted == null) {
+            isDeleted = false;
+        }
+
+        validateTime();
+    }
+
+    @PreUpdate
+    public void preUpdate() {
+        validateTime();
+    }
+
+    private void validateTime() {
+        if (activateAt == null || expiresAt == null) {
+            throw new IllegalArgumentException("activateAt and expiresAt must not be null");
+        }
+
+        if (!expiresAt.isAfter(activateAt)) {
+            throw new IllegalArgumentException("expires_at must be after activate_at");
+        }
+    }
+
+    // =========================
+    // Getter / Setter
+    // =========================
 
     public Long getId() {
         return id;
@@ -97,10 +185,6 @@ public class KeyEntity {
 
     public Instant getCreatedAt() {
         return createdAt;
-    }
-
-    public void setCreatedAt(Instant createdAt) {
-        this.createdAt = createdAt;
     }
 
     public Instant getActivateAt() {
