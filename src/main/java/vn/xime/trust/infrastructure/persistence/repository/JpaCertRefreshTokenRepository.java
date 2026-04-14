@@ -1,43 +1,21 @@
 package vn.xime.trust.infrastructure.persistence.repository;
 
-import org.springframework.stereotype.Repository;
-import vn.xime.trust.domain.model.CertRefreshToken;
-import vn.xime.trust.domain.repository.CertRefreshTokenRepository;
-import vn.xime.trust.infrastructure.persistence.mapper.CertRefreshTokenMapper;
+import org.springframework.data.jpa.repository.JpaRepository;
+import vn.xime.trust.infrastructure.persistence.entity.CertRefreshTokenEntity;
 
 import java.time.Instant;
 import java.util.Optional;
 
-@Repository
-public class JpaCertRefreshTokenRepository implements CertRefreshTokenRepository {
+public interface JpaCertRefreshTokenRepository extends JpaRepository<CertRefreshTokenEntity, Long> {
 
-    private final SpringDataCertRefreshTokenRepository repo;
+    Optional<CertRefreshTokenEntity> findByTokenHash(String tokenHash);
 
-    public JpaCertRefreshTokenRepository(SpringDataCertRefreshTokenRepository repo) {
-        this.repo = repo;
-    }
+    Optional<CertRefreshTokenEntity> findByTokenHashAndUsedAtIsNull(String tokenHash);
 
-    @Override
-    public CertRefreshToken save(CertRefreshToken token) {
-        var entity = CertRefreshTokenMapper.toEntity(token);
-        var saved = repo.save(entity);
-        return CertRefreshTokenMapper.toDomain(saved);
-    }
+    Optional<CertRefreshTokenEntity> findByTokenHashAndUsedAtIsNullAndExpiresAtAfter(String tokenHash, Instant now);
 
-    @Override
-    public Optional<CertRefreshToken> findValidToken(String tokenHash) {
-        return repo.findByTokenHashAndUsedAtIsNull(tokenHash)
-                .map(CertRefreshTokenMapper::toDomain);
-    }
+    boolean existsByTokenHash(String tokenHash);
 
-    @Override
-    public Optional<CertRefreshToken> findByTokenHash(String tokenHash) {
-        return repo.findByTokenHash(tokenHash)
-                .map(CertRefreshTokenMapper::toDomain);
-    }
-
-    @Override
-    public void deleteExpired(Instant now) {
-        repo.deleteByExpiresAtBefore(now);
-    }
+    // optional: phục vụ cleanup / audit
+    void deleteByExpiresAtBefore(Instant now);
 }

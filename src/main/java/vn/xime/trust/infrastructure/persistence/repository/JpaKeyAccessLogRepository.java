@@ -1,41 +1,13 @@
 package vn.xime.trust.infrastructure.persistence.repository;
 
-import org.springframework.stereotype.Repository;
-import vn.xime.trust.domain.model.KeyAccessLog;
-import vn.xime.trust.domain.repository.KeyAccessLogRepository;
-import vn.xime.trust.infrastructure.persistence.mapper.KeyAccessLogMapper;
+import org.springframework.data.jpa.repository.JpaRepository;
+import vn.xime.trust.infrastructure.persistence.entity.KeyAccessLogEntity;
 
 import java.util.List;
 
-@Repository
-public class JpaKeyAccessLogRepository implements KeyAccessLogRepository {
+public interface JpaKeyAccessLogRepository extends JpaRepository<KeyAccessLogEntity, Long> {
 
-    private final SpringDataKeyAccessLogRepository repo;
+    List<KeyAccessLogEntity> findByServiceIdOrderByRequestedAtDesc(String serviceId);
 
-    public JpaKeyAccessLogRepository(SpringDataKeyAccessLogRepository repo) {
-        this.repo = repo;
-    }
-
-    @Override
-    public KeyAccessLog save(KeyAccessLog log) {
-        var entity = KeyAccessLogMapper.toEntity(log);
-        var saved = repo.save(entity);
-        return KeyAccessLogMapper.toDomain(saved);
-    }
-
-    @Override
-    public List<KeyAccessLog> findByServiceId(String serviceId) {
-        return repo.findByServiceIdOrderByRequestedAtDesc(serviceId)
-                .stream()
-                .map(KeyAccessLogMapper::toDomain)
-                .toList();
-    }
-
-    @Override
-    public List<KeyAccessLog> findByKid(String kid) {
-        return repo.findByKidOrderByRequestedAtDesc(kid)
-                .stream()
-                .map(KeyAccessLogMapper::toDomain)
-                .toList();
-    }
+    List<KeyAccessLogEntity> findByKidOrderByRequestedAtDesc(String kid);
 }

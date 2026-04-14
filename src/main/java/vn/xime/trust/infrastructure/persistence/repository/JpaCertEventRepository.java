@@ -1,41 +1,13 @@
 package vn.xime.trust.infrastructure.persistence.repository;
 
-import org.springframework.stereotype.Repository;
-import vn.xime.trust.domain.event.certificate.CertEvent;
-import vn.xime.trust.domain.repository.CertEventRepository;
-import vn.xime.trust.infrastructure.persistence.mapper.CertEventMapper;
+import org.springframework.data.jpa.repository.JpaRepository;
+import vn.xime.trust.infrastructure.persistence.entity.CertEventEntity;
 
 import java.util.List;
 
-@Repository
-public class JpaCertEventRepository implements CertEventRepository {
+public interface JpaCertEventRepository extends JpaRepository<CertEventEntity, Long> {
 
-    private final SpringDataCertEventRepository repo;
+    List<CertEventEntity> findByServiceIdOrderByCreatedAtDesc(String serviceId);
 
-    public JpaCertEventRepository(SpringDataCertEventRepository repo) {
-        this.repo = repo;
-    }
-
-    @Override
-    public CertEvent save(CertEvent event) {
-        var entity = CertEventMapper.toEntity(event);
-        var saved = repo.save(entity);
-        return CertEventMapper.toDomain(saved);
-    }
-
-    @Override
-    public List<CertEvent> findByServiceId(String serviceId) {
-        return repo.findByServiceIdOrderByCreatedAtDesc(serviceId)
-                .stream()
-                .map(CertEventMapper::toDomain)
-                .toList();
-    }
-
-    @Override
-    public List<CertEvent> findByKid(String kid) {
-        return repo.findByKidOrderByCreatedAtDesc(kid)
-                .stream()
-                .map(CertEventMapper::toDomain)
-                .toList();
-    }
+    List<CertEventEntity> findByKidOrderByCreatedAtDesc(String kid);
 }

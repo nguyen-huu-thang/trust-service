@@ -1,6 +1,6 @@
 package vn.xime.trust.domain.repository;
 
-import vn.xime.trust.domain.policy.KeyPolicy;
+import vn.xime.trust.domain.model.KeyPolicy;
 
 import java.util.Optional;
 

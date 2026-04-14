@@ -10,4 +10,5 @@ public interface KeyEventRepository {
 
     List<KeyEvent> findByServiceId(String serviceId);
 
+    List<KeyEvent> findByKid(String kid);
 }

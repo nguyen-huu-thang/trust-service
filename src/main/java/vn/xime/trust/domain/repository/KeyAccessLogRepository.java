@@ -10,4 +10,5 @@ public interface KeyAccessLogRepository {
 
     List<KeyAccessLog> findByServiceId(String serviceId);
 
+    List<KeyAccessLog> findByKid(String kid);
 }

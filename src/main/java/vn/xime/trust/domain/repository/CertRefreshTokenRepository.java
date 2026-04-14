@@ -4,10 +4,12 @@ import vn.xime.trust.domain.model.CertRefreshToken;
 
 import java.util.Optional;
 
+
 public interface CertRefreshTokenRepository {
 
     CertRefreshToken save(CertRefreshToken token);
 
     Optional<CertRefreshToken> findByTokenHash(String tokenHash);
 
+    Optional<CertRefreshToken> findValidToken(String tokenHash);
 }

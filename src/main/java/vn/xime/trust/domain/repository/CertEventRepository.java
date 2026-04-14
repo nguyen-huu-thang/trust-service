@@ -10,4 +10,5 @@ public interface CertEventRepository {
 
     List<CertEvent> findByServiceId(String serviceId);
 
+    List<CertEvent> findByKid(String kid);
 }
