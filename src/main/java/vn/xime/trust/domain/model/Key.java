@@ -111,4 +111,19 @@ public class Key {
     public boolean isDeleted() {
         return deleted;
     }
+
+    public Key markDeleted() {
+    return new Key(
+            kid,
+            serviceId,
+            publicKey,
+            privateKeyEncrypted,
+            algorithm,
+            keySize,
+            createdAt,
+            activateAt,
+            expiresAt,
+            true
+        );
+    }
 }

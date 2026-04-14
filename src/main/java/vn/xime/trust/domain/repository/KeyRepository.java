@@ -13,5 +13,5 @@ public interface KeyRepository {
 
     List<Key> findByServiceId(String serviceId);
 
-    List<Key> findActiveKeys(String serviceId);
+    List<Key> findActiveKeys(String serviceId); // Hơi nguy hiểm.
 }

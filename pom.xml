@@ -199,6 +199,12 @@
             <scope>test</scope>
         </dependency>
 
+        <!-- Jackson. khó hiểu thật, đã có starter-web rồi. -->
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-databind</artifactId>
+        </dependency>
+
     </dependencies>
 
     <!-- ========================= -->

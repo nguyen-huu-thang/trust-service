@@ -30,7 +30,7 @@ public class KeyValidationPolicy {
     }
 
     public void validateForSigning(Key key, Instant now) {
-        if (!key.isUsableForSign(now)) {
+        if (!key.canSign(now)) {
             throw new IllegalStateException("Key is not usable for signing");
         }
     }
