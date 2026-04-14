@@ -12,6 +12,7 @@ public class KeyAccessLogFactory {
             String serviceId,
             KeyAccessAction action,
             boolean includePrivate,
+            Instant now,
             String ip
     ) {
         return new KeyAccessLog(
@@ -19,7 +20,7 @@ public class KeyAccessLogFactory {
                 serviceId,
                 action,
                 includePrivate,
-                Instant.now(),
+                now,
                 ip,
                 true,
                 null
@@ -31,6 +32,7 @@ public class KeyAccessLogFactory {
             String serviceId,
             KeyAccessAction action,
             boolean includePrivate,
+            Instant now,
             String ip,
             String error
     ) {
@@ -39,7 +41,7 @@ public class KeyAccessLogFactory {
                 serviceId,
                 action,
                 includePrivate,
-                Instant.now(),
+                now,
                 ip,
                 false,
                 error

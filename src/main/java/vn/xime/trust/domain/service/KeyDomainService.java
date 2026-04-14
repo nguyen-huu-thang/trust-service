@@ -29,4 +29,10 @@ public class KeyDomainService {
                 .filter(k -> k.canVerify(now))
                 .toList();
     }
+
+    public List<Key> filterNotDeleted(List<Key> keys) {
+        return keys.stream()
+                .filter(k -> !k.isDeleted())
+                .toList();
+    }
 }

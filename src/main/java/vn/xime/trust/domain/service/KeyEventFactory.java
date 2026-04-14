@@ -8,42 +8,42 @@ import java.util.Map;
 
 public class KeyEventFactory {
 
-    public KeyEvent keyCreated(String kid, String serviceId) {
+    public KeyEvent keyCreated(String kid, String serviceId, Instant now) {
         return new KeyEvent(
                 kid,
                 serviceId,
                 KeyEventType.KEY_CREATED,
-                Instant.now(),
+                now,
                 null
         );
     }
 
-    public KeyEvent keyRotated(String kid, String serviceId, String previousKid) {
+    public KeyEvent keyRotated(String kid, String serviceId, Instant now, String previousKid) {
         return new KeyEvent(
                 kid,
                 serviceId,
                 KeyEventType.KEY_ROTATED,
-                Instant.now(),
+                now,
                 Map.of("previous_kid", previousKid)
         );
     }
 
-    public KeyEvent keyExpired(String kid, String serviceId) {
+    public KeyEvent keyExpired(String kid, String serviceId, Instant now) {
         return new KeyEvent(
                 kid,
                 serviceId,
                 KeyEventType.KEY_EXPIRED,
-                Instant.now(),
+                now,
                 null
         );
     }
 
-    public KeyEvent keyDeleted(String kid, String serviceId) {
+    public KeyEvent keyDeleted(String kid, String serviceId, Instant now) {
         return new KeyEvent(
                 kid,
                 serviceId,
                 KeyEventType.KEY_DELETED,
-                Instant.now(),
+                now,
                 null
         );
     }
