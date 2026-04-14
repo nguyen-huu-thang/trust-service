@@ -1,4 +1,4 @@
-package vn.xime.trust.domain.event;
+package vn.xime.trust.domain.model;
 
 import java.time.Instant;
 import java.util.Map;

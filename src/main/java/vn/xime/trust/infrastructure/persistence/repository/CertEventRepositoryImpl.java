@@ -1,7 +1,8 @@
 package vn.xime.trust.infrastructure.persistence.repository;
 
 import org.springframework.stereotype.Repository;
-import vn.xime.trust.domain.event.CertEvent;
+
+import vn.xime.trust.domain.model.CertEvent;
 import vn.xime.trust.domain.repository.CertEventRepository;
 import vn.xime.trust.infrastructure.persistence.mapper.CertEventMapper;
 

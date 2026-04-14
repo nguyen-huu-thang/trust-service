@@ -1,7 +1,7 @@
 package vn.xime.trust.domain.service;
 
-import vn.xime.trust.domain.event.CertEvent;
-import vn.xime.trust.domain.event.CertEventType;
+import vn.xime.trust.domain.model.CertEvent;
+import vn.xime.trust.domain.model.CertEventType;
 
 import java.time.Instant;
 import java.util.Map;

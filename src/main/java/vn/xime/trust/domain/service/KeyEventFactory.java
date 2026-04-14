@@ -1,7 +1,7 @@
 package vn.xime.trust.domain.service;
 
-import vn.xime.trust.domain.event.KeyEvent;
-import vn.xime.trust.domain.event.KeyEventType;
+import vn.xime.trust.domain.model.KeyEvent;
+import vn.xime.trust.domain.model.KeyEventType;
 
 import java.time.Instant;
 import java.util.Map;

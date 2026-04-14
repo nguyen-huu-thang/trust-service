@@ -1,8 +1,8 @@
 package vn.xime.trust.domain.repository;
 
-import vn.xime.trust.domain.event.KeyEvent;
-
 import java.util.List;
+
+import vn.xime.trust.domain.model.KeyEvent;
 
 public interface KeyEventRepository {
 

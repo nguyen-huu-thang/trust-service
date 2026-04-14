@@ -1,7 +1,8 @@
 package vn.xime.trust.infrastructure.persistence.repository;
 
 import org.springframework.stereotype.Repository;
-import vn.xime.trust.domain.event.KeyEvent;
+
+import vn.xime.trust.domain.model.KeyEvent;
 import vn.xime.trust.domain.repository.KeyEventRepository;
 import vn.xime.trust.infrastructure.persistence.mapper.KeyEventMapper;
 

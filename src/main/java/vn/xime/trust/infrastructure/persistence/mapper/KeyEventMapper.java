@@ -2,8 +2,9 @@ package vn.xime.trust.infrastructure.persistence.mapper;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import vn.xime.trust.domain.event.KeyEvent;
-import vn.xime.trust.domain.event.KeyEventType;
+
+import vn.xime.trust.domain.model.KeyEvent;
+import vn.xime.trust.domain.model.KeyEventType;
 import vn.xime.trust.infrastructure.persistence.entity.KeyEventEntity;
 
 import java.util.Map;

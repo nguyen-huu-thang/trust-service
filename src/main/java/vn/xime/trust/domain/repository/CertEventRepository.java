@@ -1,8 +1,8 @@
 package vn.xime.trust.domain.repository;
 
-import vn.xime.trust.domain.event.CertEvent;
-
 import java.util.List;
+
+import vn.xime.trust.domain.model.CertEvent;
 
 public interface CertEventRepository {
 
