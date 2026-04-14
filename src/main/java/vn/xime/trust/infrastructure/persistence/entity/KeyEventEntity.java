@@ -70,12 +70,15 @@ public class KeyEventEntity {
     // Lifecycle hooks
     // =========================
 
-    @PrePersist
-    public void prePersist() {
-        if (createdAt == null) {
-            createdAt = Instant.now();
-        }
-    }
+
+    // ❌ Không đặt logic ở JPA Entity. chỉ để test tạm thời.
+
+    // @PrePersist
+    // public void prePersist() {
+    //     if (createdAt == null) {
+    //         throw new IllegalStateException("createdAt must not be null");
+    //     }
+    // }
 
     // =========================
     // Getter / Setter

@@ -62,17 +62,20 @@ public class ServiceEntity {
             throw new IllegalArgumentException("service id must not be empty");
         }
 
-        if (name == null || name.isBlank()) {
-            throw new IllegalArgumentException("service name must not be empty");
-        }
+        // ❌ Không nên đặt validation business ở JPA Entity
+        // ✅ Domain mới là nơi duy nhất đảm bảo dữ liệu luôn đúng
 
-        if (status == null || status.isBlank()) {
-            throw new IllegalArgumentException("status must not be empty");
-        }
+        // if (name == null || name.isBlank()) {
+        //     throw new IllegalArgumentException("service name must not be empty");
+        // }
 
-        if (createdAt == null) {
-            createdAt = Instant.now();
-        }
+        // if (status == null || status.isBlank()) {
+        //     throw new IllegalArgumentException("status must not be empty");
+        // }
+
+        // if (createdAt == null) {
+        // throw new IllegalStateException("createdAt must not be null");
+        // }
     }
 
     // =========================
@@ -113,5 +116,9 @@ public class ServiceEntity {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public void setCreatedAt(Instant createdAt) {
+    this.createdAt = createdAt;
     }
 }

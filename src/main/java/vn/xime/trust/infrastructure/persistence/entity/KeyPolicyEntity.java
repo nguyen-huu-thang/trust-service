@@ -77,66 +77,67 @@ public class KeyPolicyEntity {
     // Lifecycle hooks
     // =========================
 
-    @PrePersist
-    public void prePersist() {
-        Instant now = Instant.now();
 
-        if (createdAt == null) {
-            createdAt = now;
-        }
+    // ❌ Không đặt logic ở JPA Entity. chỉ để test tạm thời.
 
-        if (updatedAt == null) {
-            updatedAt = now;
-        }
+    // @PrePersist
+    // public void prePersist() {
+    //     if (createdAt == null) {
+    //         throw new IllegalStateException("createdAt must not be null");
+    //     }
 
-        validate();
-    }
+    //     if (updatedAt == null) {
+    //         throw new IllegalStateException("updatedAt must not be null");
+    //     }
 
-    @PreUpdate
-    public void preUpdate() {
-        updatedAt = Instant.now();
-        validate();
-    }
+    //     validate();
+    // }
+
+    // @PreUpdate
+    // public void preUpdate() {
+    //     throw new UnsupportedOperationException("KeyPolicyEntity is immutable and cannot be updated");
+    //     validate();
+    // }
 
     // =========================
-    // Validation (VERY IMPORTANT)
+    // Validation
     // =========================
 
-    private void validate() {
+    // private void validate() {
 
-        if (keyLifetimeSeconds == null || keyLifetimeSeconds <= 0) {
-            throw new IllegalArgumentException("key_lifetime_seconds must be > 0");
-        }
+    //     if (keyLifetimeSeconds == null || keyLifetimeSeconds <= 0) {
+    //         throw new IllegalArgumentException("key_lifetime_seconds must be > 0");
+    //     }
 
-        if (jwtTtlSeconds == null || jwtTtlSeconds <= 0) {
-            throw new IllegalArgumentException("jwt_ttl_seconds must be > 0");
-        }
+    //     if (jwtTtlSeconds == null || jwtTtlSeconds <= 0) {
+    //         throw new IllegalArgumentException("jwt_ttl_seconds must be > 0");
+    //     }
 
-        if (preloadSeconds == null || preloadSeconds < 0) {
-            throw new IllegalArgumentException("preload_seconds must be >= 0");
-        }
+    //     if (preloadSeconds == null || preloadSeconds < 0) {
+    //         throw new IllegalArgumentException("preload_seconds must be >= 0");
+    //     }
 
-        /**
-         * QUAN TRỌNG:
-         * expires_at phải cover JWT TTL
-         *
-         * => key_lifetime >= jwt_ttl
-         */
-        if (keyLifetimeSeconds < jwtTtlSeconds) {
-            throw new IllegalArgumentException(
-                    "key_lifetime_seconds must be >= jwt_ttl_seconds"
-            );
-        }
+    //     /**
+    //      * QUAN TRỌNG:
+    //      * expires_at phải cover JWT TTL
+    //      *
+    //      * => key_lifetime >= jwt_ttl
+    //      */
+    //     if (keyLifetimeSeconds < jwtTtlSeconds) {
+    //         throw new IllegalArgumentException(
+    //                 "key_lifetime_seconds must be >= jwt_ttl_seconds"
+    //         );
+    //     }
 
-        /**
-         * preload không được lớn hơn lifetime
-         */
-        if (preloadSeconds >= keyLifetimeSeconds) {
-            throw new IllegalArgumentException(
-                    "preload_seconds must be < key_lifetime_seconds"
-            );
-        }
-    }
+    //     /**
+    //      * preload không được lớn hơn lifetime
+    //      */
+    //     if (preloadSeconds >= keyLifetimeSeconds) {
+    //         throw new IllegalArgumentException(
+    //                 "preload_seconds must be < key_lifetime_seconds"
+    //         );
+    //     }
+    // }
 
     // =========================
     // Getter / Setter
@@ -182,7 +183,15 @@ public class KeyPolicyEntity {
         return createdAt;
     }
 
+    public void setCreatedAt(Instant createdAt) {
+        this.createdAt = createdAt;
+    }
+
     public Instant getUpdatedAt() {
         return updatedAt;
+    }
+
+    public void setUpdatedAt(Instant updatedAt) {
+        this.updatedAt = updatedAt;
     }
 }

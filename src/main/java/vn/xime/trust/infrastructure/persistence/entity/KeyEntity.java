@@ -96,36 +96,38 @@ public class KeyEntity {
     private Boolean isDeleted = false;
 
     // =========================
-    // Lifecycle hooks (VERY IMPORTANT)
+    // Lifecycle hooks
     // =========================
 
-    @PrePersist
-    public void prePersist() {
-        if (createdAt == null) {
-            createdAt = Instant.now();
-        }
+    // ❌ Không đặt logic ở JPA Entity. chỉ để test tạm thời.
 
-        if (isDeleted == null) {
-            isDeleted = false;
-        }
+    // @PrePersist
+    // public void prePersist() {
+    //     if (createdAt == null) {
+    //         throw new IllegalStateException("createdAt must not be null");
+    //     }
 
-        validateTime();
-    }
+    //     if (isDeleted == null) {
+    //         throw new IllegalStateException("isDeleted must not be null");
+    //     }
 
-    @PreUpdate
-    public void preUpdate() {
-        validateTime();
-    }
+    //     validateTime();
+    // }
 
-    private void validateTime() {
-        if (activateAt == null || expiresAt == null) {
-            throw new IllegalArgumentException("activateAt and expiresAt must not be null");
-        }
+    // @PreUpdate
+    // public void preUpdate() {
+    //     validateTime();
+    // }
 
-        if (!expiresAt.isAfter(activateAt)) {
-            throw new IllegalArgumentException("expires_at must be after activate_at");
-        }
-    }
+    // private void validateTime() {
+    //     if (activateAt == null || expiresAt == null) {
+    //         throw new IllegalArgumentException("activateAt and expiresAt must not be null");
+    //     }
+
+    //     if (!expiresAt.isAfter(activateAt)) {
+    //         throw new IllegalArgumentException("expires_at must be after activate_at");
+    //     }
+    // }
 
     // =========================
     // Getter / Setter
@@ -185,6 +187,10 @@ public class KeyEntity {
 
     public Instant getCreatedAt() {
         return createdAt;
+    }
+
+    public void setCreatedAt(Instant createdAt) {
+        this.createdAt = createdAt;
     }
 
     public Instant getActivateAt() {

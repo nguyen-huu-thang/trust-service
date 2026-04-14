@@ -79,12 +79,14 @@ public class KeyAccessLogEntity {
     // Lifecycle hooks
     // =========================
 
-    @PrePersist
-    public void prePersist() {
-        if (requestedAt == null) {
-            requestedAt = Instant.now();
-        }
-    }
+    // ❌ Không đặt logic ở JPA Entity. chỉ để test tạm thời.
+
+    // @PrePersist
+    // public void prePersist() {
+    //     if (requestedAt == null) {
+    //         throw new IllegalStateException("requestedAt must not be null");
+    //     }
+    // }
 
     // =========================
     // Getter / Setter

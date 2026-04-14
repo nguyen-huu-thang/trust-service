@@ -22,11 +22,11 @@ public class CertEvent {
             Instant createdAt,
             Map<String, Object> metadata
     ) {
-        this.serviceId = serviceId;
-        this.kid = kid;
+        this.serviceId = Objects.requireNonNull(serviceId);
+        this.kid = Objects.requireNonNull(kid);
         this.eventType = Objects.requireNonNull(eventType);
         this.createdAt = Objects.requireNonNull(createdAt);
-        this.metadata = metadata;
+        this.metadata = metadata != null ? Map.copyOf(metadata) : null;
     }
 
     // =========================

@@ -46,7 +46,7 @@ public class CertRefreshTokenEntity {
     private String tokenHash;
 
     /**
-     * bind với cert hiện tại
+     * Bind với cert hiện tại
      */
     @Column(name = "bound_kid", nullable = false, length = 100)
     private String boundKid;
@@ -71,7 +71,7 @@ public class CertRefreshTokenEntity {
 
     /**
      * null = chưa dùng
-     * != null = đã dùng (one-time enforcement)
+     * != null = đã dùng (one-time token)
      */
     @Column(
             name = "used_at",
@@ -85,74 +85,6 @@ public class CertRefreshTokenEntity {
 
     @Column(name = "issued_by", length = 100)
     private String issuedBy;
-
-    // =========================
-    // Lifecycle hooks
-    // =========================
-
-    @PrePersist
-    public void prePersist() {
-
-        if (issuedAt == null) {
-            issuedAt = Instant.now();
-        }
-
-        validate();
-    }
-
-    @PreUpdate
-    public void preUpdate() {
-        validate();
-    }
-
-    // =========================
-    // Validation (VERY CRITICAL)
-    // =========================
-
-    private void validate() {
-
-        if (tokenHash == null || tokenHash.isBlank()) {
-            throw new IllegalArgumentException("token_hash must not be empty");
-        }
-
-        if (boundKid == null || boundKid.isBlank()) {
-            throw new IllegalArgumentException("bound_kid must not be empty");
-        }
-
-        if (issuedAt == null || expiresAt == null) {
-            throw new IllegalArgumentException("issued_at and expires_at must not be null");
-        }
-
-        if (!expiresAt.isAfter(issuedAt)) {
-            throw new IllegalArgumentException("expires_at must be after issued_at");
-        }
-    }
-
-    // =========================
-    // Domain helper (IMPORTANT)
-    // =========================
-
-    public boolean isUsed() {
-        return usedAt != null;
-    }
-
-    public boolean isExpired(Instant now) {
-        return expiresAt != null && !expiresAt.isAfter(now);
-    }
-
-    public boolean isValid(Instant now) {
-        return !isUsed() && !isExpired(now);
-    }
-
-    /**
-     * mark used (one-time)
-     */
-    public void markUsed(Instant now) {
-        if (this.usedAt != null) {
-            throw new IllegalStateException("Token already used");
-        }
-        this.usedAt = now;
-    }
 
     // =========================
     // Getter / Setter
@@ -188,6 +120,10 @@ public class CertRefreshTokenEntity {
 
     public Instant getIssuedAt() {
         return issuedAt;
+    }
+
+    public void setIssuedAt(Instant issuedAt) {
+        this.issuedAt = issuedAt;
     }
 
     public Instant getExpiresAt() {

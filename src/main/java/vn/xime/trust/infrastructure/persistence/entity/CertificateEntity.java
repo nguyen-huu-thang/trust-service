@@ -84,35 +84,37 @@ public class CertificateEntity {
     // Lifecycle hooks
     // =========================
 
-    @PrePersist
-    public void prePersist() {
+    // ❌ Không đặt logic ở JPA Entity. chỉ để test tạm thời.
 
-        if (issuedAt == null) {
-            issuedAt = Instant.now();
-        }
+    // @PrePersist
+    // public void prePersist() {
 
-        validate();
-    }
+    //     if (issuedAt == null) {
+    //         throw new IllegalStateException("issuedAt must not be null");
+    //     }
 
-    @PreUpdate
-    public void preUpdate() {
-        validate();
-    }
+    //     validate();
+    // }
 
-    private void validate() {
+    // @PreUpdate
+    // public void preUpdate() {
+    //     validate();
+    // }
 
-        if (issuedAt == null || expiresAt == null) {
-            throw new IllegalArgumentException("issued_at and expires_at must not be null");
-        }
+    // private void validate() {
 
-        if (!expiresAt.isAfter(issuedAt)) {
-            throw new IllegalArgumentException("expires_at must be after issued_at");
-        }
+    //     if (issuedAt == null || expiresAt == null) {
+    //         throw new IllegalArgumentException("issued_at and expires_at must not be null");
+    //     }
 
-        if (status == null || status.isBlank()) {
-            throw new IllegalArgumentException("status must not be empty");
-        }
-    }
+    //     if (!expiresAt.isAfter(issuedAt)) {
+    //         throw new IllegalArgumentException("expires_at must be after issued_at");
+    //     }
+
+    //     if (status == null || status.isBlank()) {
+    //         throw new IllegalArgumentException("status must not be empty");
+    //     }
+    // }
 
     // =========================
     // Getter / Setter
@@ -158,6 +160,10 @@ public class CertificateEntity {
         return issuedAt;
     }
 
+    public void setIssuedAt(Instant issuedAt) {
+        this.issuedAt = issuedAt;
+    }
+    
     public Instant getExpiresAt() {
         return expiresAt;
     }

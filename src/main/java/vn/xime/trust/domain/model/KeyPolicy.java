@@ -35,6 +35,18 @@ public class KeyPolicy {
             throw new IllegalArgumentException("preloadSeconds must be >= 0");
         }
 
+        if (keyLifetimeSeconds < jwtTtlSeconds) {
+            throw new IllegalArgumentException(
+                "keyLifetimeSeconds must be >= jwtTtlSeconds"
+            );
+        }
+
+        if (preloadSeconds >= keyLifetimeSeconds) {
+            throw new IllegalArgumentException(
+                "preloadSeconds must be < keyLifetimeSeconds"
+            );
+        }
+
         this.keyLifetimeSeconds = keyLifetimeSeconds;
         this.jwtTtlSeconds = jwtTtlSeconds;
         this.preloadSeconds = preloadSeconds;

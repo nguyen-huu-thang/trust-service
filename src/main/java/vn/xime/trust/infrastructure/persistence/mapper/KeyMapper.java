@@ -11,17 +11,33 @@ public class KeyMapper {
     // =========================
 
     public static Key toDomain(KeyEntity e) {
+
+        if (e == null) {
+            throw new IllegalArgumentException("KeyEntity must not be null");
+        }
+
+        requireNonNull(e.getKid(), "kid");
+        requireNonNull(e.getServiceId(), "serviceId");
+        requireNonNull(e.getPublicKey(), "publicKey");
+        requireNonNull(e.getPrivateKeyEncrypted(), "privateKeyEncrypted");
+        requireNonNull(e.getAlgorithm(), "algorithm");
+        requireNonNull(e.getKeySize(), "keySize");
+        requireNonNull(e.getCreatedAt(), "createdAt");
+        requireNonNull(e.getActivateAt(), "activateAt");
+        requireNonNull(e.getExpiresAt(), "expiresAt");
+        requireNonNull(e.getIsDeleted(), "isDeleted");
+
         return new Key(
                 e.getKid(),
                 e.getServiceId(),
                 e.getPublicKey(),
                 e.getPrivateKeyEncrypted(),
-                KeyAlgorithm.valueOf(e.getAlgorithm()),
+                mapAlgorithm(e.getAlgorithm()),
                 e.getKeySize(),
                 e.getCreatedAt(),
                 e.getActivateAt(),
                 e.getExpiresAt(),
-                Boolean.TRUE.equals(e.getIsDeleted())
+                e.getIsDeleted()
         );
     }
 
@@ -30,6 +46,11 @@ public class KeyMapper {
     // =========================
 
     public static KeyEntity toEntity(Key d) {
+
+        if (d == null) {
+            throw new IllegalArgumentException("Key must not be null");
+        }
+
         KeyEntity e = new KeyEntity();
 
         e.setKid(d.getKid());
@@ -44,5 +65,24 @@ public class KeyMapper {
         e.setIsDeleted(d.isDeleted());
 
         return e;
+    }
+
+    // =========================
+    // Helpers
+    // =========================
+
+    private static KeyAlgorithm mapAlgorithm(String algorithm) {
+
+        try {
+            return KeyAlgorithm.valueOf(algorithm.toUpperCase());
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Invalid algorithm: " + algorithm);
+        }
+    }
+
+    private static void requireNonNull(Object value, String field) {
+        if (value == null) {
+            throw new IllegalStateException(field + " must not be null");
+        }
     }
 }

@@ -1,5 +1,6 @@
 package vn.xime.trust.infrastructure.persistence.mapper;
 
+import vn.xime.trust.domain.model.KeyAccessAction;
 import vn.xime.trust.domain.model.KeyAccessLog;
 import vn.xime.trust.infrastructure.persistence.entity.KeyAccessLogEntity;
 
@@ -10,10 +11,18 @@ public class KeyAccessLogMapper {
     // =========================
 
     public static KeyAccessLog toDomain(KeyAccessLogEntity e) {
+
+        if (e == null) {
+            throw new IllegalArgumentException("KeyAccessLogEntity must not be null");
+        }
+
+        requireNonNull(e.getAction(), "action");
+        requireNonNull(e.getRequestedAt(), "requestedAt");
+
         return new KeyAccessLog(
                 e.getKid(),
                 e.getServiceId(),
-                e.getAction(),
+                mapAction(e.getAction()),
                 Boolean.TRUE.equals(e.getIncludePrivate()),
                 e.getRequestedAt(),
                 e.getIpAddress(),
@@ -27,11 +36,16 @@ public class KeyAccessLogMapper {
     // =========================
 
     public static KeyAccessLogEntity toEntity(KeyAccessLog d) {
+
+        if (d == null) {
+            throw new IllegalArgumentException("KeyAccessLog must not be null");
+        }
+
         KeyAccessLogEntity e = new KeyAccessLogEntity();
 
         e.setKid(d.getKid());
         e.setServiceId(d.getServiceId());
-        e.setAction(d.getAction());
+        e.setAction(d.getAction().name());
         e.setIncludePrivate(d.isIncludePrivate());
         e.setRequestedAt(d.getRequestedAt());
         e.setIpAddress(d.getIpAddress());
@@ -39,5 +53,23 @@ public class KeyAccessLogMapper {
         e.setErrorMessage(d.getErrorMessage());
 
         return e;
+    }
+
+    // =========================
+    // Helpers
+    // =========================
+
+    private static KeyAccessAction mapAction(String action) {
+        try {
+            return KeyAccessAction.valueOf(action.toUpperCase());
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Invalid action: " + action);
+        }
+    }
+
+    private static void requireNonNull(Object value, String field) {
+        if (value == null) {
+            throw new IllegalStateException(field + " must not be null");
+        }
     }
 }
