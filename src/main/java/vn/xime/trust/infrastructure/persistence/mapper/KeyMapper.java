@@ -17,7 +17,8 @@ public class KeyMapper {
         }
 
         requireNonNull(e.getKid(), "kid");
-        requireNonNull(e.getServiceId(), "serviceId");
+        requireNonNull(e.getSignerServiceId(), "signerServiceId");
+        requireNonNull(e.getVerifierServiceId(), "verifierServiceId");
         requireNonNull(e.getPublicKey(), "publicKey");
         requireNonNull(e.getPrivateKeyEncrypted(), "privateKeyEncrypted");
         requireNonNull(e.getAlgorithm(), "algorithm");
@@ -29,7 +30,8 @@ public class KeyMapper {
 
         return new Key(
                 e.getKid(),
-                e.getServiceId(),
+                e.getSignerServiceId(),
+                e.getVerifierServiceId(),
                 e.getPublicKey(),
                 e.getPrivateKeyEncrypted(),
                 mapAlgorithm(e.getAlgorithm()),
@@ -54,7 +56,8 @@ public class KeyMapper {
         KeyEntity e = new KeyEntity();
 
         e.setKid(d.getKid());
-        e.setServiceId(d.getServiceId());
+        e.setSignerServiceId(d.getSignerServiceId());
+        e.setVerifierServiceId(d.getVerifierServiceId());
         e.setPublicKey(d.getPublicKey());
         e.setPrivateKeyEncrypted(d.getPrivateKeyEncrypted());
         e.setAlgorithm(d.getAlgorithm().name());

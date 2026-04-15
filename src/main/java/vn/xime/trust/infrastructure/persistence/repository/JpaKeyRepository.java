@@ -10,7 +10,14 @@ public interface JpaKeyRepository extends JpaRepository<KeyEntity, Long> {
 
     Optional<KeyEntity> findByKid(String kid);
 
-    List<KeyEntity> findByServiceId(String serviceId);
+    // 🔥 signing queries
+    List<KeyEntity> findBySignerServiceId(String signerServiceId);
 
-    List<KeyEntity> findByServiceIdAndIsDeletedFalse(String serviceId);
+    List<KeyEntity> findBySignerServiceIdAndIsDeletedFalse(String signerServiceId);
+
+    // 🔥 trust pair
+    List<KeyEntity> findBySignerServiceIdAndVerifierServiceId(
+            String signerServiceId,
+            String verifierServiceId
+    );
 }

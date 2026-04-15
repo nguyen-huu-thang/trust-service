@@ -11,7 +11,12 @@ public interface KeyRepository {
 
     Optional<Key> findByKid(String kid);
 
-    List<Key> findByServiceId(String serviceId);
+    // 🔥 dùng cho SIGNING (identity service)
+    List<Key> findBySignerServiceId(String signerServiceId);
 
-    List<Key> findActiveKeys(String serviceId); // Hơi nguy hiểm.
+    // 🔥 dùng cho SIGNING (lọc active)
+    List<Key> findActiveKeysBySigner(String signerServiceId);
+
+    // 🔥 dùng khi cần theo từng cặp trust
+    List<Key> findBySignerAndVerifier(String signerServiceId, String verifierServiceId);
 }

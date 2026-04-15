@@ -31,16 +31,27 @@ public class KeyRepositoryImpl implements KeyRepository {
     }
 
     @Override
-    public List<Key> findByServiceId(String serviceId) {
-        return repo.findByServiceId(serviceId)
+    public List<Key> findBySignerServiceId(String signerServiceId) {
+        return repo.findBySignerServiceId(signerServiceId)
                 .stream()
                 .map(KeyMapper::toDomain)
                 .toList();
     }
 
     @Override
-    public List<Key> findActiveKeys(String serviceId) {
-        return repo.findByServiceIdAndIsDeletedFalse(serviceId)
+    public List<Key> findActiveKeysBySigner(String signerServiceId) {
+        return repo.findBySignerServiceIdAndIsDeletedFalse(signerServiceId)
+                .stream()
+                .map(KeyMapper::toDomain)
+                .toList();
+    }
+
+    @Override
+    public List<Key> findBySignerAndVerifier(String signerServiceId, String verifierServiceId) {
+        return repo.findBySignerServiceIdAndVerifierServiceId(
+                        signerServiceId,
+                        verifierServiceId
+                )
                 .stream()
                 .map(KeyMapper::toDomain)
                 .toList();

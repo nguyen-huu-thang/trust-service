@@ -9,14 +9,27 @@ import java.time.Instant;
         name = "keys",
         uniqueConstraints = {
                 @UniqueConstraint(
-                        name = "uk_keys_service_activate",
-                        columnNames = {"service_id", "activate_at"}
+                        name = "uk_keys_pair_activate",
+                        columnNames = {"signer_service_id", "verifier_service_id", "activate_at"}
                 )
         },
         indexes = {
                 @Index(name = "idx_keys_kid", columnList = "kid"),
-                @Index(name = "idx_keys_service_active", columnList = "service_id,is_deleted,expires_at"),
-                @Index(name = "idx_keys_service_activate", columnList = "service_id,activate_at DESC")
+
+                @Index(
+                        name = "idx_keys_signer_active",
+                        columnList = "signer_service_id,is_deleted,expires_at"
+                ),
+
+                @Index(
+                        name = "idx_keys_signer_activate",
+                        columnList = "signer_service_id,activate_at DESC"
+                ),
+
+                @Index(
+                        name = "idx_keys_pair_active",
+                        columnList = "signer_service_id,verifier_service_id,expires_at"
+                )
         }
 )
 public class KeyEntity {
@@ -36,12 +49,21 @@ public class KeyEntity {
     @Column(name = "kid", nullable = false, unique = true, length = 100)
     private String kid;
 
+    // =========================
+    // Relationship (QUAN TRỌNG NHẤT)
+    // =========================
+
     /**
-     * Giữ dạng String (KHÔNG map ManyToOne)
-     * → đúng boundary microservice
+     * Service dùng để SIGN (identity service)
      */
-    @Column(name = "service_id", nullable = false, length = 100)
-    private String serviceId;
+    @Column(name = "signer_service_id", nullable = false, length = 100)
+    private String signerServiceId;
+
+    /**
+     * Service dùng để VERIFY
+     */
+    @Column(name = "verifier_service_id", nullable = false, length = 100)
+    private String verifierServiceId;
 
     // =========================
     // Key data
@@ -145,12 +167,20 @@ public class KeyEntity {
         this.kid = kid;
     }
 
-    public String getServiceId() {
-        return serviceId;
+    public String getSignerServiceId() {
+        return signerServiceId;
     }
 
-    public void setServiceId(String serviceId) {
-        this.serviceId = serviceId;
+    public void setSignerServiceId(String signerServiceId) {
+        this.signerServiceId = signerServiceId;
+    }
+
+    public String getVerifierServiceId() {
+        return verifierServiceId;
+    }
+
+    public void setVerifierServiceId(String verifierServiceId) {
+        this.verifierServiceId = verifierServiceId;
     }
 
     public String getPublicKey() {

@@ -6,7 +6,10 @@ import java.util.Objects;
 public class Key {
 
     private final String kid;
-    private final String serviceId;
+
+    // 🔥 relationship (QUAN TRỌNG NHẤT)
+    private final String signerServiceId;
+    private final String verifierServiceId;
 
     private final String publicKey;
     private final String privateKeyEncrypted;
@@ -22,7 +25,8 @@ public class Key {
 
     public Key(
             String kid,
-            String serviceId,
+            String signerServiceId,
+            String verifierServiceId,
             String publicKey,
             String privateKeyEncrypted,
             KeyAlgorithm algorithm,
@@ -37,7 +41,8 @@ public class Key {
         }
 
         this.kid = Objects.requireNonNull(kid);
-        this.serviceId = Objects.requireNonNull(serviceId);
+        this.signerServiceId = Objects.requireNonNull(signerServiceId);
+        this.verifierServiceId = Objects.requireNonNull(verifierServiceId);
         this.publicKey = Objects.requireNonNull(publicKey);
         this.privateKeyEncrypted = Objects.requireNonNull(privateKeyEncrypted);
         this.algorithm = Objects.requireNonNull(algorithm);
@@ -76,8 +81,12 @@ public class Key {
         return kid;
     }
 
-    public String getServiceId() {
-        return serviceId;
+    public String getSignerServiceId() {
+        return signerServiceId;
+    }
+
+    public String getVerifierServiceId() {
+        return verifierServiceId;
     }
 
     public String getPublicKey() {
@@ -112,18 +121,23 @@ public class Key {
         return deleted;
     }
 
+    // =========================
+    // STATE CHANGE
+    // =========================
+
     public Key markDeleted() {
-    return new Key(
-            kid,
-            serviceId,
-            publicKey,
-            privateKeyEncrypted,
-            algorithm,
-            keySize,
-            createdAt,
-            activateAt,
-            expiresAt,
-            true
+        return new Key(
+                kid,
+                signerServiceId,
+                verifierServiceId,
+                publicKey,
+                privateKeyEncrypted,
+                algorithm,
+                keySize,
+                createdAt,
+                activateAt,
+                expiresAt,
+                true
         );
     }
 }

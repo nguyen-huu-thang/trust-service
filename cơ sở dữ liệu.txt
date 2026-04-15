@@ -1,5 +1,5 @@
-==================================================
-TRUST SERVICE – DATABASE DESIGN (FINAL)
+=======================================
+TRUST SERVICE – DATABASE DESIGN (V2)
 =======================================
 
 ==================================================
@@ -17,20 +17,28 @@ status VARCHAR(20) NOT NULL
 
 created_at TIMESTAMP NOT NULL
 
+
 ==================================================
-SHARDS
-======
+SHARDS (RESTORED + IMPROVED)
+============================
 
 ## shards
 
-id VARCHAR(20) PRIMARY KEY       -- shard_id (ví dụ: A1B2C3)
+id VARCHAR(50) PRIMARY KEY        -- shard_id (unique instance, vd: user-1, user-2, A1B2C3)
 
-service_id VARCHAR(100) NOT NULL
+service_id VARCHAR(100) NOT NULL  -- thuộc service nào
 
+-- network
 host VARCHAR(100)
 port INT
 
-status VARCHAR(20) NOT NULL
+-- lifecycle
+status VARCHAR(20) NOT NULL       -- ACTIVE / INACTIVE / DRAINING / DEAD
+
+version VARCHAR(50)               -- version của service (vd: v1.2.3)
+
+started_at TIMESTAMP
+last_heartbeat TIMESTAMP
 
 created_at TIMESTAMP NOT NULL
 
@@ -42,9 +50,61 @@ REFERENCES services(id)
 CREATE INDEX idx_shards_service
 ON shards(service_id);
 
+CREATE INDEX idx_shards_status
+ON shards(status);
+
+CREATE INDEX idx_shards_heartbeat
+ON shards(last_heartbeat);
+
+
 ==================================================
-KEYS
-====
+SERVICE TRUSTS (REPLACE KEY_POLICIES)
+=====================================
+
+## service_trusts
+
+id BIGSERIAL PRIMARY KEY
+
+-- relationship
+signer_service_id VARCHAR(100) NOT NULL
+verifier_service_id VARCHAR(100) NOT NULL
+
+-- policy
+key_lifetime_seconds BIGINT NOT NULL
+jwt_ttl_seconds BIGINT NOT NULL
+preload_seconds BIGINT NOT NULL
+
+-- rotation control
+auto_rotate BOOLEAN DEFAULT TRUE
+last_rotated_at TIMESTAMP
+next_rotation_at TIMESTAMP
+
+-- audit
+created_at TIMESTAMP NOT NULL
+updated_at TIMESTAMP
+
+-- constraints
+FOREIGN KEY (signer_service_id)
+REFERENCES services(id)
+
+FOREIGN KEY (verifier_service_id)
+REFERENCES services(id)
+
+UNIQUE(signer_service_id, verifier_service_id)
+
+CHECK (signer_service_id != verifier_service_id)
+
+-- indexes
+CREATE INDEX idx_trusts_signer
+ON service_trusts(signer_service_id);
+
+CREATE INDEX idx_trusts_verifier
+ON service_trusts(verifier_service_id);
+
+
+==================================================
+KEYS (UPDATED - RELATIONSHIP BASED)
+==================================
 
 ## keys
 
@@ -52,7 +112,10 @@ id BIGSERIAL PRIMARY KEY
 
 -- identify
 kid VARCHAR(100) UNIQUE NOT NULL
-service_id VARCHAR(100) NOT NULL
+
+-- relationship
+signer_service_id VARCHAR(100) NOT NULL
+verifier_service_id VARCHAR(100) NOT NULL
 
 -- key data
 public_key TEXT NOT NULL
@@ -71,44 +134,29 @@ expires_at TIMESTAMP NOT NULL
 is_deleted BOOLEAN DEFAULT FALSE
 
 -- constraints
-FOREIGN KEY (service_id)
+FOREIGN KEY (signer_service_id)
+REFERENCES services(id)
+
+FOREIGN KEY (verifier_service_id)
 REFERENCES services(id)
 
 CHECK (expires_at > activate_at)
 
-UNIQUE(service_id, activate_at)
+UNIQUE(signer_service_id, verifier_service_id, activate_at)
 
 -- indexes
 CREATE INDEX idx_keys_kid
 ON keys(kid);
 
-CREATE INDEX idx_keys_service_active
-ON keys(service_id, is_deleted, expires_at);
+CREATE INDEX idx_keys_signer_active
+ON keys(signer_service_id, is_deleted, expires_at);
 
-CREATE INDEX idx_keys_service_activate
-ON keys(service_id, activate_at DESC);
+CREATE INDEX idx_keys_signer_activate
+ON keys(signer_service_id, activate_at DESC);
 
-==================================================
-KEY POLICIES
-============
+CREATE INDEX idx_keys_pair_active
+ON keys(signer_service_id, verifier_service_id, expires_at);
 
-## key_policies
-
-id BIGSERIAL PRIMARY KEY
-
-service_id VARCHAR(100) UNIQUE NOT NULL
-
-key_lifetime_seconds BIGINT NOT NULL
-jwt_ttl_seconds BIGINT NOT NULL
-
-preload_seconds BIGINT NOT NULL
-
-created_at TIMESTAMP
-updated_at TIMESTAMP
-
--- constraints
-FOREIGN KEY (service_id)
-REFERENCES services(id)
 
 ==================================================
 KEY ACCESS LOGS (AUDIT - NO FK)
@@ -119,7 +167,9 @@ KEY ACCESS LOGS (AUDIT - NO FK)
 id BIGSERIAL PRIMARY KEY
 
 kid VARCHAR(100)
-service_id VARCHAR(100)
+
+signer_service_id VARCHAR(100)
+verifier_service_id VARCHAR(100)
 
 action VARCHAR(50)
 
@@ -132,14 +182,13 @@ ip_address VARCHAR(50)
 success BOOLEAN
 error_message TEXT
 
--- NO FOREIGN KEY (audit table)
-
 -- indexes
-CREATE INDEX idx_key_access_logs_service_time
-ON key_access_logs(service_id, requested_at DESC);
+CREATE INDEX idx_key_access_logs_signer_time
+ON key_access_logs(signer_service_id, requested_at DESC);
 
 CREATE INDEX idx_key_access_logs_kid
 ON key_access_logs(kid);
+
 
 ==================================================
 KEY EVENTS (AUDIT - NO FK)
@@ -150,7 +199,9 @@ KEY EVENTS (AUDIT - NO FK)
 id BIGSERIAL PRIMARY KEY
 
 kid VARCHAR(100)
-service_id VARCHAR(100)
+
+signer_service_id VARCHAR(100)
+verifier_service_id VARCHAR(100)
 
 event_type VARCHAR(50)
 
@@ -158,14 +209,13 @@ created_at TIMESTAMP
 
 metadata JSONB
 
--- NO FOREIGN KEY (audit table)
-
 -- indexes
-CREATE INDEX idx_key_events_service_time
-ON key_events(service_id, created_at DESC);
+CREATE INDEX idx_key_events_signer_time
+ON key_events(signer_service_id, created_at DESC);
 
 CREATE INDEX idx_key_events_kid
 ON key_events(kid);
+
 
 ==================================================
 CERTIFICATES
@@ -177,7 +227,7 @@ id BIGSERIAL PRIMARY KEY
 
 service_id VARCHAR(100) NOT NULL
 
-kid VARCHAR(100) UNIQUE NOT NULL   -- certificate id
+kid VARCHAR(100) UNIQUE NOT NULL
 
 public_cert TEXT NOT NULL
 private_key_encrypted TEXT NOT NULL
@@ -202,6 +252,7 @@ ON certificates(kid);
 CREATE INDEX idx_cert_service_expire
 ON certificates(service_id, expires_at);
 
+
 ==================================================
 CERT REFRESH TOKENS
 ===================
@@ -214,7 +265,7 @@ service_id VARCHAR(100) NOT NULL
 
 token_hash TEXT NOT NULL
 
-bound_kid VARCHAR(100) NOT NULL   -- reference certificates.kid
+bound_kid VARCHAR(100) NOT NULL
 
 issued_at TIMESTAMP NOT NULL
 expires_at TIMESTAMP NOT NULL
@@ -241,6 +292,7 @@ ON cert_refresh_tokens(service_id, used_at);
 CREATE INDEX idx_refresh_bound_kid
 ON cert_refresh_tokens(bound_kid);
 
+
 ==================================================
 CERT EVENTS (AUDIT - NO FK)
 ===========================
@@ -258,14 +310,13 @@ created_at TIMESTAMP
 
 metadata JSONB
 
--- NO FOREIGN KEY (audit table)
-
 -- indexes
 CREATE INDEX idx_cert_events_service_time
 ON cert_events(service_id, created_at DESC);
 
 CREATE INDEX idx_cert_events_kid
 ON cert_events(kid);
+
 
 ==================================================
 END
