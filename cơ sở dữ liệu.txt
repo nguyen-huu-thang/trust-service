@@ -1,10 +1,14 @@
 ==================================================
-SERVICES TABLE
-==================================================
+TRUST SERVICE – DATABASE DESIGN (FINAL)
+=======================================
 
-services
---------
-id VARCHAR(100) PRIMARY KEY
+==================================================
+SERVICES
+========
+
+## services
+
+id VARCHAR(100) PRIMARY KEY   -- service_id (global identity của service)
 
 name VARCHAR(100) NOT NULL
 tenant VARCHAR(100)
@@ -13,13 +17,37 @@ status VARCHAR(20) NOT NULL
 
 created_at TIMESTAMP NOT NULL
 
+==================================================
+SHARDS
+======
+
+## shards
+
+id VARCHAR(20) PRIMARY KEY       -- shard_id (ví dụ: A1B2C3)
+
+service_id VARCHAR(100) NOT NULL
+
+host VARCHAR(100)
+port INT
+
+status VARCHAR(20) NOT NULL
+
+created_at TIMESTAMP NOT NULL
+
+-- constraints
+FOREIGN KEY (service_id)
+REFERENCES services(id)
+
+-- indexes
+CREATE INDEX idx_shards_service
+ON shards(service_id);
 
 ==================================================
-KEYS TABLE
-==================================================
+KEYS
+====
 
-keys
-----
+## keys
+
 id BIGSERIAL PRIMARY KEY
 
 -- identify
@@ -50,7 +78,6 @@ CHECK (expires_at > activate_at)
 
 UNIQUE(service_id, activate_at)
 
-
 -- indexes
 CREATE INDEX idx_keys_kid
 ON keys(kid);
@@ -61,13 +88,34 @@ ON keys(service_id, is_deleted, expires_at);
 CREATE INDEX idx_keys_service_activate
 ON keys(service_id, activate_at DESC);
 
+==================================================
+KEY POLICIES
+============
+
+## key_policies
+
+id BIGSERIAL PRIMARY KEY
+
+service_id VARCHAR(100) UNIQUE NOT NULL
+
+key_lifetime_seconds BIGINT NOT NULL
+jwt_ttl_seconds BIGINT NOT NULL
+
+preload_seconds BIGINT NOT NULL
+
+created_at TIMESTAMP
+updated_at TIMESTAMP
+
+-- constraints
+FOREIGN KEY (service_id)
+REFERENCES services(id)
 
 ==================================================
-KEY ACCESS LOGS
-==================================================
+KEY ACCESS LOGS (AUDIT - NO FK)
+===============================
 
-key_access_logs
----------------
+## key_access_logs
+
 id BIGSERIAL PRIMARY KEY
 
 kid VARCHAR(100)
@@ -84,50 +132,21 @@ ip_address VARCHAR(50)
 success BOOLEAN
 error_message TEXT
 
-
--- constraints
-FOREIGN KEY (kid)
-REFERENCES keys(kid)
-
-FOREIGN KEY (service_id)
-REFERENCES services(id)
-
+-- NO FOREIGN KEY (audit table)
 
 -- indexes
 CREATE INDEX idx_key_access_logs_service_time
 ON key_access_logs(service_id, requested_at DESC);
 
+CREATE INDEX idx_key_access_logs_kid
+ON key_access_logs(kid);
 
 ==================================================
-KEY POLICIES
-==================================================
+KEY EVENTS (AUDIT - NO FK)
+==========================
 
-key_policies
-------------
-id BIGSERIAL PRIMARY KEY
+## key_events
 
-service_id VARCHAR(100) UNIQUE NOT NULL
-
-key_lifetime_seconds BIGINT NOT NULL
-jwt_ttl_seconds BIGINT NOT NULL
-
-preload_seconds BIGINT NOT NULL
-
-created_at TIMESTAMP
-updated_at TIMESTAMP
-
-
--- constraints
-FOREIGN KEY (service_id)
-REFERENCES services(id)
-
-
-==================================================
-KEY EVENTS
-==================================================
-
-key_events
-----------
 id BIGSERIAL PRIMARY KEY
 
 kid VARCHAR(100)
@@ -139,31 +158,26 @@ created_at TIMESTAMP
 
 metadata JSONB
 
-
--- constraints
-FOREIGN KEY (kid)
-REFERENCES keys(kid)
-
-FOREIGN KEY (service_id)
-REFERENCES services(id)
-
+-- NO FOREIGN KEY (audit table)
 
 -- indexes
 CREATE INDEX idx_key_events_service_time
 ON key_events(service_id, created_at DESC);
 
+CREATE INDEX idx_key_events_kid
+ON key_events(kid);
 
 ==================================================
-CERTIFICATES TABLE
-==================================================
+CERTIFICATES
+============
 
-certificates
-------------
+## certificates
+
 id BIGSERIAL PRIMARY KEY
 
 service_id VARCHAR(100) NOT NULL
 
-kid VARCHAR(100) UNIQUE NOT NULL
+kid VARCHAR(100) UNIQUE NOT NULL   -- certificate id
 
 public_cert TEXT NOT NULL
 private_key_encrypted TEXT NOT NULL
@@ -173,7 +187,6 @@ expires_at TIMESTAMP NOT NULL
 
 status VARCHAR(20) NOT NULL
 
-
 -- constraints
 FOREIGN KEY (service_id)
 REFERENCES services(id)
@@ -182,7 +195,6 @@ CHECK (expires_at > issued_at)
 
 UNIQUE(service_id, issued_at)
 
-
 -- indexes
 CREATE INDEX idx_cert_kid
 ON certificates(kid);
@@ -190,27 +202,25 @@ ON certificates(kid);
 CREATE INDEX idx_cert_service_expire
 ON certificates(service_id, expires_at);
 
-
 ==================================================
 CERT REFRESH TOKENS
-==================================================
+===================
 
-cert_refresh_tokens
--------------------
+## cert_refresh_tokens
+
 id BIGSERIAL PRIMARY KEY
 
 service_id VARCHAR(100) NOT NULL
 
 token_hash TEXT NOT NULL
 
-bound_kid VARCHAR(100) NOT NULL
+bound_kid VARCHAR(100) NOT NULL   -- reference certificates.kid
 
 issued_at TIMESTAMP NOT NULL
 expires_at TIMESTAMP NOT NULL
 used_at TIMESTAMP
 
 issued_by VARCHAR(100)
-
 
 -- constraints
 FOREIGN KEY (service_id)
@@ -221,7 +231,6 @@ REFERENCES certificates(kid)
 
 UNIQUE(token_hash)
 
-
 -- indexes
 CREATE INDEX idx_refresh_token_hash
 ON cert_refresh_tokens(token_hash);
@@ -229,13 +238,15 @@ ON cert_refresh_tokens(token_hash);
 CREATE INDEX idx_refresh_service_used
 ON cert_refresh_tokens(service_id, used_at);
 
+CREATE INDEX idx_refresh_bound_kid
+ON cert_refresh_tokens(bound_kid);
 
 ==================================================
-CERT EVENTS
-==================================================
+CERT EVENTS (AUDIT - NO FK)
+===========================
 
-cert_events
------------
+## cert_events
+
 id BIGSERIAL PRIMARY KEY
 
 service_id VARCHAR(100)
@@ -247,15 +258,15 @@ created_at TIMESTAMP
 
 metadata JSONB
 
-
--- constraints
-FOREIGN KEY (service_id)
-REFERENCES services(id)
-
-FOREIGN KEY (kid)
-REFERENCES certificates(kid)
-
+-- NO FOREIGN KEY (audit table)
 
 -- indexes
 CREATE INDEX idx_cert_events_service_time
 ON cert_events(service_id, created_at DESC);
+
+CREATE INDEX idx_cert_events_kid
+ON cert_events(kid);
+
+==================================================
+END
+===
