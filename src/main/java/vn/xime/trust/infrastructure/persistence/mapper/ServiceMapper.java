@@ -1,6 +1,6 @@
 package vn.xime.trust.infrastructure.persistence.mapper;
 
-import vn.xime.trust.domain.model.Service;
+import vn.xime.trust.domain.model.PlatformService;
 import vn.xime.trust.domain.model.ServiceStatus;
 import vn.xime.trust.infrastructure.persistence.entity.ServiceEntity;
 
@@ -10,7 +10,7 @@ public class ServiceMapper {
     // Entity -> Domain
     // =========================
 
-    public static Service toDomain(ServiceEntity e) {
+    public static PlatformService toDomain(ServiceEntity e) {
 
         if (e == null) {
             throw new IllegalArgumentException("ServiceEntity must not be null");
@@ -32,7 +32,7 @@ public class ServiceMapper {
             throw new IllegalStateException("Service createdAt must not be null");
         }
 
-        return new Service(
+        return new PlatformService(
                 e.getId(),
                 e.getName(),
                 e.getTenant(),
@@ -45,10 +45,10 @@ public class ServiceMapper {
     // Domain -> Entity
     // =========================
 
-    public static ServiceEntity toEntity(Service d) {
+    public static ServiceEntity toEntity(PlatformService d) {
 
         if (d == null) {
-            throw new IllegalArgumentException("Service must not be null");
+            throw new IllegalArgumentException("PlatformService must not be null");
         }
 
         ServiceEntity e = new ServiceEntity();

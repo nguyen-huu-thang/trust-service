@@ -1,4 +1,4 @@
-package vn.xime.trust.application.usecase;
+package vn.xime.trust.application.usecase.key;
 
 import vn.xime.trust.application.dto.request.GetKeysRequestDto;
 import vn.xime.trust.application.dto.response.GetKeysResponseDto;
@@ -24,43 +24,43 @@ public class GetKeyUseCase {
         this.encryptionService = encryptionService;
     }
 
-    public GetKeysResponseDto getKeys(GetKeysRequestDto request) {
+    public void getKeys(GetKeysRequestDto request) {
 
-        Instant now = Instant.now();
+        // Instant now = Instant.now();
 
-        // 1. Load keys
-        List<Key> keys = keyRepository.findByServiceId(request.getService())
-                .stream()
-                .filter(k -> !k.isDeleted())
-                .toList();
+        // // 1. Load keys
+        // List<Key> keys = keyRepository.findByServiceId(request.getService())
+        //         .stream()
+        //         .filter(k -> !k.isDeleted())
+        //         .toList();
 
-        // =========================
-        // PRIVATE KEY (Identity only)
-        // =========================
-        if (request.isIncludePrivate()) {
+        // // =========================
+        // // PRIVATE KEY (Identity only)
+        // // =========================
+        // if (request.isIncludePrivate()) {
 
-            // ⚠️ SECURITY CHECK (bắt buộc)
-        //     if (!request.isInternalCall()) {
-        //         throw new SecurityException("Private key access denied");
-        //     }
+        //     // ⚠️ SECURITY CHECK (bắt buộc)
+        // //     if (!request.isInternalCall()) {
+        // //         throw new SecurityException("Private key access denied");
+        // //     }
 
-            List<PrivateKeyDto> privateKeys = keys.stream()
-                    .filter(k -> !k.isExpiredAt(now)) // chỉ key còn valid
-                    .map(this::toPrivateDto)
-                    .toList();
+        //     List<PrivateKeyDto> privateKeys = keys.stream()
+        //             .filter(k -> !k.isExpiredAt(now)) // chỉ key còn valid
+        //             .map(this::toPrivateDto)
+        //             .toList();
 
-            return new GetKeysResponseDto(null, privateKeys);
-        }
+        //     return new GetKeysResponseDto(null, privateKeys);
+        // }
 
-        // =========================
-        // PUBLIC KEY (Verify services)
-        // =========================
-        List<PublicKeyDto> publicKeys = keys.stream()
-                .filter(k -> !k.isExpiredAt(now)) // chỉ key còn verify được
-                .map(this::toPublicDto)
-                .toList();
+        // // =========================
+        // // PUBLIC KEY (Verify services)
+        // // =========================
+        // List<PublicKeyDto> publicKeys = keys.stream()
+        //         .filter(k -> !k.isExpiredAt(now)) // chỉ key còn verify được
+        //         .map(this::toPublicDto)
+        //         .toList();
 
-        return new GetKeysResponseDto(publicKeys, null);
+        // return new GetKeysResponseDto(publicKeys, null);
     }
 
     // =========================

@@ -7,7 +7,7 @@ import vn.xime.trust.application.dto.request.GetKeysRequestDto;
 import vn.xime.trust.application.dto.response.GetKeysResponseDto;
 import vn.xime.trust.application.dto.response.PrivateKeyDto;
 import vn.xime.trust.application.dto.response.PublicKeyDto;
-import vn.xime.trust.application.usecase.GetKeyUseCase;
+import vn.xime.trust.application.usecase.key.GetKeyUseCase;
 
 import java.util.List;
 

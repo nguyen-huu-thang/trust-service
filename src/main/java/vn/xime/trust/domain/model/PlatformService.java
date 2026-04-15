@@ -3,7 +3,7 @@ package vn.xime.trust.domain.model;
 import java.time.Instant;
 import java.util.Objects;
 
-public class Service {
+public class PlatformService {
 
     private final String id;
     private final String name;
@@ -12,7 +12,7 @@ public class Service {
 
     private final Instant createdAt;
 
-    public Service(
+    public PlatformService(
             String id,
             String name,
             String tenant,
