@@ -1,16 +1,17 @@
 package vn.xime.trust.application.usecase.service;
 
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 import vn.xime.trust.application.dto.request.GetServicesQuery;
 import vn.xime.trust.application.dto.response.ServiceDto;
 import vn.xime.trust.domain.repository.ServiceRepository;
-import vn.xime.trust.domain.model.PlatformService;
+import vn.xime.trust.domain.model.Service;
 
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-@Service
+
+@Component
 public class GetServicesUseCase {
 
     private final ServiceRepository serviceRepository;
@@ -25,7 +26,7 @@ public class GetServicesUseCase {
 
     public List<ServiceDto> execute(GetServicesQuery query) {
 
-        List<PlatformService> services =
+        List<Service> services =
                 serviceRepository.findAll();
 
         if (services == null || services.isEmpty()) {
@@ -68,7 +69,7 @@ public class GetServicesUseCase {
     // MAPPER
     // =========================
 
-    private ServiceDto toDto(PlatformService s) {
+    private ServiceDto toDto(Service s) {
         return new ServiceDto(
                 s.getId(),
                 s.getName(),

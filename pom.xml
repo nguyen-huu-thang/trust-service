@@ -21,7 +21,7 @@
     <!-- ========================= -->
 
     <groupId>vn.xime</groupId>
-    <artifactId>key-service</artifactId>
+    <artifactId>trust-service</artifactId>
     <version>0.0.1-SNAPSHOT</version>
     <name>key-service</name>
     <description>Key Management Service</description>

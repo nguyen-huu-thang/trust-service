@@ -6,19 +6,19 @@ import java.time.Instant;
 
 @Entity
 @Table(
-        name = "service_trusts",
+        name = "key_policies",
         uniqueConstraints = {
                 @UniqueConstraint(
-                        name = "uk_service_trusts_pair",
+                        name = "uk_key_policies_pair",
                         columnNames = {"signer_service_id", "verifier_service_id"}
                 )
         },
         indexes = {
-                @Index(name = "idx_trusts_signer", columnList = "signer_service_id"),
-                @Index(name = "idx_trusts_verifier", columnList = "verifier_service_id")
+                @Index(name = "idx_key_policies_signer", columnList = "signer_service_id"),
+                @Index(name = "idx_key_policies_verifier", columnList = "verifier_service_id")
         }
 )
-public class ServiceTrustEntity {
+public class KeyPolicyEntity {
 
     // =========================
     // ID
@@ -65,25 +65,6 @@ public class ServiceTrustEntity {
      */
     @Column(name = "preload_seconds", nullable = false)
     private Long preloadSeconds;
-
-    // =========================
-    // ROTATION CONTROL
-    // =========================
-
-    @Column(name = "auto_rotate", nullable = false)
-    private Boolean autoRotate = true;
-
-    @Column(
-            name = "last_rotated_at",
-            columnDefinition = "TIMESTAMP WITH TIME ZONE"
-    )
-    private Instant lastRotatedAt;
-
-    @Column(
-            name = "next_rotation_at",
-            columnDefinition = "TIMESTAMP WITH TIME ZONE"
-    )
-    private Instant nextRotationAt;
 
     // =========================
     // AUDIT
@@ -148,30 +129,6 @@ public class ServiceTrustEntity {
 
     public void setPreloadSeconds(Long preloadSeconds) {
         this.preloadSeconds = preloadSeconds;
-    }
-
-    public Boolean getAutoRotate() {
-        return autoRotate;
-    }
-
-    public void setAutoRotate(Boolean autoRotate) {
-        this.autoRotate = autoRotate;
-    }
-
-    public Instant getLastRotatedAt() {
-        return lastRotatedAt;
-    }
-
-    public void setLastRotatedAt(Instant lastRotatedAt) {
-        this.lastRotatedAt = lastRotatedAt;
-    }
-
-    public Instant getNextRotationAt() {
-        return nextRotationAt;
-    }
-
-    public void setNextRotationAt(Instant nextRotationAt) {
-        this.nextRotationAt = nextRotationAt;
     }
 
     public Instant getCreatedAt() {

@@ -1,117 +1,130 @@
 package vn.xime.trust.application.usecase.key;
 
-import vn.xime.trust.application.port.out.KeyEncryptionService;
-import vn.xime.trust.application.port.out.KeyGenerator;
+import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
+import vn.xime.trust.application.dto.request.GenerateKeyCommand;
+import vn.xime.trust.application.port.out.*;
+import vn.xime.trust.domain.factory.KeyFactory;
 import vn.xime.trust.domain.model.Key;
 import vn.xime.trust.domain.model.KeyAlgorithm;
+import vn.xime.trust.domain.model.ServiceTrust;
 import vn.xime.trust.domain.repository.KeyRepository;
+import vn.xime.trust.domain.repository.ServiceRepository;
+import vn.xime.trust.domain.repository.ServiceTrustRepository;
+import vn.xime.trust.domain.service.KeyPolicyDomainService;
 
-import java.security.KeyPair;
-import java.time.Duration;
 import java.time.Instant;
-import java.util.Comparator;
-import java.util.List;
-import java.util.UUID;
 
+@Component
 public class GenerateKeyUseCase {
 
-    private static final int KEY_SIZE = 2048;
-
-    private static final Duration KEY_ACTIVATION_DELAY = Duration.ofMinutes(5);
-    private static final Duration JWT_TTL = Duration.ofHours(1);
-
     private final KeyRepository keyRepository;
+    private final ServiceRepository serviceRepository;
+    private final ServiceTrustRepository trustRepository;
+
     private final KeyGenerator keyGenerator;
     private final KeyEncryptionService encryptionService;
+    private final IdGenerator idGenerator;
+
+    private final KeyFactory keyFactory;
+    private final KeyPolicyDomainService policyService;
+    private final Clock clock;
 
     public GenerateKeyUseCase(
             KeyRepository keyRepository,
+            ServiceRepository serviceRepository,
+            ServiceTrustRepository trustRepository,
             KeyGenerator keyGenerator,
-            KeyEncryptionService encryptionService
+            KeyEncryptionService encryptionService,
+            IdGenerator idGenerator,
+            KeyFactory keyFactory,
+            KeyPolicyDomainService policyService,
+            Clock clock
     ) {
         this.keyRepository = keyRepository;
+        this.serviceRepository = serviceRepository;
+        this.trustRepository = trustRepository;
         this.keyGenerator = keyGenerator;
         this.encryptionService = encryptionService;
+        this.idGenerator = idGenerator;
+        this.keyFactory = keyFactory;
+        this.policyService = policyService;
+        this.clock = clock;
     }
 
-    public void execute(String serviceId) {
+    @Transactional
+    public String execute(GenerateKeyCommand cmd) {
 
-        // Instant now = Instant.now();
+        Instant now = clock.now();
 
-        // // 1. Load keys
-        // List<Key> keys = keyRepository.findByServiceId(serviceId);
+        // =========================
+        // VALIDATE
+        // =========================
 
-        // // 2. Find latest (max activateAt)
-        // Key latestKey = keys.stream()
-        //         .filter(k -> !k.isDeleted())
-        //         .max(Comparator.comparing(Key::getActivateAt))
-        //         .orElse(null);
+        if (!serviceRepository.existsById(cmd.getSignerServiceId())) {
+            throw new IllegalStateException("Signer service not found");
+        }
 
-        // // 3. Generate keypair
-        // KeyPair keyPair = keyGenerator.generate(KEY_SIZE);
+        if (!serviceRepository.existsById(cmd.getVerifierServiceId())) {
+            throw new IllegalStateException("Verifier service not found");
+        }
 
-        // String publicKey = encodePublicKey(keyPair);
-        // String privateKeyRaw = encodePrivateKey(keyPair);
+        ServiceTrust trust = trustRepository
+                .findBySignerAndVerifier(
+                        cmd.getSignerServiceId(),
+                        cmd.getVerifierServiceId()
+                )
+                .orElseThrow(() -> new IllegalStateException("Trust not found"));
 
-        // String privateKeyEncrypted = encryptionService.encrypt(privateKeyRaw);
+        // =========================
+        // GENERATE KEY
+        // =========================
 
-        // // 4. Decide activateAt
-        // Instant activateAt = (latestKey == null)
-        //         ? now
-        //         : latestKey.getActivateAt().plus(KEY_ACTIVATION_DELAY);
+        var pair = keyGenerator.generate(
+                cmd.getAlgorithm(),
+                cmd.getKeySize()
+        );
 
-        // // 5. Create new key
-        // Key newKey = new Key(
-        //         generateKid(serviceId),
-        //         serviceId,
-        //         publicKey,
-        //         privateKeyEncrypted,
-        //         KeyAlgorithm.RSA,
-        //         KEY_SIZE,
-        //         now,
-        //         activateAt,
-        //         null,
-        //         false
-        // );
+        String encryptedPrivateKey =
+                encryptionService.encrypt(pair.getPrivateKey());
 
-        // // 6. Update old key expiresAt
-        // if (latestKey != null) {
+        String kid = idGenerator.generateKid();
 
-        //     Instant expiresAt = activateAt.plus(JWT_TTL);
+        // =========================
+        // TIME CALCULATION
+        // =========================
 
-        //     Key updatedOldKey = new Key(
-        //             latestKey.getKid(),
-        //             latestKey.getServiceId(),
-        //             latestKey.getPublicKey(),
-        //             latestKey.getPrivateKeyEncrypted(),
-        //             latestKey.getAlgorithm(),
-        //             latestKey.getKeySize(),
-        //             latestKey.getCreatedAt(),
-        //             latestKey.getActivateAt(),
-        //             expiresAt,
-        //             latestKey.isDeleted()
-        //     );
+        Instant activateAt =
+                cmd.getActivateAt() != null ? cmd.getActivateAt() : now;
 
-        //     keyRepository.save(updatedOldKey);
-        // }
+        Instant expiresAt = policyService.calculateExpiresAt(
+                activateAt,
+                trust.getKeyLifetimeSec()
+        );
 
-        // // 7. Save new key
-        // keyRepository.save(newKey);
+        // =========================
+        // BUILD DOMAIN
+        // =========================
 
-        // return newKey;
-    }
+        Key key = keyFactory.create(
+                kid,
+                cmd.getSignerServiceId(),
+                cmd.getVerifierServiceId(),
+                pair.getPublicKey(),
+                encryptedPrivateKey,
+                KeyAlgorithm.valueOf(cmd.getAlgorithm()),
+                cmd.getKeySize(),
+                now,
+                activateAt,
+                expiresAt
+        );
 
-    private String generateKid(String serviceId) {
-        return serviceId + "-" + UUID.randomUUID();
-    }
+        // =========================
+        // SAVE
+        // =========================
 
-    private String encodePublicKey(KeyPair keyPair) {
-        return java.util.Base64.getEncoder()
-                .encodeToString(keyPair.getPublic().getEncoded());
-    }
+        keyRepository.save(key);
 
-    private String encodePrivateKey(KeyPair keyPair) {
-        return java.util.Base64.getEncoder()
-                .encodeToString(keyPair.getPrivate().getEncoded());
+        return kid;
     }
 }

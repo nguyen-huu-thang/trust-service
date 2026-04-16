@@ -58,10 +58,10 @@ ON shards(last_heartbeat);
 
 
 ==================================================
-SERVICE TRUSTS (REPLACE KEY_POLICIES)
+KEY_POLICIES
 =====================================
 
-## service_trusts
+## key_policies
 
 id BIGSERIAL PRIMARY KEY
 

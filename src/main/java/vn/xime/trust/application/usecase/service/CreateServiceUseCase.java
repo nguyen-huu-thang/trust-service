@@ -1,28 +1,24 @@
 package vn.xime.trust.application.usecase.service;
 
-import org.springframework.stereotype.Service;
+import org.springframework.stereotype.Component;
 import vn.xime.trust.application.dto.request.CreateServiceCommand;
-import vn.xime.trust.application.port.out.Clock;
 import vn.xime.trust.domain.factory.ServiceFactory;
-import vn.xime.trust.domain.model.PlatformService;
-import vn.xime.trust.domain.model.ServiceStatus;
+import vn.xime.trust.domain.model.Service;
 import vn.xime.trust.domain.repository.ServiceRepository;
 
-@Service
+
+@Component
 public class CreateServiceUseCase {
 
     private final ServiceRepository serviceRepository;
     private final ServiceFactory serviceFactory;
-    private final Clock clock;
 
     public CreateServiceUseCase(
             ServiceRepository serviceRepository,
-            ServiceFactory serviceFactory,
-            Clock clock
+            ServiceFactory serviceFactory
     ) {
         this.serviceRepository = serviceRepository;
         this.serviceFactory = serviceFactory;
-        this.clock = clock;
     }
 
     public void execute(CreateServiceCommand cmd) {
@@ -49,12 +45,10 @@ public class CreateServiceUseCase {
         // BUILD DOMAIN
         // =========================
 
-        PlatformService service = serviceFactory.create(
+        Service service = serviceFactory.create(
                 cmd.getId(),
                 cmd.getName(),
-                cmd.getTenant(),
-                ServiceStatus.ACTIVE,
-                clock.now()
+                cmd.getTenant()
         );
 
         // =========================

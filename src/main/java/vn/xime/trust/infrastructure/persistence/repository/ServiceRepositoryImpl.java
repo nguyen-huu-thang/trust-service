@@ -1,7 +1,7 @@
 package vn.xime.trust.infrastructure.persistence.repository;
 
 import org.springframework.stereotype.Repository;
-import vn.xime.trust.domain.model.PlatformService;
+import vn.xime.trust.domain.model.Service;
 import vn.xime.trust.domain.repository.ServiceRepository;
 import vn.xime.trust.infrastructure.persistence.mapper.ServiceMapper;
 
@@ -17,14 +17,14 @@ public class ServiceRepositoryImpl implements ServiceRepository {
     }
 
     @Override
-    public PlatformService save(PlatformService service) {
+    public Service save(Service service) {
         var entity = ServiceMapper.toEntity(service);
         var saved = repo.save(entity);
         return ServiceMapper.toDomain(saved);
     }
 
     @Override
-    public Optional<PlatformService> findById(String id) {
+    public Optional<Service> findById(String id) {
         return repo.findById(id)
                 .map(ServiceMapper::toDomain);
     }
@@ -35,7 +35,7 @@ public class ServiceRepositoryImpl implements ServiceRepository {
     }
 
     @Override
-    public java.util.List<PlatformService> findAll() {
+    public java.util.List<Service> findAll() {
         return repo.findAll().stream()
                 .map(ServiceMapper::toDomain)
                 .toList();

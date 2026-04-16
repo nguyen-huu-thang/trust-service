@@ -77,4 +77,15 @@ public class Shard {
     public Instant getCreatedAt() {
         return createdAt;
     }
+
+    public Shard changeStatus(ShardStatus newStatus) {
+        return new Shard(
+                id,
+                serviceId,
+                host,
+                port,
+                newStatus,
+                createdAt
+        );
+    }
 }

@@ -3,7 +3,7 @@ package vn.xime.trust.domain.model;
 import java.time.Instant;
 import java.util.Objects;
 
-public class ServiceTrust {
+public class KeyPolicy {
 
     private final String signerServiceId;
     private final String verifierServiceId;
@@ -12,23 +12,15 @@ public class ServiceTrust {
     private final long jwtTtlSeconds;
     private final long preloadSeconds;
 
-    private final boolean autoRotate;
-
-    private final Instant lastRotatedAt;
-    private final Instant nextRotationAt;
-
     private final Instant createdAt;
     private final Instant updatedAt;
 
-    public ServiceTrust(
+    public KeyPolicy(
             String signerServiceId,
             String verifierServiceId,
             long keyLifetimeSeconds,
             long jwtTtlSeconds,
             long preloadSeconds,
-            boolean autoRotate,
-            Instant lastRotatedAt,
-            Instant nextRotationAt,
             Instant createdAt,
             Instant updatedAt
     ) {
@@ -42,11 +34,6 @@ public class ServiceTrust {
         this.keyLifetimeSeconds = keyLifetimeSeconds;
         this.jwtTtlSeconds = jwtTtlSeconds;
         this.preloadSeconds = preloadSeconds;
-
-        this.autoRotate = autoRotate;
-
-        this.lastRotatedAt = lastRotatedAt;
-        this.nextRotationAt = nextRotationAt;
 
         this.createdAt = Objects.requireNonNull(createdAt);
         this.updatedAt = updatedAt;
@@ -74,18 +61,6 @@ public class ServiceTrust {
 
     public long getPreloadSeconds() {
         return preloadSeconds;
-    }
-
-    public boolean isAutoRotate() {
-        return autoRotate;
-    }
-
-    public Instant getLastRotatedAt() {
-        return lastRotatedAt;
-    }
-
-    public Instant getNextRotationAt() {
-        return nextRotationAt;
     }
 
     public Instant getCreatedAt() {

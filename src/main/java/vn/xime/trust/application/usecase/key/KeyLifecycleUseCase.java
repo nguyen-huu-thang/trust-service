@@ -20,55 +20,55 @@ public class KeyLifecycleUseCase {
         this.lifecycle = lifecycle;
     }
 
-    // // =========================
-    // // LOAD KEYS
-    // // =========================
+    // =========================
+    // LOAD KEYS
+    // =========================
 
-    // public List<Key> loadKeys(String serviceId) {
-    //     List<Key> keys = keyRepository.findByServiceId(serviceId);
-    //     return lifecycle.filterNotDeleted(keys);
-    // }
+    public List<Key> loadKeys(String serviceId) {
+        List<Key> keys = keyRepository.findByServiceId(serviceId);
+        return lifecycle.filterNotDeleted(keys);
+    }
 
-    // // =========================
-    // // SIGN
-    // // =========================
+    // =========================
+    // SIGN
+    // =========================
 
-    // public Key getKeyForSign(String serviceId, Instant now) {
-    //     List<Key> keys = loadKeys(serviceId);
-    //     return lifecycle.getKeyForSign(keys, now);
-    // }
+    public Key getKeyForSign(String serviceId, Instant now) {
+        List<Key> keys = loadKeys(serviceId);
+        return lifecycle.getKeyForSign(keys, now);
+    }
 
-    // // =========================
-    // // VERIFY
-    // // =========================
+    // =========================
+    // VERIFY
+    // =========================
 
-    // public List<Key> getKeysForVerify(String serviceId, Instant now) {
-    //     List<Key> keys = loadKeys(serviceId);
-    //     return lifecycle.getKeysForVerify(keys, now);
-    // }
+    public List<Key> getKeysForVerify(String serviceId, Instant now) {
+        List<Key> keys = loadKeys(serviceId);
+        return lifecycle.getKeysForVerify(keys, now);
+    }
 
-    // // =========================
-    // // NEXT
-    // // =========================
+    // =========================
+    // NEXT
+    // =========================
 
-    // public Key getNextKey(String serviceId, Instant now) {
-    //     List<Key> keys = loadKeys(serviceId);
-    //     return lifecycle.getNextKey(keys, now);
-    // }
+    public Key getNextKey(String serviceId, Instant now) {
+        List<Key> keys = loadKeys(serviceId);
+        return lifecycle.getNextKey(keys, now);
+    }
 
-    // // =========================
-    // // CLEANUP
-    // // =========================
+    // =========================
+    // CLEANUP
+    // =========================
 
-    // public void cleanupExpiredKeys(String serviceId, Instant now) {
-    //     List<Key> keys = keyRepository.findByServiceId(serviceId);
+    public void cleanupExpiredKeys(String serviceId, Instant now) {
+        List<Key> keys = keyRepository.findByServiceId(serviceId);
 
-    //     keys.stream()
-    //             .filter(k -> !k.isDeleted())
-    //             .filter(k -> lifecycle.shouldBeDeleted(k, now))
-    //             .forEach(k -> {
-    //                 Key deleted = k.markDeleted();
-    //                 keyRepository.save(deleted);
-    //             });
-    // }
+        keys.stream()
+                .filter(k -> !k.isDeleted())
+                .filter(k -> lifecycle.shouldBeDeleted(k, now))
+                .forEach(k -> {
+                    Key deleted = k.markDeleted();
+                    keyRepository.save(deleted);
+                });
+    }
 }

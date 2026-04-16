@@ -1,18 +1,18 @@
 package vn.xime.trust.infrastructure.persistence.mapper;
 
-import vn.xime.trust.domain.model.ServiceTrust;
-import vn.xime.trust.infrastructure.persistence.entity.ServiceTrustEntity;
+import vn.xime.trust.domain.model.KeyPolicy;
+import vn.xime.trust.infrastructure.persistence.entity.KeyPolicyEntity;
 
-public class ServiceTrustMapper {
+public class KeyPolicyMapper {
 
     // =========================
     // Entity -> Domain
     // =========================
 
-    public static ServiceTrust toDomain(ServiceTrustEntity e) {
+    public static KeyPolicy toDomain(KeyPolicyEntity e) {
 
         if (e == null) {
-            throw new IllegalArgumentException("ServiceTrustEntity must not be null");
+            throw new IllegalArgumentException("KeyPolicyEntity must not be null");
         }
 
         requireNonNull(e.getSignerServiceId(), "signerServiceId");
@@ -20,18 +20,14 @@ public class ServiceTrustMapper {
         requireNonNull(e.getKeyLifetimeSeconds(), "keyLifetimeSeconds");
         requireNonNull(e.getJwtTtlSeconds(), "jwtTtlSeconds");
         requireNonNull(e.getPreloadSeconds(), "preloadSeconds");
-        requireNonNull(e.getAutoRotate(), "autoRotate");
         requireNonNull(e.getCreatedAt(), "createdAt");
 
-        return new ServiceTrust(
+        return new KeyPolicy(
                 e.getSignerServiceId(),
                 e.getVerifierServiceId(),
                 e.getKeyLifetimeSeconds(),
                 e.getJwtTtlSeconds(),
                 e.getPreloadSeconds(),
-                e.getAutoRotate(),
-                e.getLastRotatedAt(),
-                e.getNextRotationAt(),
                 e.getCreatedAt(),
                 e.getUpdatedAt()
         );
@@ -41,22 +37,19 @@ public class ServiceTrustMapper {
     // Domain -> Entity
     // =========================
 
-    public static ServiceTrustEntity toEntity(ServiceTrust d) {
+    public static KeyPolicyEntity toEntity(KeyPolicy d) {
 
         if (d == null) {
-            throw new IllegalArgumentException("ServiceTrust must not be null");
+            throw new IllegalArgumentException("KeyPolicy must not be null");
         }
 
-        ServiceTrustEntity e = new ServiceTrustEntity();
+        KeyPolicyEntity e = new KeyPolicyEntity();
 
         e.setSignerServiceId(d.getSignerServiceId());
         e.setVerifierServiceId(d.getVerifierServiceId());
         e.setKeyLifetimeSeconds(d.getKeyLifetimeSeconds());
         e.setJwtTtlSeconds(d.getJwtTtlSeconds());
         e.setPreloadSeconds(d.getPreloadSeconds());
-        e.setAutoRotate(d.isAutoRotate());
-        e.setLastRotatedAt(d.getLastRotatedAt());
-        e.setNextRotationAt(d.getNextRotationAt());
         e.setCreatedAt(d.getCreatedAt());
         e.setUpdatedAt(d.getUpdatedAt());
 

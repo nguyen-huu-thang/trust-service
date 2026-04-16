@@ -1,19 +1,16 @@
 package vn.xime.trust.domain.factory;
 
-import vn.xime.trust.domain.model.PlatformService;
+import vn.xime.trust.domain.model.Service;
 import vn.xime.trust.domain.model.ServiceStatus;
 
 import java.time.Instant;
-import java.util.Objects;
 
 public class ServiceFactory {
 
-    public PlatformService create(
+    public Service create(
             String id,
             String name,
-            String tenant,
-            ServiceStatus status,
-            Instant createdAt
+            String tenant
     ) {
         // =========================
         // VALIDATE (DOMAIN LEVEL)
@@ -27,19 +24,17 @@ public class ServiceFactory {
             throw new IllegalArgumentException("service name is required");
         }
 
-        Objects.requireNonNull(status, "status is required");
-        Objects.requireNonNull(createdAt, "createdAt is required");
 
         // =========================
         // BUILD DOMAIN
         // =========================
 
-        return new PlatformService(
+        return new Service(
                 id,
                 name,
                 tenant,
-                status,
-                createdAt
+                ServiceStatus.INACTIVE,
+                Instant.now()
         );
     }
 }
