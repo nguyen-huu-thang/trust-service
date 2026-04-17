@@ -1,7 +1,10 @@
 package vn.xime.trust.infrastructure.persistence.mapper;
 
+import vn.xime.trust.domain.model.Id;
 import vn.xime.trust.domain.model.KeyPolicy;
 import vn.xime.trust.infrastructure.persistence.entity.KeyPolicyEntity;
+
+import java.util.Arrays;
 
 public class KeyPolicyMapper {
 
@@ -15,6 +18,7 @@ public class KeyPolicyMapper {
             throw new IllegalArgumentException("KeyPolicyEntity must not be null");
         }
 
+        requireNonNull(e.getId(), "id");
         requireNonNull(e.getSignerServiceId(), "signerServiceId");
         requireNonNull(e.getVerifierServiceId(), "verifierServiceId");
         requireNonNull(e.getKeyLifetimeSeconds(), "keyLifetimeSeconds");
@@ -23,6 +27,7 @@ public class KeyPolicyMapper {
         requireNonNull(e.getCreatedAt(), "createdAt");
 
         return new KeyPolicy(
+                toId(e.getId()),
                 e.getSignerServiceId(),
                 e.getVerifierServiceId(),
                 e.getKeyLifetimeSeconds(),
@@ -45,6 +50,7 @@ public class KeyPolicyMapper {
 
         KeyPolicyEntity e = new KeyPolicyEntity();
 
+        e.setId(toBytes(d.getId()));
         e.setSignerServiceId(d.getSignerServiceId());
         e.setVerifierServiceId(d.getVerifierServiceId());
         e.setKeyLifetimeSeconds(d.getKeyLifetimeSeconds());
@@ -54,6 +60,22 @@ public class KeyPolicyMapper {
         e.setUpdatedAt(d.getUpdatedAt());
 
         return e;
+    }
+
+    // =========================
+    // ID MAPPING
+    // =========================
+
+    private static Id toId(byte[] bytes) {
+        return new Id(copy(bytes));
+    }
+
+    private static byte[] toBytes(Id id) {
+        return copy(id.toBytes());
+    }
+
+    private static byte[] copy(byte[] src) {
+        return src == null ? null : Arrays.copyOf(src, src.length);
     }
 
     // =========================

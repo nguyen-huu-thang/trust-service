@@ -1,8 +1,11 @@
 package vn.xime.trust.infrastructure.persistence.mapper;
 
+import vn.xime.trust.domain.model.Id;
 import vn.xime.trust.domain.model.Key;
 import vn.xime.trust.domain.model.KeyAlgorithm;
 import vn.xime.trust.infrastructure.persistence.entity.KeyEntity;
+
+import java.util.Arrays;
 
 public class KeyMapper {
 
@@ -16,7 +19,7 @@ public class KeyMapper {
             throw new IllegalArgumentException("KeyEntity must not be null");
         }
 
-        requireNonNull(e.getKid(), "kid");
+        requireNonNull(e.getId(), "id");
         requireNonNull(e.getSignerServiceId(), "signerServiceId");
         requireNonNull(e.getVerifierServiceId(), "verifierServiceId");
         requireNonNull(e.getPublicKey(), "publicKey");
@@ -29,7 +32,7 @@ public class KeyMapper {
         requireNonNull(e.getIsDeleted(), "isDeleted");
 
         return new Key(
-                e.getKid(),
+                toId(e.getId()),
                 e.getSignerServiceId(),
                 e.getVerifierServiceId(),
                 e.getPublicKey(),
@@ -55,7 +58,7 @@ public class KeyMapper {
 
         KeyEntity e = new KeyEntity();
 
-        e.setKid(d.getKid());
+        e.setId(toBytes(d.getId()));
         e.setSignerServiceId(d.getSignerServiceId());
         e.setVerifierServiceId(d.getVerifierServiceId());
         e.setPublicKey(d.getPublicKey());
@@ -68,6 +71,22 @@ public class KeyMapper {
         e.setIsDeleted(d.isDeleted());
 
         return e;
+    }
+
+    // =========================
+    // ID MAPPING (QUAN TRỌNG)
+    // =========================
+
+    private static Id toId(byte[] bytes) {
+        return new Id(copy(bytes));
+    }
+
+    private static byte[] toBytes(Id id) {
+        return copy(id.toBytes());
+    }
+
+    private static byte[] copy(byte[] src) {
+        return src == null ? null : Arrays.copyOf(src, src.length);
     }
 
     // =========================

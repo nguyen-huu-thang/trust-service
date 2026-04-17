@@ -1,5 +1,6 @@
 package vn.xime.trust.domain.repository;
 
+import vn.xime.trust.domain.model.Id;
 import vn.xime.trust.domain.model.Key;
 
 import java.util.List;
@@ -9,14 +10,14 @@ public interface KeyRepository {
 
     Key save(Key key);
 
-    Optional<Key> findByKid(String kid);
+    Optional<Key> findById(Id id);
 
-    // 🔥 dùng cho SIGNING (identity service)
+    // 🔥 SIGNING
     List<Key> findBySignerServiceId(String signerServiceId);
 
     // 🔥 dùng cho SIGNING (lọc active)
     List<Key> findActiveKeysBySigner(String signerServiceId);
 
-    // 🔥 dùng khi cần theo từng cặp trust
+    // 🔥 trust pair
     List<Key> findBySignerAndVerifier(String signerServiceId, String verifierServiceId);
 }

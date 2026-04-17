@@ -25,7 +25,7 @@ public class KeyLifecycleUseCase {
     // =========================
 
     public List<Key> loadKeys(String serviceId) {
-        List<Key> keys = keyRepository.findByServiceId(serviceId);
+        List<Key> keys = keyRepository.findBySignerServiceId(serviceId);
         return lifecycle.filterNotDeleted(keys);
     }
 
@@ -61,7 +61,7 @@ public class KeyLifecycleUseCase {
     // =========================
 
     public void cleanupExpiredKeys(String serviceId, Instant now) {
-        List<Key> keys = keyRepository.findByServiceId(serviceId);
+        List<Key> keys = keyRepository.findBySignerServiceId(serviceId);
 
         keys.stream()
                 .filter(k -> !k.isDeleted())

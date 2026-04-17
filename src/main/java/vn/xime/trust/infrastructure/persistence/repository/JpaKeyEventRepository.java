@@ -5,9 +5,9 @@ import vn.xime.trust.infrastructure.persistence.entity.KeyEventEntity;
 
 import java.util.List;
 
-public interface JpaKeyEventRepository extends JpaRepository<KeyEventEntity, Long> {
+public interface JpaKeyEventRepository extends JpaRepository<KeyEventEntity, byte[]> {
 
-    List<KeyEventEntity> findByServiceIdOrderByCreatedAtDesc(String serviceId);
+    List<KeyEventEntity> findBySignerServiceIdOrderByCreatedAtDesc(String signerServiceId);
 
-    List<KeyEventEntity> findByKidOrderByCreatedAtDesc(String kid);
+    List<KeyEventEntity> findByKeyIdOrderByCreatedAtDesc(byte[] keyId);
 }

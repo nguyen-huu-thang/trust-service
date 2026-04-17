@@ -11,32 +11,33 @@ import java.time.Instant;
                 @Index(
                         name = "idx_cert_events_service_time",
                         columnList = "service_id,created_at DESC"
+                ),
+                @Index(
+                        name = "idx_cert_events_cert",
+                        columnList = "cert_id"
                 )
         }
 )
 public class CertEventEntity {
 
     // =========================
-    // ID
+    // ID (KSUID)
     // =========================
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Column(name = "id", nullable = false, columnDefinition = "BYTEA")
+    private byte[] id;
 
     // =========================
     // Reference (NO RELATION)
     // =========================
 
-    /**
-     * Không dùng ManyToOne
-     * → event phải độc lập
-     */
-    @Column(name = "service_id", length = 100)
+    @Column(name = "service_id", length = 20)
     private String serviceId;
 
-    @Column(name = "kid", length = 100)
-    private String kid;
+    // 🔥 thay kid → cert_id
+    @Column(name = "cert_id", columnDefinition = "BYTEA")
+    private byte[] certId;
 
     // =========================
     // Event
@@ -49,10 +50,7 @@ public class CertEventEntity {
     // Time
     // =========================
 
-    @Column(
-            name = "created_at",
-            columnDefinition = "TIMESTAMP WITH TIME ZONE"
-    )
+    @Column(name = "created_at")
     private Instant createdAt;
 
     // =========================
@@ -63,24 +61,15 @@ public class CertEventEntity {
     private String metadata;
 
     // =========================
-    // Lifecycle hooks
-    // =========================
-
-    // ❌ Không đặt logic ở JPA Entity. chỉ để test tạm thời.
-
-    // @PrePersist
-    // public void prePersist() {
-    //     if (createdAt == null) {
-    //         throw new IllegalStateException("createdAt must not be null");
-    //     }
-    // }
-
-    // =========================
     // Getter / Setter
     // =========================
 
-    public Long getId() {
+    public byte[] getId() {
         return id;
+    }
+
+    public void setId(byte[] id) {
+        this.id = id;
     }
 
     public String getServiceId() {
@@ -91,12 +80,12 @@ public class CertEventEntity {
         this.serviceId = serviceId;
     }
 
-    public String getKid() {
-        return kid;
+    public byte[] getCertId() {
+        return certId;
     }
 
-    public void setKid(String kid) {
-        this.kid = kid;
+    public void setCertId(byte[] certId) {
+        this.certId = certId;
     }
 
     public String getEventType() {

@@ -3,10 +3,12 @@ package vn.xime.trust.infrastructure.persistence.mapper;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import vn.xime.trust.domain.model.Id;
 import vn.xime.trust.domain.model.KeyEvent;
 import vn.xime.trust.domain.model.KeyEventType;
 import vn.xime.trust.infrastructure.persistence.entity.KeyEventEntity;
 
+import java.util.Arrays;
 import java.util.Map;
 
 public class KeyEventMapper {
@@ -23,12 +25,15 @@ public class KeyEventMapper {
             throw new IllegalArgumentException("KeyEventEntity must not be null");
         }
 
+        requireNonNull(e.getId(), "id");
         requireNonNull(e.getEventType(), "eventType");
         requireNonNull(e.getCreatedAt(), "createdAt");
 
         return new KeyEvent(
-                e.getKid(),
-                e.getServiceId(),
+                toId(e.getId()),
+                toNullableId(e.getKeyId()),
+                e.getSignerServiceId(),
+                e.getVerifierServiceId(),
                 mapEventType(e.getEventType()),
                 e.getCreatedAt(),
                 deserializeMetadata(e.getMetadata())
@@ -47,8 +52,10 @@ public class KeyEventMapper {
 
         KeyEventEntity e = new KeyEventEntity();
 
-        e.setKid(d.getKid());
-        e.setServiceId(d.getServiceId());
+        e.setId(toBytes(d.getId()));
+        e.setKeyId(toNullableBytes(d.getKeyId()));
+        e.setSignerServiceId(d.getSignerServiceId());
+        e.setVerifierServiceId(d.getVerifierServiceId());
         e.setEventType(d.getEventType().name());
         e.setCreatedAt(d.getCreatedAt());
         e.setMetadata(serializeMetadata(d.getMetadata()));
@@ -57,7 +64,31 @@ public class KeyEventMapper {
     }
 
     // =========================
-    // Helpers
+    // ID MAPPING
+    // =========================
+
+    private static Id toId(byte[] bytes) {
+        return new Id(copy(bytes));
+    }
+
+    private static Id toNullableId(byte[] bytes) {
+        return bytes == null ? null : toId(bytes);
+    }
+
+    private static byte[] toBytes(Id id) {
+        return copy(id.toBytes());
+    }
+
+    private static byte[] toNullableBytes(Id id) {
+        return id == null ? null : toBytes(id);
+    }
+
+    private static byte[] copy(byte[] src) {
+        return src == null ? null : Arrays.copyOf(src, src.length);
+    }
+
+    // =========================
+    // ENUM
     // =========================
 
     private static KeyEventType mapEventType(String eventType) {
@@ -68,10 +99,12 @@ public class KeyEventMapper {
         }
     }
 
+    // =========================
+    // JSONB
+    // =========================
+
     private static Map<String, Object> deserializeMetadata(String json) {
-        if (json == null) {
-            return null;
-        }
+        if (json == null) return null;
 
         try {
             return OBJECT_MAPPER.readValue(
@@ -84,9 +117,7 @@ public class KeyEventMapper {
     }
 
     private static String serializeMetadata(Map<String, Object> metadata) {
-        if (metadata == null) {
-            return null;
-        }
+        if (metadata == null) return null;
 
         try {
             return OBJECT_MAPPER.writeValueAsString(metadata);

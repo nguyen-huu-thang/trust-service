@@ -9,99 +9,93 @@ import java.time.Instant;
         name = "key_events",
         indexes = {
                 @Index(
-                        name = "idx_key_events_service_time",
-                        columnList = "service_id,created_at DESC"
+                        name = "idx_key_events_signer_time",
+                        columnList = "signer_service_id,created_at DESC"
+                ),
+                @Index(
+                        name = "idx_key_events_key",
+                        columnList = "key_id"
                 )
         }
 )
 public class KeyEventEntity {
 
     // =========================
-    // ID
+    // ID (KSUID)
     // =========================
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Column(name = "id", nullable = false, columnDefinition = "BYTEA")
+    private byte[] id;
 
     // =========================
-    // Reference (NO RELATION)
+    // REFERENCE (NO FK)
     // =========================
 
-    /**
-     * Không dùng ManyToOne
-     * → event phải độc lập
-     */
-    @Column(name = "kid", length = 100)
-    private String kid;
+    @Column(name = "key_id", columnDefinition = "BYTEA")
+    private byte[] keyId;
 
-    @Column(name = "service_id", length = 100)
-    private String serviceId;
+    @Column(name = "signer_service_id", length = 20)
+    private String signerServiceId;
+
+    @Column(name = "verifier_service_id", length = 20)
+    private String verifierServiceId;
 
     // =========================
-    // Event
+    // EVENT
     // =========================
 
     @Column(name = "event_type", length = 50)
     private String eventType;
 
     // =========================
-    // Time
+    // TIME
     // =========================
 
-    @Column(
-            name = "created_at",
-            columnDefinition = "TIMESTAMP WITH TIME ZONE"
-    )
+    @Column(name = "created_at")
     private Instant createdAt;
 
     // =========================
-    // Metadata (JSONB)
+    // METADATA (JSONB)
     // =========================
 
-    /**
-     * Lưu JSON dạng string (simple & safe)
-     * Có thể nâng cấp sang Map + converter sau
-     */
     @Column(name = "metadata", columnDefinition = "jsonb")
     private String metadata;
 
     // =========================
-    // Lifecycle hooks
+    // GETTER / SETTER
     // =========================
 
-
-    // ❌ Không đặt logic ở JPA Entity. chỉ để test tạm thời.
-
-    // @PrePersist
-    // public void prePersist() {
-    //     if (createdAt == null) {
-    //         throw new IllegalStateException("createdAt must not be null");
-    //     }
-    // }
-
-    // =========================
-    // Getter / Setter
-    // =========================
-
-    public Long getId() {
+    public byte[] getId() {
         return id;
     }
 
-    public String getKid() {
-        return kid;
+    public void setId(byte[] id) {
+        this.id = id;
     }
 
-    public void setKid(String kid) {
-        this.kid = kid;
+    public byte[] getKeyId() {
+        return keyId;
     }
 
-    public String getServiceId() {
-        return serviceId;
+    public void setKeyId(byte[] keyId) {
+        this.keyId = keyId;
     }
 
-    public void setServiceId(String serviceId) {
-        this.serviceId = serviceId;
+    public String getSignerServiceId() {
+        return signerServiceId;
+    }
+
+    public void setSignerServiceId(String signerServiceId) {
+        this.signerServiceId = signerServiceId;
+    }
+
+    public String getVerifierServiceId() {
+        return verifierServiceId;
+    }
+
+    public void setVerifierServiceId(String verifierServiceId) {
+        this.verifierServiceId = verifierServiceId;
     }
 
     public String getEventType() {

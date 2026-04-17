@@ -3,15 +3,15 @@ package vn.xime.trust.application.usecase.key;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import vn.xime.trust.application.dto.request.GenerateKeyCommand;
-import vn.xime.trust.application.port.out.*;
+import vn.xime.trust.application.port.out.KeyEncryptionService;
+import vn.xime.trust.application.port.out.KeyGenerator;
 import vn.xime.trust.domain.factory.KeyFactory;
 import vn.xime.trust.domain.model.Key;
 import vn.xime.trust.domain.model.KeyAlgorithm;
-import vn.xime.trust.domain.model.ServiceTrust;
+import vn.xime.trust.domain.model.KeyPolicy;
+import vn.xime.trust.domain.repository.KeyPolicyRepository;
 import vn.xime.trust.domain.repository.KeyRepository;
 import vn.xime.trust.domain.repository.ServiceRepository;
-import vn.xime.trust.domain.repository.ServiceTrustRepository;
-import vn.xime.trust.domain.service.KeyPolicyDomainService;
 
 import java.time.Instant;
 
@@ -20,45 +20,36 @@ public class GenerateKeyUseCase {
 
     private final KeyRepository keyRepository;
     private final ServiceRepository serviceRepository;
-    private final ServiceTrustRepository trustRepository;
+    private final KeyPolicyRepository keyPolicyRepository;
 
     private final KeyGenerator keyGenerator;
     private final KeyEncryptionService encryptionService;
-    private final IdGenerator idGenerator;
 
     private final KeyFactory keyFactory;
-    private final KeyPolicyDomainService policyService;
-    private final Clock clock;
 
     public GenerateKeyUseCase(
             KeyRepository keyRepository,
             ServiceRepository serviceRepository,
-            ServiceTrustRepository trustRepository,
+            KeyPolicyRepository keyPolicyRepository,
             KeyGenerator keyGenerator,
             KeyEncryptionService encryptionService,
-            IdGenerator idGenerator,
-            KeyFactory keyFactory,
-            KeyPolicyDomainService policyService,
-            Clock clock
+            KeyFactory keyFactory
     ) {
         this.keyRepository = keyRepository;
         this.serviceRepository = serviceRepository;
-        this.trustRepository = trustRepository;
+        this.keyPolicyRepository = keyPolicyRepository;
         this.keyGenerator = keyGenerator;
         this.encryptionService = encryptionService;
-        this.idGenerator = idGenerator;
         this.keyFactory = keyFactory;
-        this.policyService = policyService;
-        this.clock = clock;
     }
 
     @Transactional
-    public String execute(GenerateKeyCommand cmd) {
+    public byte[] execute(GenerateKeyCommand cmd) {
 
-        Instant now = clock.now();
+        Instant now = Instant.now();
 
         // =========================
-        // VALIDATE
+        // VALIDATE SERVICE
         // =========================
 
         if (!serviceRepository.existsById(cmd.getSignerServiceId())) {
@@ -69,15 +60,19 @@ public class GenerateKeyUseCase {
             throw new IllegalStateException("Verifier service not found");
         }
 
-        ServiceTrust trust = trustRepository
-                .findBySignerAndVerifier(
+        // =========================
+        // LOAD POLICY
+        // =========================
+
+        KeyPolicy policy = keyPolicyRepository
+                .findByPair(
                         cmd.getSignerServiceId(),
                         cmd.getVerifierServiceId()
                 )
-                .orElseThrow(() -> new IllegalStateException("Trust not found"));
+                .orElseThrow(() -> new IllegalStateException("KeyPolicy not found"));
 
         // =========================
-        // GENERATE KEY
+        // GENERATE KEY PAIR
         // =========================
 
         var pair = keyGenerator.generate(
@@ -88,33 +83,28 @@ public class GenerateKeyUseCase {
         String encryptedPrivateKey =
                 encryptionService.encrypt(pair.getPrivateKey());
 
-        String kid = idGenerator.generateKid();
-
         // =========================
-        // TIME CALCULATION
+        // TIME CALCULATION (CORE LOGIC)
         // =========================
 
         Instant activateAt =
                 cmd.getActivateAt() != null ? cmd.getActivateAt() : now;
 
-        Instant expiresAt = policyService.calculateExpiresAt(
-                activateAt,
-                trust.getKeyLifetimeSec()
-        );
+        Instant expiresAt = activateAt
+                .plusSeconds(policy.getKeyLifetimeSeconds())
+                .plusSeconds(policy.getJwtTtlSeconds());
 
         // =========================
         // BUILD DOMAIN
         // =========================
 
         Key key = keyFactory.create(
-                kid,
                 cmd.getSignerServiceId(),
                 cmd.getVerifierServiceId(),
                 pair.getPublicKey(),
                 encryptedPrivateKey,
                 KeyAlgorithm.valueOf(cmd.getAlgorithm()),
                 cmd.getKeySize(),
-                now,
                 activateAt,
                 expiresAt
         );
@@ -125,6 +115,7 @@ public class GenerateKeyUseCase {
 
         keyRepository.save(key);
 
-        return kid;
+        // return id (byte[])
+        return key.getId().toBytes();
     }
 }

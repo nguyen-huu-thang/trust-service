@@ -1,6 +1,7 @@
 package vn.xime.trust.domain.service;
 
 import vn.xime.trust.domain.model.CertRefreshToken;
+import vn.xime.trust.domain.model.Id;
 
 import java.time.Instant;
 
@@ -11,11 +12,11 @@ public class CertRefreshTokenDomainService {
      */
     public void validateToken(
             CertRefreshToken token,
-            String currentKid,
+            Id currentCertId,
             Instant now
     ) {
         token.ensureValid(now);
-        token.ensureBoundTo(currentKid);
+        token.ensureBoundTo(currentCertId);
     }
 
     /**

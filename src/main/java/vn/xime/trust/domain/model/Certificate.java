@@ -5,7 +5,8 @@ import java.util.Objects;
 
 public class Certificate {
 
-    private final String kid;
+    private final Id id;
+
     private final String serviceId;
 
     private final String publicCert;
@@ -17,7 +18,7 @@ public class Certificate {
     private final CertificateStatus status;
 
     public Certificate(
-            String kid,
+            Id id,
             String serviceId,
             String publicCert,
             String privateKeyEncrypted,
@@ -29,7 +30,7 @@ public class Certificate {
             throw new IllegalArgumentException("expiresAt must be after issuedAt");
         }
 
-        this.kid = Objects.requireNonNull(kid);
+        this.id = Objects.requireNonNull(id);
         this.serviceId = Objects.requireNonNull(serviceId);
         this.publicCert = Objects.requireNonNull(publicCert);
         this.privateKeyEncrypted = Objects.requireNonNull(privateKeyEncrypted);
@@ -62,8 +63,8 @@ public class Certificate {
     // GETTERS
     // =========================
 
-    public String getKid() {
-        return kid;
+    public Id getId() {
+        return id;
     }
 
     public String getServiceId() {

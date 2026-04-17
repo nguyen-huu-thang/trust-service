@@ -1,8 +1,8 @@
 package vn.xime.trust.infrastructure.persistence.repository;
 
 import org.springframework.stereotype.Repository;
-
 import vn.xime.trust.domain.model.CertEvent;
+import vn.xime.trust.domain.model.Id;
 import vn.xime.trust.domain.repository.CertEventRepository;
 import vn.xime.trust.infrastructure.persistence.mapper.CertEventMapper;
 
@@ -32,8 +32,8 @@ public class CertEventRepositoryImpl implements CertEventRepository {
     }
 
     @Override
-    public List<CertEvent> findByKid(String kid) {
-        return repo.findByKidOrderByCreatedAtDesc(kid)
+    public List<CertEvent> findByCertId(Id certId) {
+        return repo.findByCertId(certId.toBytes())
                 .stream()
                 .map(CertEventMapper::toDomain)
                 .toList();

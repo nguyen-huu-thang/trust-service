@@ -1,14 +1,21 @@
 package vn.xime.trust.domain.repository;
 
-import java.util.List;
-
+import vn.xime.trust.domain.model.Id;
 import vn.xime.trust.domain.model.KeyEvent;
+
+import java.util.List;
 
 public interface KeyEventRepository {
 
     void save(KeyEvent event);
 
-    List<KeyEvent> findByServiceId(String serviceId);
+    List<KeyEvent> findBySignerServiceId(String signerServiceId);
 
-    List<KeyEvent> findByKid(String kid);
+    List<KeyEvent> findByKeyId(Id keyId);
+
+    // List<KeyEvent> findBySignerAndKey(Id keyId, String signerServiceId);
+
+    // List<KeyEvent> findTop100BySignerServiceIdOrderByCreatedAtDesc(...)
+
+    // Page<KeyEvent> findBySignerServiceId(...)
 }

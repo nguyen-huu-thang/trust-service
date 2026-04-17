@@ -1,33 +1,33 @@
-package vn.xime.trust.application.usecase.servicetrust;
+package vn.xime.trust.application.usecase.policy;
 
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import vn.xime.trust.application.dto.request.CreateTrustCommand;
-import vn.xime.trust.domain.model.ServiceTrust;
-import vn.xime.trust.domain.factory.ServiceTrustFactory;
+import vn.xime.trust.domain.model.KeyPolicy;
+import vn.xime.trust.domain.factory.KeyPolicyFactory;
 import vn.xime.trust.domain.repository.ServiceRepository;
-import vn.xime.trust.domain.repository.ServiceTrustRepository;
+import vn.xime.trust.domain.repository.KeyPolicyRepository;
 
 @Component
-public class CreateTrustUseCase {
+public class CreatePolicyUseCase {
 
-    private final ServiceTrustRepository serviceTrustRepository;
+    private final KeyPolicyRepository keyPolicyRepository;
     private final ServiceRepository serviceRepository;
-    private final ServiceTrustFactory serviceTrustFactory;
+    private final KeyPolicyFactory keyPolicyFactory;
 
 
-    public CreateTrustUseCase(
-            ServiceTrustRepository serviceTrustRepository,
+    public CreatePolicyUseCase(
+            KeyPolicyRepository keyPolicyRepository,
             ServiceRepository serviceRepository,
-            ServiceTrustFactory serviceTrustFactory
+            KeyPolicyFactory keyPolicyFactory
     ) {
-        this.serviceTrustRepository = serviceTrustRepository;
+        this.keyPolicyRepository = keyPolicyRepository;
         this.serviceRepository = serviceRepository;
-        this.serviceTrustFactory = serviceTrustFactory;
+        this.keyPolicyFactory = keyPolicyFactory;
     }
 
     @Transactional
-    public ServiceTrust execute(CreateTrustCommand cmd) {
+    public KeyPolicy execute(CreateTrustCommand cmd) {
 
         // =========================
         // VALIDATE
@@ -65,7 +65,7 @@ public class CreateTrustUseCase {
         // BUILD DOMAIN
         // =========================
 
-        ServiceTrust serviceTrust = serviceTrustFactory.create(
+        KeyPolicy keyPolicy = keyPolicyFactory.create(
                 cmd.getSignerServiceId(),
                 cmd.getVerifierServiceId(),
                 cmd.getKeyLifetimeSec(),
@@ -77,8 +77,8 @@ public class CreateTrustUseCase {
         // SAVE
         // =========================
 
-        serviceTrustRepository.save(serviceTrust);
+        keyPolicyRepository.save(keyPolicy);
 
-        return serviceTrust;
+        return keyPolicy;
     }
 }

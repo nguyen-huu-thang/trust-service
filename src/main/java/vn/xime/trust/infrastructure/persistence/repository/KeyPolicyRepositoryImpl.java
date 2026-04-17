@@ -18,8 +18,8 @@ public class KeyPolicyRepositoryImpl implements KeyPolicyRepository {
     }
 
     @Override
-    public KeyPolicy save(KeyPolicy trust) {
-        var entity = KeyPolicyMapper.toEntity(trust);
+    public KeyPolicy save(KeyPolicy policy) {
+        var entity = KeyPolicyMapper.toEntity(policy);
         var saved = repo.save(entity);
         return KeyPolicyMapper.toDomain(saved);
     }

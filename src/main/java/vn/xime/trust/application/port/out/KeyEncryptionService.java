@@ -6,11 +6,3 @@ public interface KeyEncryptionService {
 
     String decrypt(String encrypted);
 }
-
-
-// package vn.xime.trust.application.port.out;
-
-// public interface KeyEncryptionService {
-
-//     String encrypt(String privateKey);
-// }

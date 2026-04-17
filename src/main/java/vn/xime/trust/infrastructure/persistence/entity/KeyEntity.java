@@ -14,7 +14,7 @@ import java.time.Instant;
                 )
         },
         indexes = {
-                @Index(name = "idx_keys_kid", columnList = "kid"),
+                @Index(name = "idx_keys_id", columnList = "id"),
 
                 @Index(
                         name = "idx_keys_signer_active",
@@ -35,38 +35,25 @@ import java.time.Instant;
 public class KeyEntity {
 
     // =========================
-    // ID
+    // ID (KSUID - BYTEA)
     // =========================
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Column(name = "id", nullable = false, columnDefinition = "BYTEA")
+    private byte[] id;
 
     // =========================
-    // Identify
+    // RELATIONSHIP
     // =========================
 
-    @Column(name = "kid", nullable = false, unique = true, length = 100)
-    private String kid;
-
-    // =========================
-    // Relationship (QUAN TRỌNG NHẤT)
-    // =========================
-
-    /**
-     * Service dùng để SIGN (identity service)
-     */
-    @Column(name = "signer_service_id", nullable = false, length = 100)
+    @Column(name = "signer_service_id", nullable = false, length = 20)
     private String signerServiceId;
 
-    /**
-     * Service dùng để VERIFY
-     */
-    @Column(name = "verifier_service_id", nullable = false, length = 100)
+    @Column(name = "verifier_service_id", nullable = false, length = 20)
     private String verifierServiceId;
 
     // =========================
-    // Key data
+    // KEY DATA
     // =========================
 
     @Column(name = "public_key", nullable = false, columnDefinition = "TEXT")
@@ -76,7 +63,7 @@ public class KeyEntity {
     private String privateKeyEncrypted;
 
     // =========================
-    // Crypto
+    // CRYPTO
     // =========================
 
     @Column(name = "algorithm", nullable = false, length = 20)
@@ -86,85 +73,35 @@ public class KeyEntity {
     private Integer keySize;
 
     // =========================
-    // Lifecycle (QUAN TRỌNG NHẤT)
+    // LIFECYCLE
     // =========================
 
-    @Column(
-            name = "created_at",
-            nullable = false,
-            columnDefinition = "TIMESTAMP WITH TIME ZONE"
-    )
+    @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
-    @Column(
-            name = "activate_at",
-            nullable = false,
-            columnDefinition = "TIMESTAMP WITH TIME ZONE"
-    )
+    @Column(name = "activate_at", nullable = false)
     private Instant activateAt;
 
-    @Column(
-            name = "expires_at",
-            nullable = false,
-            columnDefinition = "TIMESTAMP WITH TIME ZONE"
-    )
+    @Column(name = "expires_at", nullable = false)
     private Instant expiresAt;
 
     // =========================
-    // Control
+    // CONTROL
     // =========================
 
     @Column(name = "is_deleted", nullable = false)
     private Boolean isDeleted = false;
 
     // =========================
-    // Lifecycle hooks
+    // GETTER / SETTER
     // =========================
 
-    // ❌ Không đặt logic ở JPA Entity. chỉ để test tạm thời.
-
-    // @PrePersist
-    // public void prePersist() {
-    //     if (createdAt == null) {
-    //         throw new IllegalStateException("createdAt must not be null");
-    //     }
-
-    //     if (isDeleted == null) {
-    //         throw new IllegalStateException("isDeleted must not be null");
-    //     }
-
-    //     validateTime();
-    // }
-
-    // @PreUpdate
-    // public void preUpdate() {
-    //     validateTime();
-    // }
-
-    // private void validateTime() {
-    //     if (activateAt == null || expiresAt == null) {
-    //         throw new IllegalArgumentException("activateAt and expiresAt must not be null");
-    //     }
-
-    //     if (!expiresAt.isAfter(activateAt)) {
-    //         throw new IllegalArgumentException("expires_at must be after activate_at");
-    //     }
-    // }
-
-    // =========================
-    // Getter / Setter
-    // =========================
-
-    public Long getId() {
+    public byte[] getId() {
         return id;
     }
 
-    public String getKid() {
-        return kid;
-    }
-
-    public void setKid(String kid) {
-        this.kid = kid;
+    public void setId(byte[] id) {
+        this.id = id;
     }
 
     public String getSignerServiceId() {

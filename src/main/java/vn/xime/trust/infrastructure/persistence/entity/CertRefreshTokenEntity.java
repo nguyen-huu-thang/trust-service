@@ -15,68 +15,49 @@ import java.time.Instant;
         },
         indexes = {
                 @Index(name = "idx_refresh_token_hash", columnList = "token_hash"),
-                @Index(name = "idx_refresh_service_used", columnList = "service_id,used_at")
+                @Index(name = "idx_refresh_service_used", columnList = "service_id,used_at"),
+                @Index(name = "idx_refresh_bound_cert", columnList = "bound_cert_id")
         }
 )
 public class CertRefreshTokenEntity {
 
     // =========================
-    // ID
+    // ID (KSUID)
     // =========================
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Column(name = "id", nullable = false, columnDefinition = "BYTEA")
+    private byte[] id;
 
     // =========================
     // Ownership
     // =========================
 
-    @Column(name = "service_id", nullable = false, length = 100)
+    @Column(name = "service_id", nullable = false, length = 20)
     private String serviceId;
 
     // =========================
     // Token (CRITICAL)
     // =========================
 
-    /**
-     * Lưu HASH, không lưu raw token
-     */
     @Column(name = "token_hash", nullable = false, columnDefinition = "TEXT")
     private String tokenHash;
 
-    /**
-     * Bind với cert hiện tại
-     */
-    @Column(name = "bound_kid", nullable = false, length = 100)
-    private String boundKid;
+    // 🔥 bind trực tiếp với certificate.id
+    @Column(name = "bound_cert_id", nullable = false, columnDefinition = "BYTEA")
+    private byte[] boundCertId;
 
     // =========================
     // Lifecycle
     // =========================
 
-    @Column(
-            name = "issued_at",
-            nullable = false,
-            columnDefinition = "TIMESTAMP WITH TIME ZONE"
-    )
+    @Column(name = "issued_at", nullable = false)
     private Instant issuedAt;
 
-    @Column(
-            name = "expires_at",
-            nullable = false,
-            columnDefinition = "TIMESTAMP WITH TIME ZONE"
-    )
+    @Column(name = "expires_at", nullable = false)
     private Instant expiresAt;
 
-    /**
-     * null = chưa dùng
-     * != null = đã dùng (one-time token)
-     */
-    @Column(
-            name = "used_at",
-            columnDefinition = "TIMESTAMP WITH TIME ZONE"
-    )
+    @Column(name = "used_at")
     private Instant usedAt;
 
     // =========================
@@ -90,8 +71,12 @@ public class CertRefreshTokenEntity {
     // Getter / Setter
     // =========================
 
-    public Long getId() {
+    public byte[] getId() {
         return id;
+    }
+
+    public void setId(byte[] id) {
+        this.id = id;
     }
 
     public String getServiceId() {
@@ -110,12 +95,12 @@ public class CertRefreshTokenEntity {
         this.tokenHash = tokenHash;
     }
 
-    public String getBoundKid() {
-        return boundKid;
+    public byte[] getBoundCertId() {
+        return boundCertId;
     }
 
-    public void setBoundKid(String boundKid) {
-        this.boundKid = boundKid;
+    public void setBoundCertId(byte[] boundCertId) {
+        this.boundCertId = boundCertId;
     }
 
     public Instant getIssuedAt() {

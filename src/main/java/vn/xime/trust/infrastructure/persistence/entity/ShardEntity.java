@@ -36,7 +36,7 @@ public class ShardEntity {
      * FK → services(id)
      * Không map ManyToOne để tránh coupling
      */
-    @Column(name = "service_id", nullable = false, length = 100)
+    @Column(name = "service_id", nullable = false, length = 20)
     private String serviceId;
 
     // =========================

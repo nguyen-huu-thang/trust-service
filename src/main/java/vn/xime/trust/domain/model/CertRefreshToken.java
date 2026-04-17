@@ -5,11 +5,13 @@ import java.util.Objects;
 
 public class CertRefreshToken {
 
+    private final Id id;
+
     private final String serviceId;
 
     private final String tokenHash;
 
-    private final String boundKid;
+    private final Id boundCertId;
 
     private final Instant issuedAt;
     private final Instant expiresAt;
@@ -19,21 +21,23 @@ public class CertRefreshToken {
     private final String issuedBy;
 
     public CertRefreshToken(
-            String serviceId,
-            String tokenHash,
-            String boundKid,
-            Instant issuedAt,
-            Instant expiresAt,
-            Instant usedAt,
-            String issuedBy
+        Id id,
+        String serviceId,
+        String tokenHash,
+        Id boundCertId,
+        Instant issuedAt,
+        Instant expiresAt,
+        Instant usedAt,
+        String issuedBy
     ) {
         if (expiresAt.isBefore(issuedAt)) {
             throw new IllegalArgumentException("expiresAt must be after issuedAt");
         }
 
+        this.id = Objects.requireNonNull(id);
         this.serviceId = Objects.requireNonNull(serviceId);
         this.tokenHash = Objects.requireNonNull(tokenHash);
-        this.boundKid = Objects.requireNonNull(boundKid);
+        this.boundCertId = Objects.requireNonNull(boundCertId);
         this.issuedAt = Objects.requireNonNull(issuedAt);
         this.expiresAt = Objects.requireNonNull(expiresAt);
         this.usedAt = usedAt;
@@ -68,8 +72,8 @@ public class CertRefreshToken {
     /**
      * validate token có đúng cert hiện tại không
      */
-    public void ensureBoundTo(String currentKid) {
-        if (!this.boundKid.equals(currentKid)) {
+    public void ensureBoundTo(Id currentCertId) {
+        if (!this.boundCertId.equals(currentCertId)) {
             throw new IllegalStateException("Token not bound to current certificate");
         }
     }
@@ -83,9 +87,10 @@ public class CertRefreshToken {
         }
 
         return new CertRefreshToken(
+                this.id,
                 serviceId,
                 tokenHash,
-                boundKid,
+                boundCertId,
                 issuedAt,
                 expiresAt,
                 now,
@@ -97,6 +102,10 @@ public class CertRefreshToken {
     // GETTERS
     // =========================
 
+    public Id getId() {
+        return id;
+    }
+
     public String getServiceId() {
         return serviceId;
     }
@@ -105,8 +114,8 @@ public class CertRefreshToken {
         return tokenHash;
     }
 
-    public String getBoundKid() {
-        return boundKid;
+    public Id getBoundCertId() {
+        return boundCertId;
     }
 
     public Instant getIssuedAt() {

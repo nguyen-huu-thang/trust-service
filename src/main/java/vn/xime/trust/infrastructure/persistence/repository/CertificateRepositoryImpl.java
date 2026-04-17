@@ -2,6 +2,7 @@ package vn.xime.trust.infrastructure.persistence.repository;
 
 import org.springframework.stereotype.Repository;
 import vn.xime.trust.domain.model.Certificate;
+import vn.xime.trust.domain.model.Id;
 import vn.xime.trust.domain.repository.CertificateRepository;
 import vn.xime.trust.infrastructure.persistence.mapper.CertificateMapper;
 
@@ -26,8 +27,8 @@ public class CertificateRepositoryImpl implements CertificateRepository {
     }
 
     @Override
-    public Optional<Certificate> findByKid(String kid) {
-        return repo.findByKid(kid)
+    public Optional<Certificate> findById(Id id) {
+        return repo.findByIdBytes(id.toBytes())
                 .map(CertificateMapper::toDomain);
     }
 

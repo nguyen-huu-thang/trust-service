@@ -6,8 +6,10 @@ import java.util.Objects;
 
 public class CertEvent {
 
+    private final Id id;
+
     private final String serviceId;
-    private final String kid;
+    private final Id certId;
 
     private final CertEventType eventType;
 
@@ -16,14 +18,16 @@ public class CertEvent {
     private final Map<String, Object> metadata;
 
     public CertEvent(
+            Id id,
             String serviceId,
-            String kid,
+            Id certId,
             CertEventType eventType,
             Instant createdAt,
             Map<String, Object> metadata
     ) {
+        this.id = Objects.requireNonNull(id);
         this.serviceId = Objects.requireNonNull(serviceId);
-        this.kid = Objects.requireNonNull(kid);
+        this.certId = Objects.requireNonNull(certId);
         this.eventType = Objects.requireNonNull(eventType);
         this.createdAt = Objects.requireNonNull(createdAt);
         this.metadata = metadata != null ? Map.copyOf(metadata) : null;
@@ -33,12 +37,16 @@ public class CertEvent {
     // GETTERS
     // =========================
 
+    public Id getId() {
+        return id;
+    }
+
     public String getServiceId() {
         return serviceId;
     }
 
-    public String getKid() {
-        return kid;
+    public Id getCertId() {
+        return certId;
     }
 
     public CertEventType getEventType() {

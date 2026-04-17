@@ -5,9 +5,9 @@ import java.util.Objects;
 
 public class Key {
 
-    private final String kid;
+    private final Id id;
 
-    // 🔥 relationship (QUAN TRỌNG NHẤT)
+    // 🔥 relationship
     private final String signerServiceId;
     private final String verifierServiceId;
 
@@ -24,7 +24,7 @@ public class Key {
     private final boolean deleted;
 
     public Key(
-            String kid,
+            Id id,
             String signerServiceId,
             String verifierServiceId,
             String publicKey,
@@ -40,7 +40,7 @@ public class Key {
             throw new IllegalArgumentException("expiresAt must be after activateAt");
         }
 
-        this.kid = Objects.requireNonNull(kid);
+        this.id = Objects.requireNonNull(id);
         this.signerServiceId = Objects.requireNonNull(signerServiceId);
         this.verifierServiceId = Objects.requireNonNull(verifierServiceId);
         this.publicKey = Objects.requireNonNull(publicKey);
@@ -77,8 +77,8 @@ public class Key {
     // GETTERS
     // =========================
 
-    public String getKid() {
-        return kid;
+    public Id getId() {
+        return id;
     }
 
     public String getSignerServiceId() {
@@ -127,7 +127,7 @@ public class Key {
 
     public Key markDeleted() {
         return new Key(
-                kid,
+                id,
                 signerServiceId,
                 verifierServiceId,
                 publicKey,

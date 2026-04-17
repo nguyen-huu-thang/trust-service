@@ -2,11 +2,12 @@ package vn.xime.trust.infrastructure.persistence.mapper;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import vn.xime.trust.domain.model.CertEvent;
 import vn.xime.trust.domain.model.CertEventType;
+import vn.xime.trust.domain.model.Id;
 import vn.xime.trust.infrastructure.persistence.entity.CertEventEntity;
 
+import java.util.Arrays;
 import java.util.Map;
 
 public class CertEventMapper {
@@ -23,12 +24,14 @@ public class CertEventMapper {
             throw new IllegalArgumentException("CertEventEntity must not be null");
         }
 
+        requireNonNull(e.getId(), "id");
         requireNonNull(e.getEventType(), "eventType");
         requireNonNull(e.getCreatedAt(), "createdAt");
 
         return new CertEvent(
+                toId(e.getId()),
                 e.getServiceId(),
-                e.getKid(),
+                toId(e.getCertId()),
                 mapEventType(e.getEventType()),
                 e.getCreatedAt(),
                 deserializeMetadata(e.getMetadata())
@@ -47,13 +50,30 @@ public class CertEventMapper {
 
         CertEventEntity e = new CertEventEntity();
 
+        e.setId(toBytes(d.getId()));
         e.setServiceId(d.getServiceId());
-        e.setKid(d.getKid());
+        e.setCertId(toBytes(d.getCertId()));
         e.setEventType(d.getEventType().name());
         e.setCreatedAt(d.getCreatedAt());
         e.setMetadata(serializeMetadata(d.getMetadata()));
 
         return e;
+    }
+
+    // =========================
+    // ID mapping
+    // =========================
+
+    private static Id toId(byte[] bytes) {
+        return bytes == null ? null : new Id(copy(bytes));
+    }
+
+    private static byte[] toBytes(Id id) {
+        return id == null ? null : copy(id.toBytes());
+    }
+
+    private static byte[] copy(byte[] src) {
+        return src == null ? null : Arrays.copyOf(src, src.length);
     }
 
     // =========================

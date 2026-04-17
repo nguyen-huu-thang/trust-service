@@ -2,6 +2,7 @@ package vn.xime.trust.infrastructure.persistence.repository;
 
 import org.springframework.stereotype.Repository;
 import vn.xime.trust.domain.model.CertRefreshToken;
+import vn.xime.trust.domain.model.Id;
 import vn.xime.trust.domain.repository.CertRefreshTokenRepository;
 import vn.xime.trust.infrastructure.persistence.mapper.CertRefreshTokenMapper;
 
@@ -25,14 +26,22 @@ public class CertRefreshTokenRepositoryImpl implements CertRefreshTokenRepositor
     }
 
     @Override
-    public Optional<CertRefreshToken> findValidToken(String tokenHash) {
-        return repo.findByTokenHashAndUsedAtIsNullAndExpiresAtAfter(tokenHash, Instant.now())
+    public Optional<CertRefreshToken> findByTokenHash(String tokenHash) {
+        return repo.findByTokenHash(tokenHash)
                 .map(CertRefreshTokenMapper::toDomain);
     }
 
     @Override
-    public Optional<CertRefreshToken> findByTokenHash(String tokenHash) {
-        return repo.findByTokenHash(tokenHash)
+    public Optional<CertRefreshToken> findValidToken(
+            String tokenHash,
+            Id boundCertId,
+            Instant now
+    ) {
+        return repo.findValidToken(
+                        tokenHash,
+                        boundCertId.toBytes(),
+                        now
+                )
                 .map(CertRefreshTokenMapper::toDomain);
     }
 }

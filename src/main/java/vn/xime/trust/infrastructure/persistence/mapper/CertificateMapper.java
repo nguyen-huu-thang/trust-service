@@ -2,7 +2,10 @@ package vn.xime.trust.infrastructure.persistence.mapper;
 
 import vn.xime.trust.domain.model.Certificate;
 import vn.xime.trust.domain.model.CertificateStatus;
+import vn.xime.trust.domain.model.Id;
 import vn.xime.trust.infrastructure.persistence.entity.CertificateEntity;
+
+import java.util.Arrays;
 
 public class CertificateMapper {
 
@@ -16,7 +19,7 @@ public class CertificateMapper {
             throw new IllegalArgumentException("CertificateEntity must not be null");
         }
 
-        requireNonNull(e.getKid(), "kid");
+        requireNonNull(e.getId(), "id");
         requireNonNull(e.getServiceId(), "serviceId");
         requireNonNull(e.getPublicCert(), "publicCert");
         requireNonNull(e.getPrivateKeyEncrypted(), "privateKeyEncrypted");
@@ -25,7 +28,7 @@ public class CertificateMapper {
         requireNonNull(e.getStatus(), "status");
 
         return new Certificate(
-                e.getKid(),
+                toId(e.getId()),
                 e.getServiceId(),
                 e.getPublicCert(),
                 e.getPrivateKeyEncrypted(),
@@ -47,7 +50,7 @@ public class CertificateMapper {
 
         CertificateEntity e = new CertificateEntity();
 
-        e.setKid(d.getKid());
+        e.setId(toBytes(d.getId()));
         e.setServiceId(d.getServiceId());
         e.setPublicCert(d.getPublicCert());
         e.setPrivateKeyEncrypted(d.getPrivateKeyEncrypted());
@@ -56,6 +59,22 @@ public class CertificateMapper {
         e.setStatus(d.getStatus().name());
 
         return e;
+    }
+
+    // =========================
+    // ID mapping
+    // =========================
+
+    private static Id toId(byte[] bytes) {
+        return new Id(copy(bytes));
+    }
+
+    private static byte[] toBytes(Id id) {
+        return copy(id.toBytes());
+    }
+
+    private static byte[] copy(byte[] src) {
+        return src == null ? null : Arrays.copyOf(src, src.length);
     }
 
     // =========================

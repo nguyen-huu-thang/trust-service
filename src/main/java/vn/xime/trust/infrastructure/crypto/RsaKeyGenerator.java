@@ -9,13 +9,13 @@ import vn.xime.trust.application.port.out.KeyGenerator;
 public class RsaKeyGenerator implements KeyGenerator {
 
     @Override
-    public KeyPair generate(int keySize) {
+    public KeyPair generate(String algorithm, int keySize) {
         try {
-            KeyPairGenerator generator = KeyPairGenerator.getInstance("RSA");
+            KeyPairGenerator generator = KeyPairGenerator.getInstance(algorithm);
             generator.initialize(keySize);
             return generator.generateKeyPair();
         } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException("Failed to generate RSA key", e);
+            throw new RuntimeException("Failed to generate " + algorithm + " key", e);
         }
     }
 }

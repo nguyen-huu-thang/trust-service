@@ -5,9 +5,9 @@ import vn.xime.trust.infrastructure.persistence.entity.KeyAccessLogEntity;
 
 import java.util.List;
 
-public interface JpaKeyAccessLogRepository extends JpaRepository<KeyAccessLogEntity, Long> {
+public interface JpaKeyAccessLogRepository extends JpaRepository<KeyAccessLogEntity, byte[]> {
 
-    List<KeyAccessLogEntity> findByServiceIdOrderByRequestedAtDesc(String serviceId);
+    List<KeyAccessLogEntity> findBySignerServiceIdOrderByRequestedAtDesc(String signerServiceId);
 
-    List<KeyAccessLogEntity> findByKidOrderByRequestedAtDesc(String kid);
+    List<KeyAccessLogEntity> findByKeyIdOrderByRequestedAtDesc(byte[] keyId);
 }

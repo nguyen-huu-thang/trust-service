@@ -2,28 +2,19 @@ package vn.xime.trust.application.dto.request;
 
 public class GetKeysRequestDto {
 
-    /**
-     * Tên service (identity-service, payment-service...)
-     */
-    private final String service;
+    private final String signerServiceId;
+    private final String verifierServiceId;
 
-    /**
-     * Có cần private key không
-     * - true: Identity Service
-     * - false: các service verify
-     */
-    private final boolean includePrivate;
-
-    public GetKeysRequestDto(String service, boolean includePrivate) {
-        this.service = service;
-        this.includePrivate = includePrivate;
+    public GetKeysRequestDto(String signerServiceId, String verifierServiceId) {
+        this.signerServiceId = signerServiceId;
+        this.verifierServiceId = verifierServiceId;
     }
 
-    public String getService() {
-        return service;
+    public String getSignerServiceId() {
+        return signerServiceId;
     }
 
-    public boolean isIncludePrivate() {
-        return includePrivate;
+    public String getVerifierServiceId() {
+        return verifierServiceId;
     }
 }

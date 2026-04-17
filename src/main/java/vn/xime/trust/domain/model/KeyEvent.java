@@ -6,8 +6,11 @@ import java.util.Objects;
 
 public class KeyEvent {
 
-    private final String kid;
-    private final String serviceId;
+    private final Id id;
+
+    private final Id keyId;
+    private final String signerServiceId;
+    private final String verifierServiceId;
 
     private final KeyEventType eventType;
 
@@ -16,14 +19,18 @@ public class KeyEvent {
     private final Map<String, Object> metadata;
 
     public KeyEvent(
-            String kid,
-            String serviceId,
+            Id id,
+            Id keyId,
+            String signerServiceId,
+            String verifierServiceId,
             KeyEventType eventType,
             Instant createdAt,
             Map<String, Object> metadata
     ) {
-        this.kid = kid;
-        this.serviceId = serviceId;
+        this.id = Objects.requireNonNull(id);
+        this.keyId = Objects.requireNonNull(keyId);
+        this.signerServiceId = signerServiceId;
+        this.verifierServiceId = verifierServiceId;
         this.eventType = Objects.requireNonNull(eventType);
         this.createdAt = Objects.requireNonNull(createdAt);
         this.metadata = metadata;
@@ -33,12 +40,20 @@ public class KeyEvent {
     // GETTERS
     // =========================
 
-    public String getKid() {
-        return kid;
+    public Id getId() {
+    return id;
     }
 
-    public String getServiceId() {
-        return serviceId;
+    public Id getKeyId() {
+        return keyId;
+    }
+
+    public String getSignerServiceId() {
+        return signerServiceId;
+    }
+
+    public String getVerifierServiceId() {
+        return verifierServiceId;
     }
 
     public KeyEventType getEventType() {

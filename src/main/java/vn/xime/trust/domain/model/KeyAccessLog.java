@@ -5,8 +5,11 @@ import java.util.Objects;
 
 public class KeyAccessLog {
 
-    private final String kid;
-    private final String serviceId;
+    private final Id id;
+
+    private final Id keyId;
+    private final String signerServiceId;
+    private final String verifierServiceId;
 
     private final KeyAccessAction action;
 
@@ -20,8 +23,10 @@ public class KeyAccessLog {
     private final String errorMessage;
 
     public KeyAccessLog(
-            String kid,
-            String serviceId,
+            Id id,
+            Id keyId,
+            String signerServiceId,
+            String verifierServiceId,
             KeyAccessAction action,
             boolean includePrivate,
             Instant requestedAt,
@@ -29,8 +34,10 @@ public class KeyAccessLog {
             boolean success,
             String errorMessage
     ) {
-        this.kid = kid;
-        this.serviceId = serviceId;
+        this.id = Objects.requireNonNull(id);
+        this.keyId = keyId;
+        this.signerServiceId = signerServiceId;
+        this.verifierServiceId = verifierServiceId;
         this.action = Objects.requireNonNull(action);
         this.includePrivate = includePrivate;
         this.requestedAt = Objects.requireNonNull(requestedAt);
@@ -43,12 +50,20 @@ public class KeyAccessLog {
     // GETTERS
     // =========================
 
-    public String getKid() {
-        return kid;
+    public Id getId() {
+    return id;
     }
 
-    public String getServiceId() {
-        return serviceId;
+    public Id getKeyId() {
+        return keyId;
+    }
+
+    public String getSignerServiceId() {
+        return signerServiceId;
+    }
+
+    public String getVerifierServiceId() {
+        return verifierServiceId;
     }
 
     public KeyAccessAction getAction() {

@@ -1,8 +1,11 @@
 package vn.xime.trust.infrastructure.persistence.mapper;
 
+import vn.xime.trust.domain.model.Id;
 import vn.xime.trust.domain.model.KeyAccessAction;
 import vn.xime.trust.domain.model.KeyAccessLog;
 import vn.xime.trust.infrastructure.persistence.entity.KeyAccessLogEntity;
+
+import java.util.Arrays;
 
 public class KeyAccessLogMapper {
 
@@ -16,12 +19,15 @@ public class KeyAccessLogMapper {
             throw new IllegalArgumentException("KeyAccessLogEntity must not be null");
         }
 
+        requireNonNull(e.getId(), "id");
         requireNonNull(e.getAction(), "action");
         requireNonNull(e.getRequestedAt(), "requestedAt");
 
         return new KeyAccessLog(
-                e.getKid(),
-                e.getServiceId(),
+                toId(e.getId()),
+                toNullableId(e.getKeyId()),
+                e.getSignerServiceId(),
+                e.getVerifierServiceId(),
                 mapAction(e.getAction()),
                 Boolean.TRUE.equals(e.getIncludePrivate()),
                 e.getRequestedAt(),
@@ -43,8 +49,10 @@ public class KeyAccessLogMapper {
 
         KeyAccessLogEntity e = new KeyAccessLogEntity();
 
-        e.setKid(d.getKid());
-        e.setServiceId(d.getServiceId());
+        e.setId(toBytes(d.getId()));
+        e.setKeyId(toNullableBytes(d.getKeyId()));
+        e.setSignerServiceId(d.getSignerServiceId());
+        e.setVerifierServiceId(d.getVerifierServiceId());
         e.setAction(d.getAction().name());
         e.setIncludePrivate(d.isIncludePrivate());
         e.setRequestedAt(d.getRequestedAt());
@@ -53,6 +61,30 @@ public class KeyAccessLogMapper {
         e.setErrorMessage(d.getErrorMessage());
 
         return e;
+    }
+
+    // =========================
+    // ID MAPPING
+    // =========================
+
+    private static Id toId(byte[] bytes) {
+        return new Id(copy(bytes));
+    }
+
+    private static Id toNullableId(byte[] bytes) {
+        return bytes == null ? null : toId(bytes);
+    }
+
+    private static byte[] toBytes(Id id) {
+        return copy(id.toBytes());
+    }
+
+    private static byte[] toNullableBytes(Id id) {
+        return id == null ? null : toBytes(id);
+    }
+
+    private static byte[] copy(byte[] src) {
+        return src == null ? null : Arrays.copyOf(src, src.length);
     }
 
     // =========================

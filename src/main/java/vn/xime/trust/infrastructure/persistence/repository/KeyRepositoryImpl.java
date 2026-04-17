@@ -1,6 +1,7 @@
 package vn.xime.trust.infrastructure.persistence.repository;
 
 import org.springframework.stereotype.Repository;
+import vn.xime.trust.domain.model.Id;
 import vn.xime.trust.domain.model.Key;
 import vn.xime.trust.domain.repository.KeyRepository;
 import vn.xime.trust.infrastructure.persistence.mapper.KeyMapper;
@@ -25,8 +26,8 @@ public class KeyRepositoryImpl implements KeyRepository {
     }
 
     @Override
-    public Optional<Key> findByKid(String kid) {
-        return repo.findByKid(kid)
+    public Optional<Key> findById(Id id) {
+        return repo.findByIdBytes(id.toBytes())
                 .map(KeyMapper::toDomain);
     }
 

@@ -7,17 +7,17 @@ import vn.xime.trust.application.dto.request.GetKeysRequestDto;
 import vn.xime.trust.application.dto.response.GetKeysResponseDto;
 import vn.xime.trust.application.dto.response.PrivateKeyDto;
 import vn.xime.trust.application.dto.response.PublicKeyDto;
-import vn.xime.trust.application.usecase.key.GetKeyUseCase;
+import vn.xime.trust.application.usecase.key.GetKeysUseCase;
 
 import java.util.List;
 
 @Service
 public class TrustGrpcService extends TrustServiceGrpc.TrustServiceImplBase {
 
-    private final GetKeyUseCase getKeyUseCase;
+    private final GetKeysUseCase getKeysUseCase;
 
-    public TrustGrpcService(GetKeyUseCase getKeyUseCase) {
-        this.getKeyUseCase = getKeyUseCase;
+    public TrustGrpcService(GetKeysUseCase getKeysUseCase) {
+        this.getKeysUseCase = getKeysUseCase;
     }
 
     // =====================================================
@@ -43,7 +43,7 @@ public class TrustGrpcService extends TrustServiceGrpc.TrustServiceImplBase {
             // 2. Call use case
             // =========================
 
-            GetKeysResponseDto dtoResponse = getKeyUseCase.getKeys(dtoRequest);
+            GetKeysResponseDto dtoResponse = getKeysUseCase.execute(dtoRequest);
 
             // =========================
             // 3. Map DTO → proto response

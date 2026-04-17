@@ -14,37 +14,26 @@ import java.time.Instant;
                 )
         },
         indexes = {
-                @Index(name = "idx_cert_kid", columnList = "kid"),
+                @Index(name = "idx_cert_id", columnList = "id"),
                 @Index(name = "idx_cert_service_expire", columnList = "service_id,expires_at")
         }
 )
 public class CertificateEntity {
 
     // =========================
-    // ID
+    // ID (KSUID)
     // =========================
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Column(name = "id", nullable = false, columnDefinition = "BYTEA")
+    private byte[] id;
 
     // =========================
     // Ownership
     // =========================
 
-    /**
-     * Không dùng ManyToOne
-     * → giữ boundary microservice
-     */
-    @Column(name = "service_id", nullable = false, length = 100)
+    @Column(name = "service_id", nullable = false, length = 20)
     private String serviceId;
-
-    // =========================
-    // Identity
-    // =========================
-
-    @Column(name = "kid", nullable = false, unique = true, length = 100)
-    private String kid;
 
     // =========================
     // Certificate data
@@ -57,21 +46,13 @@ public class CertificateEntity {
     private String privateKeyEncrypted;
 
     // =========================
-    // Lifecycle (CRITICAL)
+    // Lifecycle
     // =========================
 
-    @Column(
-            name = "issued_at",
-            nullable = false,
-            columnDefinition = "TIMESTAMP WITH TIME ZONE"
-    )
+    @Column(name = "issued_at", nullable = false)
     private Instant issuedAt;
 
-    @Column(
-            name = "expires_at",
-            nullable = false,
-            columnDefinition = "TIMESTAMP WITH TIME ZONE"
-    )
+    @Column(name = "expires_at", nullable = false)
     private Instant expiresAt;
 
     /**
@@ -81,47 +62,15 @@ public class CertificateEntity {
     private String status;
 
     // =========================
-    // Lifecycle hooks
-    // =========================
-
-    // ❌ Không đặt logic ở JPA Entity. chỉ để test tạm thời.
-
-    // @PrePersist
-    // public void prePersist() {
-
-    //     if (issuedAt == null) {
-    //         throw new IllegalStateException("issuedAt must not be null");
-    //     }
-
-    //     validate();
-    // }
-
-    // @PreUpdate
-    // public void preUpdate() {
-    //     validate();
-    // }
-
-    // private void validate() {
-
-    //     if (issuedAt == null || expiresAt == null) {
-    //         throw new IllegalArgumentException("issued_at and expires_at must not be null");
-    //     }
-
-    //     if (!expiresAt.isAfter(issuedAt)) {
-    //         throw new IllegalArgumentException("expires_at must be after issued_at");
-    //     }
-
-    //     if (status == null || status.isBlank()) {
-    //         throw new IllegalArgumentException("status must not be empty");
-    //     }
-    // }
-
-    // =========================
     // Getter / Setter
     // =========================
 
-    public Long getId() {
+    public byte[] getId() {
         return id;
+    }
+
+    public void setId(byte[] id) {
+        this.id = id;
     }
 
     public String getServiceId() {
@@ -130,14 +79,6 @@ public class CertificateEntity {
 
     public void setServiceId(String serviceId) {
         this.serviceId = serviceId;
-    }
-
-    public String getKid() {
-        return kid;
-    }
-
-    public void setKid(String kid) {
-        this.kid = kid;
     }
 
     public String getPublicCert() {
@@ -163,7 +104,7 @@ public class CertificateEntity {
     public void setIssuedAt(Instant issuedAt) {
         this.issuedAt = issuedAt;
     }
-    
+
     public Instant getExpiresAt() {
         return expiresAt;
     }

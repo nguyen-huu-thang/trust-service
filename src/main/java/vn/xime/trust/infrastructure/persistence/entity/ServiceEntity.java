@@ -18,7 +18,7 @@ public class ServiceEntity {
      * ID do hệ thống cấp (vd: user_service, payment_service)
      */
     @Id
-    @Column(name = "id", nullable = false, length = 100)
+    @Column(name = "id", nullable = false, length = 20)
     private String id;
 
     // =========================

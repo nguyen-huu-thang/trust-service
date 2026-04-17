@@ -5,6 +5,8 @@ import java.util.Objects;
 
 public class KeyPolicy {
 
+    private final Id id;
+
     private final String signerServiceId;
     private final String verifierServiceId;
 
@@ -16,6 +18,7 @@ public class KeyPolicy {
     private final Instant updatedAt;
 
     public KeyPolicy(
+            Id id,
             String signerServiceId,
             String verifierServiceId,
             long keyLifetimeSeconds,
@@ -28,6 +31,7 @@ public class KeyPolicy {
             throw new IllegalArgumentException("signer and verifier must be different");
         }
 
+        this.id = Objects.requireNonNull(id);
         this.signerServiceId = Objects.requireNonNull(signerServiceId);
         this.verifierServiceId = Objects.requireNonNull(verifierServiceId);
 
@@ -42,6 +46,10 @@ public class KeyPolicy {
     // =========================
     // GETTERS
     // =========================
+
+    public Id getId() {
+    return id;
+    }
 
     public String getSignerServiceId() {
         return signerServiceId;

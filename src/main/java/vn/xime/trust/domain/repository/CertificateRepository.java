@@ -1,6 +1,7 @@
 package vn.xime.trust.domain.repository;
 
 import vn.xime.trust.domain.model.Certificate;
+import vn.xime.trust.domain.model.Id;
 
 import java.time.Instant;
 import java.util.List;
@@ -10,9 +11,13 @@ public interface CertificateRepository {
 
     Certificate save(Certificate certificate);
 
-    Optional<Certificate> findByKid(String kid);
+    Optional<Certificate> findById(Id id);
 
     List<Certificate> findByServiceId(String serviceId);
 
     List<Certificate> findValidCertificates(String serviceId, Instant now);
+
+    // Optional<Certificate> findTopByServiceIdOrderByIssuedAtDesc(String serviceId); làm sau
+
+    // Optional<Certificate> findLatestByServiceId(String serviceId); làm sau
 }

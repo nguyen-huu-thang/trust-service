@@ -9,37 +9,40 @@ import java.time.Instant;
         name = "key_access_logs",
         indexes = {
                 @Index(
-                        name = "idx_key_access_logs_service_time",
-                        columnList = "service_id,requested_at DESC"
+                        name = "idx_key_access_logs_signer_time",
+                        columnList = "signer_service_id,requested_at DESC"
+                ),
+                @Index(
+                        name = "idx_key_access_logs_key",
+                        columnList = "key_id"
                 )
         }
 )
 public class KeyAccessLogEntity {
 
     // =========================
-    // ID
+    // ID (KSUID)
     // =========================
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Column(name = "id", nullable = false, columnDefinition = "BYTEA")
+    private byte[] id;
 
     // =========================
-    // Reference (NO RELATION)
+    // REFERENCE (NO FK)
     // =========================
 
-    /**
-     * Không dùng ManyToOne
-     * → log không nên phụ thuộc entity khác
-     */
-    @Column(name = "kid", length = 100)
-    private String kid;
+    @Column(name = "key_id", columnDefinition = "BYTEA")
+    private byte[] keyId;
 
-    @Column(name = "service_id", length = 100)
-    private String serviceId;
+    @Column(name = "signer_service_id", length = 20)
+    private String signerServiceId;
+
+    @Column(name = "verifier_service_id", length = 20)
+    private String verifierServiceId;
 
     // =========================
-    // Action
+    // ACTION
     // =========================
 
     @Column(name = "action", length = 50)
@@ -52,18 +55,14 @@ public class KeyAccessLogEntity {
     private Boolean includePrivate;
 
     // =========================
-    // Time (VERY IMPORTANT)
+    // TIME
     // =========================
 
-    @Column(
-            name = "requested_at",
-            nullable = false,
-            columnDefinition = "TIMESTAMP WITH TIME ZONE"
-    )
+    @Column(name = "requested_at", nullable = false)
     private Instant requestedAt;
 
     // =========================
-    // Metadata
+    // METADATA
     // =========================
 
     @Column(name = "ip_address", length = 50)
@@ -76,40 +75,39 @@ public class KeyAccessLogEntity {
     private String errorMessage;
 
     // =========================
-    // Lifecycle hooks
+    // GETTER / SETTER
     // =========================
 
-    // ❌ Không đặt logic ở JPA Entity. chỉ để test tạm thời.
-
-    // @PrePersist
-    // public void prePersist() {
-    //     if (requestedAt == null) {
-    //         throw new IllegalStateException("requestedAt must not be null");
-    //     }
-    // }
-
-    // =========================
-    // Getter / Setter
-    // =========================
-
-    public Long getId() {
+    public byte[] getId() {
         return id;
     }
 
-    public String getKid() {
-        return kid;
+    public void setId(byte[] id) {
+        this.id = id;
     }
 
-    public void setKid(String kid) {
-        this.kid = kid;
+    public byte[] getKeyId() {
+        return keyId;
     }
 
-    public String getServiceId() {
-        return serviceId;
+    public void setKeyId(byte[] keyId) {
+        this.keyId = keyId;
     }
 
-    public void setServiceId(String serviceId) {
-        this.serviceId = serviceId;
+    public String getSignerServiceId() {
+        return signerServiceId;
+    }
+
+    public void setSignerServiceId(String signerServiceId) {
+        this.signerServiceId = signerServiceId;
+    }
+
+    public String getVerifierServiceId() {
+        return verifierServiceId;
+    }
+
+    public void setVerifierServiceId(String verifierServiceId) {
+        this.verifierServiceId = verifierServiceId;
     }
 
     public String getAction() {

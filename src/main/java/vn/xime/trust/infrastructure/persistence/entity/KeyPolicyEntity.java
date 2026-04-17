@@ -14,34 +14,34 @@ import java.time.Instant;
                 )
         },
         indexes = {
-                @Index(name = "idx_key_policies_signer", columnList = "signer_service_id"),
-                @Index(name = "idx_key_policies_verifier", columnList = "verifier_service_id")
+                @Index(name = "idx_policies_signer", columnList = "signer_service_id"),
+                @Index(name = "idx_policies_verifier", columnList = "verifier_service_id")
         }
 )
 public class KeyPolicyEntity {
 
     // =========================
-    // ID
+    // ID (KSUID - BYTEA)
     // =========================
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @Column(name = "id", nullable = false, columnDefinition = "BYTEA")
+    private byte[] id;
 
     // =========================
-    // RELATIONSHIP (CORE)
+    // RELATIONSHIP
     // =========================
 
     /**
      * Service dùng để SIGN (identity service)
      */
-    @Column(name = "signer_service_id", nullable = false, length = 100)
+    @Column(name = "signer_service_id", nullable = false, length = 20)
     private String signerServiceId;
 
     /**
      * Service dùng để VERIFY
      */
-    @Column(name = "verifier_service_id", nullable = false, length = 100)
+    @Column(name = "verifier_service_id", nullable = false, length = 20)
     private String verifierServiceId;
 
     // =========================
@@ -70,25 +70,22 @@ public class KeyPolicyEntity {
     // AUDIT
     // =========================
 
-    @Column(
-            name = "created_at",
-            nullable = false,
-            columnDefinition = "TIMESTAMP WITH TIME ZONE"
-    )
+    @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
-    @Column(
-            name = "updated_at",
-            columnDefinition = "TIMESTAMP WITH TIME ZONE"
-    )
+    @Column(name = "updated_at")
     private Instant updatedAt;
 
     // =========================
     // GETTER / SETTER
     // =========================
 
-    public Long getId() {
+    public byte[] getId() {
         return id;
+    }
+
+    public void setId(byte[] id) {
+        this.id = id;
     }
 
     public String getSignerServiceId() {

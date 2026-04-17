@@ -1,5 +1,5 @@
 =======================================
-TRUST SERVICE – DATABASE DESIGN (V2)
+TRUST SERVICE – DATABASE DESIGN (V3 - KSUID)
 =======================================
 
 ==================================================
@@ -8,7 +8,7 @@ SERVICES
 
 ## services
 
-id VARCHAR(100) PRIMARY KEY   -- service_id (global identity của service)
+id VARCHAR(20) PRIMARY KEY
 
 name VARCHAR(100) NOT NULL
 tenant VARCHAR(100)
@@ -24,9 +24,9 @@ SHARDS (RESTORED + IMPROVED)
 
 ## shards
 
-id VARCHAR(50) PRIMARY KEY        -- shard_id (unique instance, vd: user-1, user-2, A1B2C3)
+id VARCHAR(10) PRIMARY KEY   -- giảm từ 50 → 10
 
-service_id VARCHAR(100) NOT NULL  -- thuộc service nào
+service_id VARCHAR(20) NOT NULL  -- thuộc service nào
 
 -- network
 host VARCHAR(100)
@@ -56,28 +56,22 @@ ON shards(status);
 CREATE INDEX idx_shards_heartbeat
 ON shards(last_heartbeat);
 
-
 ==================================================
 KEY_POLICIES
 =====================================
 
 ## key_policies
 
-id BIGSERIAL PRIMARY KEY
+id BYTEA PRIMARY KEY   -- 🔥 KSUID (20 bytes)
 
 -- relationship
-signer_service_id VARCHAR(100) NOT NULL
-verifier_service_id VARCHAR(100) NOT NULL
+signer_service_id VARCHAR(20) NOT NULL
+verifier_service_id VARCHAR(20) NOT NULL
 
 -- policy
 key_lifetime_seconds BIGINT NOT NULL
 jwt_ttl_seconds BIGINT NOT NULL
 preload_seconds BIGINT NOT NULL
-
--- rotation control
-auto_rotate BOOLEAN DEFAULT TRUE
-last_rotated_at TIMESTAMP
-next_rotation_at TIMESTAMP
 
 -- audit
 created_at TIMESTAMP NOT NULL
@@ -95,11 +89,11 @@ UNIQUE(signer_service_id, verifier_service_id)
 CHECK (signer_service_id != verifier_service_id)
 
 -- indexes
-CREATE INDEX idx_trusts_signer
-ON service_trusts(signer_service_id);
+CREATE INDEX idx_policies_signer
+ON key_policies(signer_service_id);
 
-CREATE INDEX idx_trusts_verifier
-ON service_trusts(verifier_service_id);
+CREATE INDEX idx_policies_verifier
+ON key_policies(verifier_service_id);
 
 
 ==================================================
@@ -108,14 +102,11 @@ KEYS (UPDATED - RELATIONSHIP BASED)
 
 ## keys
 
-id BIGSERIAL PRIMARY KEY
-
--- identify
-kid VARCHAR(100) UNIQUE NOT NULL
+id BYTEA PRIMARY KEY   -- 🔥 KSUID (thay cho kid cũ)
 
 -- relationship
-signer_service_id VARCHAR(100) NOT NULL
-verifier_service_id VARCHAR(100) NOT NULL
+signer_service_id VARCHAR(20) NOT NULL
+verifier_service_id VARCHAR(20) NOT NULL
 
 -- key data
 public_key TEXT NOT NULL
@@ -144,9 +135,9 @@ CHECK (expires_at > activate_at)
 
 UNIQUE(signer_service_id, verifier_service_id, activate_at)
 
--- indexes
-CREATE INDEX idx_keys_kid
-ON keys(kid);
+-- index theo id (kid cũ)
+CREATE INDEX idx_keys_id
+ON keys(id);
 
 CREATE INDEX idx_keys_signer_active
 ON keys(signer_service_id, is_deleted, expires_at);
@@ -164,12 +155,12 @@ KEY ACCESS LOGS (AUDIT - NO FK)
 
 ## key_access_logs
 
-id BIGSERIAL PRIMARY KEY
+id BYTEA PRIMARY KEY   -- 🔥 KSUID
 
-kid VARCHAR(100)
+key_id BYTEA           -- thay cho kid
 
-signer_service_id VARCHAR(100)
-verifier_service_id VARCHAR(100)
+signer_service_id VARCHAR(20)
+verifier_service_id VARCHAR(20)
 
 action VARCHAR(50)
 
@@ -186,8 +177,8 @@ error_message TEXT
 CREATE INDEX idx_key_access_logs_signer_time
 ON key_access_logs(signer_service_id, requested_at DESC);
 
-CREATE INDEX idx_key_access_logs_kid
-ON key_access_logs(kid);
+CREATE INDEX idx_key_access_logs_key
+ON key_access_logs(key_id);
 
 
 ==================================================
@@ -196,12 +187,12 @@ KEY EVENTS (AUDIT - NO FK)
 
 ## key_events
 
-id BIGSERIAL PRIMARY KEY
+id BYTEA PRIMARY KEY   -- 🔥 KSUID
 
-kid VARCHAR(100)
+key_id BYTEA
 
-signer_service_id VARCHAR(100)
-verifier_service_id VARCHAR(100)
+signer_service_id VARCHAR(20)
+verifier_service_id VARCHAR(20)
 
 event_type VARCHAR(50)
 
@@ -213,8 +204,8 @@ metadata JSONB
 CREATE INDEX idx_key_events_signer_time
 ON key_events(signer_service_id, created_at DESC);
 
-CREATE INDEX idx_key_events_kid
-ON key_events(kid);
+CREATE INDEX idx_key_events_key
+ON key_events(key_id);
 
 
 ==================================================
@@ -223,11 +214,9 @@ CERTIFICATES
 
 ## certificates
 
-id BIGSERIAL PRIMARY KEY
+id BYTEA PRIMARY KEY   -- 🔥 KSUID (thay kid)
 
-service_id VARCHAR(100) NOT NULL
-
-kid VARCHAR(100) UNIQUE NOT NULL
+service_id VARCHAR(20) NOT NULL
 
 public_cert TEXT NOT NULL
 private_key_encrypted TEXT NOT NULL
@@ -246,8 +235,8 @@ CHECK (expires_at > issued_at)
 UNIQUE(service_id, issued_at)
 
 -- indexes
-CREATE INDEX idx_cert_kid
-ON certificates(kid);
+CREATE INDEX idx_cert_id
+ON certificates(id);
 
 CREATE INDEX idx_cert_service_expire
 ON certificates(service_id, expires_at);
@@ -259,13 +248,13 @@ CERT REFRESH TOKENS
 
 ## cert_refresh_tokens
 
-id BIGSERIAL PRIMARY KEY
+id BYTEA PRIMARY KEY   -- 🔥 KSUID
 
-service_id VARCHAR(100) NOT NULL
+service_id VARCHAR(20) NOT NULL
 
 token_hash TEXT NOT NULL
 
-bound_kid VARCHAR(100) NOT NULL
+bound_cert_id BYTEA NOT NULL   -- 🔥 đổi từ bound_kid
 
 issued_at TIMESTAMP NOT NULL
 expires_at TIMESTAMP NOT NULL
@@ -277,8 +266,8 @@ issued_by VARCHAR(100)
 FOREIGN KEY (service_id)
 REFERENCES services(id)
 
-FOREIGN KEY (bound_kid)
-REFERENCES certificates(kid)
+FOREIGN KEY (bound_cert_id)
+REFERENCES certificates(id)
 
 UNIQUE(token_hash)
 
@@ -289,8 +278,8 @@ ON cert_refresh_tokens(token_hash);
 CREATE INDEX idx_refresh_service_used
 ON cert_refresh_tokens(service_id, used_at);
 
-CREATE INDEX idx_refresh_bound_kid
-ON cert_refresh_tokens(bound_kid);
+CREATE INDEX idx_refresh_bound_cert
+ON cert_refresh_tokens(bound_cert_id);
 
 
 ==================================================
@@ -299,10 +288,10 @@ CERT EVENTS (AUDIT - NO FK)
 
 ## cert_events
 
-id BIGSERIAL PRIMARY KEY
+id BYTEA PRIMARY KEY   -- 🔥 KSUID
 
-service_id VARCHAR(100)
-kid VARCHAR(100)
+service_id VARCHAR(20)
+cert_id BYTEA          -- thay kid
 
 event_type VARCHAR(50)
 
@@ -314,9 +303,8 @@ metadata JSONB
 CREATE INDEX idx_cert_events_service_time
 ON cert_events(service_id, created_at DESC);
 
-CREATE INDEX idx_cert_events_kid
-ON cert_events(kid);
-
+CREATE INDEX idx_cert_events_cert
+ON cert_events(cert_id);
 
 ==================================================
 END
