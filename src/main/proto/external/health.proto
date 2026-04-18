@@ -1,0 +1,80 @@
+syntax = "proto3";
+
+package trust.external.health;
+
+option java_package = "vn.xime.trust.grpc.external.health";
+option java_multiple_files = true;
+
+
+// ==================================================
+// HEALTH / META SERVICE
+// ==================================================
+//
+// ⚠️ EXTERNAL API
+// - Dùng cho monitoring / load balancer
+// - Không chứa dữ liệu nhạy cảm
+//
+// USE CASE:
+// - health check
+// - readiness check
+// - metadata nhẹ
+//
+service HealthService {
+
+  // ==================================================
+  // LIVENESS
+  // ==================================================
+  //
+  // 👉 service có đang chạy không
+  //
+  rpc CheckLiveness (CheckLivenessRequest)
+      returns (CheckLivenessResponse);
+
+
+  // ==================================================
+  // READINESS
+  // ==================================================
+  //
+  // 👉 service có sẵn sàng xử lý request không
+  // (DB, dependency, etc.)
+  //
+  rpc CheckReadiness (CheckReadinessRequest)
+      returns (CheckReadinessResponse);
+
+
+  // ==================================================
+  // METADATA (SAFE)
+  // ==================================================
+  //
+  // 👉 thông tin nhẹ, không nhạy cảm
+  //
+  rpc GetServiceInfo (GetServiceInfoRequest)
+      returns (GetServiceInfoResponse);
+}
+
+
+message CheckLivenessRequest {}
+
+message CheckLivenessResponse {
+  string status = 1; // ALIVE / DEAD
+}
+
+message CheckReadinessRequest {}
+
+message CheckReadinessResponse {
+  string status = 1; // READY / NOT_READY
+}
+
+message GetServiceInfoRequest {}
+
+message GetServiceInfoResponse {
+
+  string service_name = 1;
+
+  string version = 2;
+
+  string environment = 3; // dev / staging / prod
+
+  int64 started_at = 4;
+}
+

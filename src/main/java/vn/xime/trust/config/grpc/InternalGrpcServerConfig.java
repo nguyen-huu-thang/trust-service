@@ -4,7 +4,8 @@ import io.grpc.Server;
 import io.grpc.netty.shaded.io.grpc.netty.NettyServerBuilder;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import vn.xime.trust.api.grpc.internal.InternalAdminGrpcService;
+import vn.xime.trust.api.grpc.internal.ShardAdminGrpcService;
+import vn.xime.trust.api.grpc.internal.ServiceAdminGrpcService;
 
 import java.net.InetSocketAddress;
 
@@ -12,11 +13,15 @@ import java.net.InetSocketAddress;
 public class InternalGrpcServerConfig {
 
     @Bean(initMethod = "start", destroyMethod = "shutdown")
-    public Server internalGrpcServer(InternalAdminGrpcService internalService) {
+    public Server internalGrpcServer(
+            ShardAdminGrpcService shardService,
+            ServiceAdminGrpcService serviceService
+    ) {
 
         return NettyServerBuilder
-                .forAddress(new InetSocketAddress("127.0.0.2", 9091)) // 🔥 local only
-                .addService(internalService)
+                .forAddress(new InetSocketAddress("127.0.0.2", 9091)) // 🔥 internal only
+                .addService(shardService)
+                .addService(serviceService)
                 .build();
     }
 }

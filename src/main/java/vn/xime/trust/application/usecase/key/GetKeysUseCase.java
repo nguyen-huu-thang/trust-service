@@ -2,7 +2,7 @@ package vn.xime.trust.application.usecase.key;
 
 import org.springframework.stereotype.Component;
 import vn.xime.trust.application.dto.request.GetKeysRequestDto;
-import vn.xime.trust.application.dto.response.KeyDto;
+import vn.xime.trust.application.dto.response.KeysResponseDto;
 import vn.xime.trust.domain.model.Key;
 import vn.xime.trust.domain.repository.KeyRepository;
 import vn.xime.trust.domain.service.KeyLifecycleDomainService;
@@ -24,7 +24,7 @@ public class GetKeysUseCase {
         this.lifecycleService = lifecycleService;
     }
 
-    public List<KeyDto> execute(GetKeysRequestDto query) {
+    public List<KeysResponseDto> execute(GetKeysRequestDto query) {
 
         List<Key> keys = keyRepository.findBySignerAndVerifier(
                 query.getSignerServiceId(),
@@ -38,8 +38,8 @@ public class GetKeysUseCase {
                 .toList();
     }
 
-    private KeyDto toDto(Key k) {
-        return new KeyDto(
+    private KeysResponseDto toDto(Key k) {
+        return new KeysResponseDto(
                 IdService.toBase62(k.getId()),
                 k.getPublicKey(),
                 k.getAlgorithm().name(),

@@ -1,13 +1,11 @@
 package vn.xime.trust.application.dto.request;
 
-import vn.xime.trust.domain.model.ShardStatus;
-
 public class UpdateShardStatusCommand {
 
     private final String shardId;
-    private final ShardStatus status;
+    private final String status;
 
-    public UpdateShardStatusCommand(String shardId, ShardStatus status) {
+    public UpdateShardStatusCommand(String shardId, String status) {
         this.shardId = shardId;
         this.status = status;
     }
@@ -16,7 +14,7 @@ public class UpdateShardStatusCommand {
         return shardId;
     }
 
-    public ShardStatus getStatus() {
+    public String getStatus() {
         return status;
     }
 }

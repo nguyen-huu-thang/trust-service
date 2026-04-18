@@ -1,0 +1,86 @@
+syntax = "proto3";
+
+package trust.internal.audit.certevent;
+
+option java_package = "vn.xime.trust.grpc.internal.audit.certevent";
+option java_multiple_files = true;
+
+
+// ==================================================
+// CERTIFICATE EVENT (AUDIT)
+// ==================================================
+
+service CertEventService {
+
+  // Append event
+  rpc RecordCertEvent (RecordCertEventRequest)
+      returns (RecordCertEventResponse);
+
+  // Query events
+  rpc ListCertEvents (ListCertEventsRequest)
+      returns (ListCertEventsResponse);
+}
+
+
+// ==================================================
+// WRITE
+// ==================================================
+
+message RecordCertEventRequest {
+
+  bytes cert_id = 1;
+
+  string service_id = 2;
+
+  string event_type = 3;
+  // ISSUED / USED / ROTATED / REVOKED / EXPIRED
+
+  string metadata_json = 4;
+}
+
+message RecordCertEventResponse {
+  bytes id = 1;
+}
+
+
+// ==================================================
+// READ
+// ==================================================
+
+message ListCertEventsRequest {
+
+  bytes cert_id = 1;
+
+  string service_id = 2;
+
+  string event_type = 3;
+
+  // time range
+  int64 from_time = 4;
+  int64 to_time = 5;
+
+  // pagination
+  int32 limit = 6;
+  string cursor = 7;
+}
+
+message ListCertEventsResponse {
+  repeated CertEventDto events = 1;
+  string next_cursor = 2;
+}
+
+
+message CertEventDto {
+
+  bytes id = 1;
+
+  bytes cert_id = 2;
+
+  string service_id = 3;
+
+  string event_type = 4;
+
+  int64 created_at = 5;
+
+  string metadata_json = 6;
+}

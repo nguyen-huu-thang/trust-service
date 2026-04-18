@@ -63,4 +63,14 @@ public class Service {
     public Instant getCreatedAt() {
         return createdAt;
     }
+
+    public Service changeStatus(ServiceStatus newStatus) {
+        return new Service(
+                this.id,
+                this.name,
+                this.tenant,
+                newStatus,
+                this.createdAt
+        );
+    }
 }

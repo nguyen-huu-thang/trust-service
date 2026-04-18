@@ -1,0 +1,91 @@
+syntax = "proto3";
+
+package trust.internal.shard;
+
+option java_package = "vn.xime.trust.grpc.internal.shard";
+option java_multiple_files = true;
+
+
+// ==================================================
+// SHARD MANAGEMENT
+// ==================================================
+
+service ShardAdmin {
+
+  // Register shard (instance up)
+  rpc RegisterShard (RegisterShardRequest)
+      returns (RegisterShardResponse);
+
+  // Update lifecycle (ACTIVE / DRAINING / DEAD)
+  rpc UpdateShardStatus (UpdateShardStatusRequest)
+      returns (UpdateShardStatusResponse);
+
+  // List shards (filter)
+  rpc ListShards (ListShardsRequest)
+      returns (ListShardsResponse);
+}
+
+
+// ==================================================
+// REQUEST / RESPONSE
+// ==================================================
+
+message RegisterShardRequest {
+  string id = 1;             // PK (ngắn)
+  string service_id = 2;
+
+  string host = 3;
+  int32 port = 4;
+}
+
+message RegisterShardResponse {
+  ShardDto shard = 1;
+}
+
+
+// --------------------------------------------------
+
+message UpdateShardStatusRequest {
+  string shard_id = 1;
+  string status = 2; // INACTIVE / ACTIVE / MAINTENANCE / FAILED
+}
+
+message UpdateShardStatusResponse {
+  string status = 1;
+}
+
+// --------------------------------------------------
+
+message ListShardsRequest {
+
+  // filters
+  string service_id = 1;
+  string status = 2;
+
+  // pagination
+  int32 limit = 3;
+  string cursor = 4;
+}
+
+message ListShardsResponse {
+  repeated ShardDto shards = 1;
+  string next_cursor = 2;
+}
+
+
+// ==================================================
+// DTO
+// ==================================================
+
+message ShardDto {
+
+  string id = 1;
+  string service_id = 2;
+
+  string host = 3;
+  int32 port = 4;
+
+  string status = 5;
+
+  int64 created_at = 6;
+}

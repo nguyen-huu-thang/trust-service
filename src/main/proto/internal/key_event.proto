@@ -1,0 +1,89 @@
+syntax = "proto3";
+
+package trust.internal.audit.keyevent;
+
+option java_package = "vn.xime.trust.grpc.internal.audit.keyevent";
+option java_multiple_files = true;
+
+
+// ==================================================
+// KEY EVENT (AUDIT)
+// ==================================================
+
+service KeyEventService {
+
+  // Append event
+  rpc RecordKeyEvent (RecordKeyEventRequest)
+      returns (RecordKeyEventResponse);
+
+  // Query events
+  rpc ListKeyEvents (ListKeyEventsRequest)
+      returns (ListKeyEventsResponse);
+}
+
+
+// ==================================================
+// WRITE
+// ==================================================
+
+message RecordKeyEventRequest {
+
+  bytes key_id = 1;
+
+  string signer_service_id = 2;
+  string verifier_service_id = 3;
+
+  string event_type = 4; 
+  // CREATED / ROTATED / ACTIVATED / EXPIRED / DELETED
+
+  string metadata_json = 5; // optional (raw JSON)
+}
+
+message RecordKeyEventResponse {
+  bytes id = 1;
+}
+
+
+// ==================================================
+// READ
+// ==================================================
+
+message ListKeyEventsRequest {
+
+  // filters
+  bytes key_id = 1;
+
+  string signer_service_id = 2;
+  string verifier_service_id = 3;
+
+  string event_type = 4;
+
+  // time range
+  int64 from_time = 5;
+  int64 to_time = 6;
+
+  // pagination
+  int32 limit = 7;
+  string cursor = 8;
+}
+
+message ListKeyEventsResponse {
+  repeated KeyEventDto events = 1;
+  string next_cursor = 2;
+}
+
+message KeyEventDto {
+
+  bytes id = 1;
+
+  bytes key_id = 2;
+
+  string signer_service_id = 3;
+  string verifier_service_id = 4;
+
+  string event_type = 5;
+
+  int64 created_at = 6;
+
+  string metadata_json = 7;
+}

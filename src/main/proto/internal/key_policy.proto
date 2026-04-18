@@ -1,0 +1,115 @@
+syntax = "proto3";
+
+package trust.internal.keypolicy;
+
+option java_package = "vn.xime.trust.grpc.internal.keypolicy";
+option java_multiple_files = true;
+
+
+// ==================================================
+// KEY POLICY MANAGEMENT
+// ==================================================
+
+service KeyPolicyAdmin {
+
+  // Create policy (unique pair signer-verifier)
+  rpc CreateKeyPolicy (CreateKeyPolicyRequest)
+      returns (CreateKeyPolicyResponse);
+
+  // Get single policy
+  rpc GetKeyPolicy (GetKeyPolicyRequest)
+      returns (GetKeyPolicyResponse);
+
+  // List policies (filter)
+  rpc ListKeyPolicies (ListKeyPoliciesRequest)
+      returns (ListKeyPoliciesResponse);
+
+  // Update policy
+  rpc UpdateKeyPolicy (UpdateKeyPolicyRequest)
+      returns (UpdateKeyPolicyResponse);
+}
+
+
+// ==================================================
+// REQUEST / RESPONSE
+// ==================================================
+
+message CreateKeyPolicyRequest {
+
+  string signer_service_id = 1;
+  string verifier_service_id = 2;
+
+  int64 key_lifetime_seconds = 3;
+  int64 jwt_ttl_seconds = 4;
+  int64 preload_seconds = 5;
+}
+
+message CreateKeyPolicyResponse {
+  KeyPolicyDto policy = 1;
+}
+
+
+// --------------------------------------------------
+
+message GetKeyPolicyRequest {
+  string signer_service_id = 1;
+  string verifier_service_id = 2;
+}
+
+message GetKeyPolicyResponse {
+  KeyPolicyDto policy = 1;
+}
+
+
+// --------------------------------------------------
+
+message ListKeyPoliciesRequest {
+
+  string signer_service_id = 1;
+  string verifier_service_id = 2;
+
+  int32 limit = 3;
+  string cursor = 4;
+}
+
+message ListKeyPoliciesResponse {
+  repeated KeyPolicyDto policies = 1;
+  string next_cursor = 2;
+}
+
+
+// --------------------------------------------------
+
+message UpdateKeyPolicyRequest {
+
+  string signer_service_id = 1;
+  string verifier_service_id = 2;
+
+  int64 key_lifetime_seconds = 3;
+  int64 jwt_ttl_seconds = 4;
+  int64 preload_seconds = 5;
+}
+
+message UpdateKeyPolicyResponse {
+  KeyPolicyDto policy = 1;
+}
+
+
+// ==================================================
+// DTO
+// ==================================================
+
+message KeyPolicyDto {
+
+  bytes id = 1; // KSUID
+
+  string signer_service_id = 2;
+  string verifier_service_id = 3;
+
+  int64 key_lifetime_seconds = 4;
+  int64 jwt_ttl_seconds = 5;
+  int64 preload_seconds = 6;
+
+  int64 created_at = 7;
+  int64 updated_at = 8;
+}

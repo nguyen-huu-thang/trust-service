@@ -9,6 +9,7 @@ import vn.xime.trust.domain.factory.KeyFactory;
 import vn.xime.trust.domain.model.Key;
 import vn.xime.trust.domain.model.KeyAlgorithm;
 import vn.xime.trust.domain.model.KeyPolicy;
+import vn.xime.trust.domain.service.IdService;
 import vn.xime.trust.domain.repository.KeyPolicyRepository;
 import vn.xime.trust.domain.repository.KeyRepository;
 import vn.xime.trust.domain.repository.ServiceRepository;
@@ -28,12 +29,12 @@ public class GenerateKeyUseCase {
     private final KeyFactory keyFactory;
 
     public GenerateKeyUseCase(
-            KeyRepository keyRepository,
-            ServiceRepository serviceRepository,
-            KeyPolicyRepository keyPolicyRepository,
-            KeyGenerator keyGenerator,
-            KeyEncryptionService encryptionService,
-            KeyFactory keyFactory
+        KeyRepository keyRepository,
+        ServiceRepository serviceRepository,
+        KeyPolicyRepository keyPolicyRepository,
+        KeyGenerator keyGenerator,
+        KeyEncryptionService encryptionService,
+        KeyFactory keyFactory
     ) {
         this.keyRepository = keyRepository;
         this.serviceRepository = serviceRepository;
@@ -44,7 +45,7 @@ public class GenerateKeyUseCase {
     }
 
     @Transactional
-    public byte[] execute(GenerateKeyCommand cmd) {
+    public String execute(GenerateKeyCommand cmd) {
 
         Instant now = Instant.now();
 
@@ -115,7 +116,6 @@ public class GenerateKeyUseCase {
 
         keyRepository.save(key);
 
-        // return id (byte[])
-        return key.getId().toBytes();
+        return IdService.toBase62(key.getId());
     }
 }

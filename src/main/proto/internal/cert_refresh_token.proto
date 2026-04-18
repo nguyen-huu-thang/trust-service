@@ -1,0 +1,125 @@
+syntax = "proto3";
+
+package trust.internal.certificate.refreshtoken;
+
+option java_package = "vn.xime.trust.grpc.internal.certificate.refreshtoken";
+option java_multiple_files = true;
+
+
+// ==================================================
+// CERT REFRESH TOKEN (mTLS ROTATION)
+// ==================================================
+
+service CertRefreshTokenService {
+
+  // Issue new refresh token
+  rpc IssueRefreshToken (IssueRefreshTokenRequest)
+      returns (IssueRefreshTokenResponse);
+
+  // Rotate certificate using refresh token
+  rpc RotateCertificate (RotateCertificateRequest)
+      returns (RotateCertificateResponse);
+
+  // List tokens (audit/debug)
+  rpc ListRefreshTokens (ListRefreshTokensRequest)
+      returns (ListRefreshTokensResponse);
+}
+
+
+message IssueRefreshTokenRequest {
+
+  string service_id = 1;
+
+  bytes bound_cert_id = 2;
+
+  int64 ttl_seconds = 3;
+
+  string issued_by = 4; // system / admin
+}
+
+message IssueRefreshTokenResponse {
+
+  bytes id = 1;
+
+  // ⚠️ raw token chỉ trả 1 lần
+  string refresh_token = 2;
+
+  int64 expires_at = 3;
+}
+
+
+message RotateCertificateRequest {
+
+  string service_id = 1;
+
+  // raw token
+  string refresh_token = 2;
+}
+
+message RotateCertificateResponse {
+
+  // cert mới
+  CertificateDto certificate = 1;
+
+  // refresh token mới (chain rotation)
+  string next_refresh_token = 2;
+
+  int64 expires_at = 3;
+}
+
+
+message ListRefreshTokensRequest {
+
+  string service_id = 1;
+
+  bytes bound_cert_id = 2;
+
+  bool used = 3;
+
+  // time range
+  int64 from_time = 4;
+  int64 to_time = 5;
+
+  int32 limit = 6;
+  string cursor = 7;
+}
+
+message ListRefreshTokensResponse {
+  repeated CertRefreshTokenDto tokens = 1;
+  string next_cursor = 2;
+}
+
+message CertRefreshTokenDto {
+
+  bytes id = 1;
+
+  string service_id = 2;
+
+  bytes bound_cert_id = 3;
+
+  int64 issued_at = 4;
+  int64 expires_at = 5;
+
+  int64 used_at = 6;
+
+  string issued_by = 7;
+}
+
+message CertificateDto {
+
+  bytes id = 1;
+
+  string service_id = 2;
+
+  // cert data
+  string public_cert = 3;
+
+  // ⚠️ chỉ trả cho service owner hoặc internal
+  string private_key_encrypted = 4;
+
+  // lifecycle
+  int64 issued_at = 5;
+  int64 expires_at = 6;
+
+  string status = 7; // ACTIVE / REVOKED / EXPIRED
+}

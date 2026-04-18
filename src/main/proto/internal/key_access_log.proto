@@ -1,0 +1,99 @@
+syntax = "proto3";
+
+package trust.internal.audit.keyaccess;
+
+option java_package = "vn.xime.trust.grpc.internal.audit.keyaccess";
+option java_multiple_files = true;
+
+
+// ==================================================
+// KEY ACCESS LOG (AUDIT)
+// ==================================================
+
+service KeyAccessLogService {
+
+  // Append log (internal only)
+  rpc RecordKeyAccess (RecordKeyAccessRequest)
+      returns (RecordKeyAccessResponse);
+
+  // Query logs
+  rpc ListKeyAccessLogs (ListKeyAccessLogsRequest)
+      returns (ListKeyAccessLogsResponse);
+}
+
+
+// ==================================================
+// WRITE
+// ==================================================
+
+message RecordKeyAccessRequest {
+
+  bytes key_id = 1;
+
+  string signer_service_id = 2;
+  string verifier_service_id = 3;
+
+  string action = 4; // GET_KEYS / GET_PRIVATE_KEY / VERIFY
+
+  bool include_private = 5;
+
+  string ip_address = 6;
+
+  bool success = 7;
+  string error_message = 8;
+}
+
+message RecordKeyAccessResponse {
+  bytes id = 1; // KSUID
+}
+
+
+// ==================================================
+// READ
+// ==================================================
+
+message ListKeyAccessLogsRequest {
+
+  // filters
+  bytes key_id = 1;
+  string signer_service_id = 2;
+  string verifier_service_id = 3;
+
+  string action = 4;
+  bool success = 5;
+
+  // time range
+  int64 from_time = 6;
+  int64 to_time = 7;
+
+  // pagination
+  int32 limit = 8;
+  string cursor = 9;
+}
+
+message ListKeyAccessLogsResponse {
+  repeated KeyAccessLogDto logs = 1;
+  string next_cursor = 2;
+}
+
+
+message KeyAccessLogDto {
+
+  bytes id = 1;
+
+  bytes key_id = 2;
+
+  string signer_service_id = 3;
+  string verifier_service_id = 4;
+
+  string action = 5;
+
+  bool include_private = 6;
+
+  int64 requested_at = 7;
+
+  string ip_address = 8;
+
+  bool success = 9;
+  string error_message = 10;
+}

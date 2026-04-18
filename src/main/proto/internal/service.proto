@@ -1,0 +1,101 @@
+syntax = "proto3";
+
+package trust.internal.service;
+
+option java_package = "vn.xime.trust.grpc.internal.service";
+option java_multiple_files = true;
+
+// ==================================================
+// SERVICE MANAGEMENT
+// ==================================================
+
+service ServiceAdmin {
+
+  // Create service
+  rpc CreateService (CreateServiceRequest)
+      returns (CreateServiceResponse);
+
+  // Get single service
+  rpc GetService (GetServiceRequest)
+      returns (GetServiceResponse);
+
+  // List services (filter + pagination)
+  rpc ListServices (ListServicesRequest)
+      returns (ListServicesResponse);
+
+  // Update service status (ACTIVE / DISABLED)
+  rpc UpdateServiceStatus (UpdateServiceStatusRequest)
+      returns (UpdateServiceStatusResponse);
+}
+
+
+// ==================================================
+// REQUEST / RESPONSE
+// ==================================================
+
+message CreateServiceRequest {
+  string id = 1;          // PK
+  string name = 2;
+  string tenant = 3;
+}
+
+message CreateServiceResponse {
+  ServiceDto service = 1;
+}
+
+
+// --------------------------------------------------
+
+message GetServiceRequest {
+  string id = 1;
+}
+
+message GetServiceResponse {
+  ServiceDto service = 1;
+}
+
+
+// --------------------------------------------------
+
+message ListServicesRequest {
+
+  // filters
+  string tenant = 1;
+  string status = 2;
+
+  // pagination
+  int32 limit = 3;
+  string cursor = 4;   // dùng KSUID hoặc created_at
+}
+
+message ListServicesResponse {
+  repeated ServiceDto services = 1;
+  string next_cursor = 2;
+}
+
+
+// --------------------------------------------------
+
+message UpdateServiceStatusRequest {
+  string id = 1;
+  string status = 2; // ACTIVE / DISABLED
+}
+
+message UpdateServiceStatusResponse {
+  string status = 1;
+}
+
+
+// ==================================================
+// DTO
+// ==================================================
+
+message ServiceDto {
+  string id = 1;
+  string name = 2;
+  string tenant = 3;
+
+  string status = 4;
+
+  int64 created_at = 5;
+}

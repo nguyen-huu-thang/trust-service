@@ -1,0 +1,148 @@
+syntax = "proto3";
+
+package trust.internal.key;
+
+option java_package = "vn.xime.trust.grpc.internal.key";
+option java_multiple_files = true;
+
+
+// ==================================================
+// KEY MANAGEMENT
+// ==================================================
+
+service KeyAdmin {
+
+  // Generate new key
+  rpc GenerateKey (GenerateKeyRequest)
+      returns (GenerateKeyResponse);
+
+  // Schedule rotation (generate key in future)
+  rpc ScheduleKeyRotation (ScheduleKeyRotationRequest)
+      returns (ScheduleKeyRotationResponse);
+
+  // Get keys (core API)
+  rpc ListKeys (ListKeysRequest)
+      returns (ListKeysResponse);
+
+  // Get key by id (kid)
+  rpc GetKey (GetKeyRequest)
+      returns (GetKeyResponse);
+
+  // Soft delete (optional, rarely used)
+  rpc DeleteKey (DeleteKeyRequest)
+      returns (DeleteKeyResponse);
+}
+
+
+// ==================================================
+// GENERATE
+// ==================================================
+
+message GenerateKeyRequest {
+
+  string signer_service_id = 1;
+  string verifier_service_id = 2;
+
+  string algorithm = 3; // RSA / EC
+  int32 key_size = 4;
+
+  int64 activate_at = 5; // optional (default = now)
+}
+
+message GenerateKeyResponse {
+  KeyDto key = 1;
+}
+
+
+// ==================================================
+// ROTATION
+// ==================================================
+
+message ScheduleKeyRotationRequest {
+
+  string signer_service_id = 1;
+  string verifier_service_id = 2;
+
+  int64 activate_at = 3; // MUST be in future
+}
+
+message ScheduleKeyRotationResponse {
+  KeyDto key = 1;
+}
+
+
+// ==================================================
+// QUERY
+// ==================================================
+
+message ListKeysRequest {
+
+  string signer_service_id = 1;
+  string verifier_service_id = 2;
+
+  // filters
+  bool include_deleted = 3;
+  bool include_private = 4; // 🔥 chỉ internal mới được dùng
+
+  int32 limit = 5;
+  string cursor = 6;
+}
+
+message ListKeysResponse {
+  repeated KeyDto keys = 1;
+  string next_cursor = 2;
+}
+
+
+// --------------------------------------------------
+
+message GetKeyRequest {
+  bytes id = 1; // KSUID
+  bool include_private = 2;
+}
+
+message GetKeyResponse {
+  KeyDto key = 1;
+}
+
+
+// ==================================================
+// DELETE
+// ==================================================
+
+message DeleteKeyRequest {
+  bytes id = 1;
+}
+
+message DeleteKeyResponse {
+  string status = 1;
+}
+
+
+// ==================================================
+// DTO
+// ==================================================
+
+message KeyDto {
+
+  bytes id = 1; // KSUID
+
+  string signer_service_id = 2;
+  string verifier_service_id = 3;
+
+  string algorithm = 4;
+  int32 key_size = 5;
+
+  // key material
+  string public_key = 6;
+
+  // ⚠️ chỉ trả khi include_private = true
+  string private_key_encrypted = 7;
+
+  // lifecycle
+  int64 created_at = 8;
+  int64 activate_at = 9;
+  int64 expires_at = 10;
+
+  bool is_deleted = 11;
+}

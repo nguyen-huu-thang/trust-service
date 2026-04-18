@@ -2,6 +2,7 @@ package vn.xime.trust.infrastructure.persistence.repository;
 
 import org.springframework.stereotype.Repository;
 import vn.xime.trust.domain.model.Shard;
+import vn.xime.trust.domain.model.ShardStatus;
 import vn.xime.trust.domain.repository.ShardRepository;
 import vn.xime.trust.infrastructure.persistence.mapper.ShardMapper;
 
@@ -31,6 +32,11 @@ public class ShardRepositoryImpl implements ShardRepository {
     }
 
     @Override
+    public boolean existsById(String shardId) {
+        return repo.existsById(shardId);
+    }
+
+    @Override
     public List<Shard> findByServiceId(String serviceId) {
         return repo.findByServiceId(serviceId)
                 .stream()
@@ -39,8 +45,15 @@ public class ShardRepositoryImpl implements ShardRepository {
     }
 
     @Override
-    public List<Shard> findActiveShards(String serviceId) {
-        return repo.findByServiceIdAndStatus(serviceId, "ACTIVE")
+    public List<Shard> search(
+            String serviceId,
+            ShardStatus status,
+            int limit,
+            String cursor
+    ) {
+        var statusStr = status != null ? status.name() : null;
+
+        return repo.search(serviceId, statusStr, cursor, limit)
                 .stream()
                 .map(ShardMapper::toDomain)
                 .toList();

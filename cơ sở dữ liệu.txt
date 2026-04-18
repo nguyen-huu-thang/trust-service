@@ -35,11 +35,6 @@ port INT
 -- lifecycle
 status VARCHAR(20) NOT NULL       -- ACTIVE / INACTIVE / DRAINING / DEAD
 
-version VARCHAR(50)               -- version của service (vd: v1.2.3)
-
-started_at TIMESTAMP
-last_heartbeat TIMESTAMP
-
 created_at TIMESTAMP NOT NULL
 
 -- constraints

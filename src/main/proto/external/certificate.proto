@@ -1,0 +1,113 @@
+syntax = "proto3";
+
+package trust.external.certificate;
+
+option java_package = "vn.xime.trust.grpc.external.certificate";
+option java_multiple_files = true;
+
+
+// ==================================================
+// CERTIFICATE SERVICE (mTLS RUNTIME)
+// ==================================================
+//
+// ⚠️ EXTERNAL API
+// - Dùng cho service-to-service authentication
+// - KHÔNG phải admin API
+//
+// USE CASE:
+// 1. Bootstrap certificate (lần đầu)
+// 2. Rotate certificate (dùng refresh token)
+//
+// SECURITY:
+// - Certificate là identity của service
+// - Refresh token là one-time + bound
+//
+service CertificateService {
+
+  // ==================================================
+  // BOOTSTRAP (FIRST TIME)
+  // ==================================================
+  //
+  // 👉 dùng khi:
+  // - service mới deploy
+  // - chưa có certificate
+  //
+  // ⚠️ cần cơ chế auth riêng:
+  // - API key / bootstrap secret / provisioning
+  //
+  rpc BootstrapCertificate (BootstrapCertificateRequest)
+      returns (BootstrapCertificateResponse);
+
+
+  // ==================================================
+  // ROTATION (RUNTIME)
+  // ==================================================
+  //
+  // 👉 dùng khi:
+  // - certificate gần hết hạn
+  //
+  // flow:
+  // - gửi refresh token
+  // - nhận cert mới + token mới
+  //
+  rpc RotateCertificate (RotateCertificateRequest)
+      returns (RotateCertificateResponse);
+}
+
+
+message BootstrapCertificateRequest {
+
+  string service_id = 1;
+
+  // ⚠️ optional:
+  // để phân biệt môi trường / deployment
+  string instance_id = 2;
+}
+
+
+message BootstrapCertificateResponse {
+
+  CertificateDto certificate = 1;
+
+  // 🔥 token dùng cho lần rotate tiếp theo
+  string refresh_token = 2;
+
+  int64 expires_at = 3;
+}
+
+
+message RotateCertificateRequest {
+
+  string service_id = 1;
+
+  // 🔥 one-time token
+  string refresh_token = 2;
+}
+
+
+message RotateCertificateResponse {
+
+  CertificateDto certificate = 1;
+
+  // 🔥 token mới (chain rotation)
+  string next_refresh_token = 2;
+
+  int64 expires_at = 3;
+}
+
+
+message CertificateDto {
+
+  bytes id = 1;
+
+  // PEM format
+  string public_cert = 2;
+
+  // ⚠️ chỉ trả cho chính service đó
+  string private_key_encrypted = 3;
+
+  int64 issued_at = 4;
+  int64 expires_at = 5;
+}
+
+

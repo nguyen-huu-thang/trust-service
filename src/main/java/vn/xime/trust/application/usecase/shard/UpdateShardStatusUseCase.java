@@ -4,6 +4,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import vn.xime.trust.application.dto.request.UpdateShardStatusCommand;
 import vn.xime.trust.domain.model.Shard;
+import vn.xime.trust.domain.model.ShardStatus;
 import vn.xime.trust.domain.repository.ShardRepository;
 
 @Component
@@ -16,15 +17,19 @@ public class UpdateShardStatusUseCase {
     }
 
     @Transactional
-    public void execute(UpdateShardStatusCommand cmd) {
+    public String execute(UpdateShardStatusCommand cmd) {
 
         Shard shard = shardRepository.findById(cmd.getShardId())
                 .orElseThrow(() ->
                         new IllegalStateException("Shard not found: " + cmd.getShardId())
                 );
 
-        Shard updated = shard.changeStatus(cmd.getStatus());
+        ShardStatus newStatus = ShardStatus.valueOf(cmd.getStatus());
 
+        Shard updated = shard.changeStatus(newStatus);
         shardRepository.save(updated);
+
+        return updated.getStatus().name();
     }
+
 }

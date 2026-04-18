@@ -3,6 +3,7 @@ package vn.xime.trust.application.usecase.shard;
 import org.springframework.stereotype.Component;
 import vn.xime.trust.application.dto.response.ShardDto;
 import vn.xime.trust.domain.model.Shard;
+import vn.xime.trust.domain.model.ShardStatus;
 import vn.xime.trust.domain.repository.ShardRepository;
 
 import java.util.List;
@@ -16,13 +17,38 @@ public class GetShardsUseCase {
         this.shardRepository = shardRepository;
     }
 
-    public List<ShardDto> getByServiceId(String serviceId) {
+    public Result execute(
+            String serviceId,
+            String status,
+            int limit,
+            String cursor
+    ) {
 
-        List<Shard> shards = shardRepository.findByServiceId(serviceId);
+        ShardStatus statusEnum = null;
+        if (status != null && !status.isBlank()) {
+            try {
+                statusEnum = ShardStatus.valueOf(status);
+            } catch (Exception e) {
+                throw new IllegalArgumentException("Invalid status: " + status);
+            }
+        }
 
-        return shards.stream()
+        List<Shard> shards = shardRepository.search(
+                serviceId,
+                statusEnum,
+                limit,
+                cursor
+        );
+
+        List<ShardDto> dtos = shards.stream()
                 .map(this::toDto)
                 .toList();
+
+        String nextCursor = shards.isEmpty()
+                ? null
+                : shards.get(shards.size() - 1).getId();
+
+        return new Result(dtos, nextCursor);
     }
 
     private ShardDto toDto(Shard s) {
@@ -30,8 +56,11 @@ public class GetShardsUseCase {
                 s.getId(),
                 s.getServiceId(),
                 s.getHost(),
+                s.getPort(),
                 s.getStatus().name(),
-                s.getCreatedAt()
+                s.getCreatedAt().toEpochMilli()
         );
     }
+
+    public record Result(List<ShardDto> shards, String nextCursor) {}
 }
