@@ -4,6 +4,7 @@ import org.springframework.stereotype.Component;
 import vn.xime.trust.application.dto.response.ShardDto;
 import vn.xime.trust.domain.model.Shard;
 import vn.xime.trust.domain.repository.ShardRepository;
+import vn.xime.trust.application.mapper.ShardMapper;
 
 import java.util.List;
 
@@ -11,9 +12,11 @@ import java.util.List;
 public class GetShardsUseCase {
 
     private final ShardRepository shardRepository;
+    private final ShardMapper shardMapper;
 
-    public GetShardsUseCase(ShardRepository shardRepository) {
+    public GetShardsUseCase(ShardRepository shardRepository, ShardMapper shardMapper) {
         this.shardRepository = shardRepository;
+        this.shardMapper = shardMapper;
     }
 
     // =========================
@@ -23,7 +26,7 @@ public class GetShardsUseCase {
         Shard shard = shardRepository.findById(shardId)
                 .orElseThrow(() -> new IllegalArgumentException("Shard not found: " + shardId));
 
-        return toDto(shard);
+        return shardMapper.toDto(shard);
     }
 
     // =========================
@@ -32,7 +35,7 @@ public class GetShardsUseCase {
     public List<ShardDto> getByServiceId(String serviceId) {
         return shardRepository.findByServiceId(serviceId)
                 .stream()
-                .map(this::toDto)
+                .map(shardMapper::toDto)
                 .toList();
     }
 
@@ -42,7 +45,7 @@ public class GetShardsUseCase {
     public List<ShardDto> getAll() {
         return shardRepository.findAll()
                 .stream()
-                .map(this::toDto)
+                .map(shardMapper::toDto)
                 .toList();
     }
 
@@ -56,21 +59,7 @@ public class GetShardsUseCase {
 
         return shardRepository.findAll(page, size)
                 .stream()
-                .map(this::toDto)
+                .map(shardMapper::toDto)
                 .toList();
-    }
-
-    // =========================
-    // Mapper
-    // =========================
-    private ShardDto toDto(Shard s) {
-        return new ShardDto(
-                s.getId(),
-                s.getServiceId(),
-                s.getHost(),
-                s.getPort(),
-                s.getStatus().name(),
-                s.getCreatedAt().toEpochMilli()
-        );
     }
 }

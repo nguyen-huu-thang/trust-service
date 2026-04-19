@@ -8,6 +8,7 @@ import vn.xime.trust.domain.factory.ShardFactory;
 import vn.xime.trust.domain.model.Shard;
 import vn.xime.trust.domain.repository.ServiceRepository;
 import vn.xime.trust.domain.repository.ShardRepository;
+import vn.xime.trust.application.mapper.ShardMapper;
 
 @Component
 public class RegisterShardUseCase {
@@ -15,15 +16,18 @@ public class RegisterShardUseCase {
     private final ShardRepository shardRepository;
     private final ServiceRepository serviceRepository;
     private final ShardFactory shardFactory;
+    private final ShardMapper shardMapper;
 
     public RegisterShardUseCase(
             ShardRepository shardRepository,
             ServiceRepository serviceRepository,
-            ShardFactory shardFactory
+            ShardFactory shardFactory,
+            ShardMapper shardMapper
     ) {
         this.shardRepository = shardRepository;
         this.serviceRepository = serviceRepository;
         this.shardFactory = shardFactory;
+        this.shardMapper = shardMapper;
     }
 
     @Transactional
@@ -50,17 +54,6 @@ public class RegisterShardUseCase {
 
         shardRepository.save(shard);
 
-        return toDto(shard);
-    }
-
-    private ShardDto toDto(Shard s) {
-        return new ShardDto(
-                s.getId(),
-                s.getServiceId(),
-                s.getHost(),
-                s.getPort(),
-                s.getStatus().name(),
-                s.getCreatedAt().toEpochMilli()
-        );
+        return shardMapper.toDto(shard);
     }
 }

@@ -33,7 +33,7 @@ host VARCHAR(100)
 port INT
 
 -- lifecycle
-status VARCHAR(20) NOT NULL       -- ACTIVE / INACTIVE / DRAINING / DEAD
+status VARCHAR(20) NOT NULL       -- ACTIVE / INACTIVE / MAINTENANCE / DEAD
 
 created_at TIMESTAMP NOT NULL
 

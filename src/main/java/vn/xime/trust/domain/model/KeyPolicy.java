@@ -78,4 +78,21 @@ public class KeyPolicy {
     public Instant getUpdatedAt() {
         return updatedAt;
     }
+
+    public KeyPolicy updated(
+            long keyLifetimeSeconds,
+            long jwtTtlSeconds,
+            long preloadSeconds
+    ) {
+        return new KeyPolicy(
+                this.id,
+                this.signerServiceId,
+                this.verifierServiceId,
+                keyLifetimeSeconds,
+                jwtTtlSeconds,
+                preloadSeconds,
+                this.createdAt,
+                Instant.now() // update timestamp
+        );
+    }
 }

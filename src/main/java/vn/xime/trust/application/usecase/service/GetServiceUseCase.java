@@ -4,6 +4,7 @@ import org.springframework.stereotype.Component;
 import vn.xime.trust.application.dto.response.ServiceDto;
 import vn.xime.trust.domain.model.Service;
 import vn.xime.trust.domain.repository.ServiceRepository;
+import vn.xime.trust.application.mapper.ServiceMapper;
 
 import java.util.List;
 
@@ -11,9 +12,11 @@ import java.util.List;
 public class GetServiceUseCase {
 
     private final ServiceRepository repository;
+    private final ServiceMapper mapper;
 
-    public GetServiceUseCase(ServiceRepository repository) {
+    public GetServiceUseCase(ServiceRepository repository, ServiceMapper mapper) {
         this.repository = repository;
+        this.mapper = mapper;
     }
 
     // =========================
@@ -29,7 +32,7 @@ public class GetServiceUseCase {
                         new IllegalStateException("Service not found: " + id)
                 );
 
-        return toDto(service);
+        return mapper.toDto(service);
     }
 
     // =========================
@@ -38,7 +41,7 @@ public class GetServiceUseCase {
     public List<ServiceDto> getAll() {
         return repository.findAll()
                 .stream()
-                .map(this::toDto)
+                .map(mapper::toDto)
                 .toList();
     }
 
@@ -50,7 +53,7 @@ public class GetServiceUseCase {
 
         return repository.findAll(page, size)
                 .stream()
-                .map(this::toDto)
+                .map(mapper::toDto)
                 .toList();
     }
 
@@ -66,7 +69,7 @@ public class GetServiceUseCase {
 
         return repository.findByTenant(tenant, page, size)
                 .stream()
-                .map(this::toDto)
+                .map(mapper::toDto)
                 .toList();
     }
 
@@ -78,7 +81,7 @@ public class GetServiceUseCase {
 
         return repository.findByTenantIsNull(page, size)
                 .stream()
-                .map(this::toDto)
+                .map(mapper::toDto)
                 .toList();
     }
 
@@ -89,18 +92,5 @@ public class GetServiceUseCase {
         if (page < 0 || size <= 0) {
             throw new IllegalArgumentException("Invalid pagination params");
         }
-    }
-
-    // =========================
-    // Mapper
-    // =========================
-    private ServiceDto toDto(Service s) {
-        return new ServiceDto(
-                s.getId(),
-                s.getName(),
-                s.getTenant(),
-                s.getStatus().name(),
-                s.getCreatedAt().toEpochMilli()
-        );
     }
 }

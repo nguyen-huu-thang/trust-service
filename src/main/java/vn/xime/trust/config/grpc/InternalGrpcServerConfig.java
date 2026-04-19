@@ -7,6 +7,7 @@ import org.springframework.context.annotation.Configuration;
 import vn.xime.trust.api.grpc.internal.ShardAdminGrpcService;
 import vn.xime.trust.api.grpc.internal.KeyAdminGrpcService;
 import vn.xime.trust.api.grpc.internal.ServiceAdminGrpcService;
+import vn.xime.trust.api.grpc.internal.KeyPolicyGrpcService;
 
 import java.net.InetSocketAddress;
 
@@ -17,7 +18,8 @@ public class InternalGrpcServerConfig {
     public Server internalGrpcServer(
             ShardAdminGrpcService shardService,
             ServiceAdminGrpcService serviceService,
-            KeyAdminGrpcService keyService
+            KeyAdminGrpcService keyService,
+            KeyPolicyGrpcService keyPolicyService
     ) {
 
         return NettyServerBuilder
@@ -25,6 +27,7 @@ public class InternalGrpcServerConfig {
                 .addService(shardService)
                 .addService(serviceService)
                 .addService(keyService)
+                .addService(keyPolicyService)
                 .build();
     }
 }

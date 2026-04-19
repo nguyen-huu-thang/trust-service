@@ -4,5 +4,5 @@ public enum ShardStatus {
     ACTIVE,
     INACTIVE,
     MAINTENANCE,
-    FAILED
+    DEAD
 }

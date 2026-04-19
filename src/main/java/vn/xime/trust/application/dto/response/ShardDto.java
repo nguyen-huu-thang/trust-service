@@ -1,5 +1,6 @@
 package vn.xime.trust.application.dto.response;
 
+import java.time.Instant;
 public class ShardDto {
 
     private final String id;
@@ -7,14 +8,15 @@ public class ShardDto {
     private final String host;
     private final int port;
     private final String status;
-    private final long createdAt;
+    private final Instant createdAt;
 
     public ShardDto(String id,
-                    String serviceId,
-                    String host,
-                    int port,
-                    String status,
-                    long createdAt) {
+        String serviceId,
+        String host,
+        int port,
+        String status,
+        Instant createdAt
+    ) {
         this.id = id;
         this.serviceId = serviceId;
         this.host = host;
@@ -43,7 +45,7 @@ public class ShardDto {
         return status;
     }
 
-    public long getCreatedAt() {
+    public Instant getCreatedAt() {
         return createdAt;
     }
 }

@@ -7,16 +7,17 @@ import vn.xime.trust.application.dto.response.KeyPolicyDto;
 import vn.xime.trust.domain.model.KeyPolicy;
 import vn.xime.trust.domain.repository.KeyPolicyRepository;
 import vn.xime.trust.domain.service.IdService;
-
-import java.time.Instant;
+import vn.xime.trust.application.mapper.KeyPolicyMapper;
 
 @Component
 public class UpdatePolicyUseCase {
 
     private final KeyPolicyRepository repository;
+    private final KeyPolicyMapper mapper;
 
-    public UpdatePolicyUseCase(KeyPolicyRepository repository) {
+    public UpdatePolicyUseCase(KeyPolicyRepository repository, KeyPolicyMapper mapper) {
         this.repository = repository;
+        this.mapper = mapper;
     }
 
     @Transactional
@@ -67,15 +68,10 @@ public class UpdatePolicyUseCase {
         // BUILD UPDATED DOMAIN
         // =========================
 
-        KeyPolicy updated = new KeyPolicy(
-                existing.getId(), // giữ nguyên ID
-                existing.getSignerServiceId(),
-                existing.getVerifierServiceId(),
-                cmd.getKeyLifetimeSec(),
-                cmd.getJwtTtlSec(),
-                cmd.getPreloadSec(),
-                existing.getCreatedAt(),
-                Instant.now() // update timestamp
+        KeyPolicy updated = existing.updated(
+            cmd.getKeyLifetimeSec(),
+            cmd.getJwtTtlSec(),
+            cmd.getPreloadSec()
         );
 
         // =========================
@@ -88,23 +84,6 @@ public class UpdatePolicyUseCase {
         // RETURN DTO
         // =========================
 
-        return toDto(saved);
-    }
-
-    // =========================
-    // Mapper
-    // =========================
-
-    private KeyPolicyDto toDto(KeyPolicy p) {
-        return new KeyPolicyDto(
-                IdService.toString(p.getId()),
-                p.getSignerServiceId(),
-                p.getVerifierServiceId(),
-                p.getKeyLifetimeSeconds(),
-                p.getJwtTtlSeconds(),
-                p.getPreloadSeconds(),
-                p.getCreatedAt(),
-                p.getUpdatedAt()
-        );
+        return mapper.toDto(saved);
     }
 }

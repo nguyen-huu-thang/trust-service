@@ -3,6 +3,7 @@ package vn.xime.trust.api.grpc.internal;
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 import org.springframework.stereotype.Component;
+import vn.xime.trust.api.grpc.mapper.KeyPolicyMapper;
 import vn.xime.trust.application.dto.request.CreateKeyPolicyCommand;
 import vn.xime.trust.application.dto.request.UpdateKeyPolicyCommand;
 import vn.xime.trust.application.dto.response.KeyPolicyDto;
@@ -18,17 +19,20 @@ public class KeyPolicyGrpcService extends KeyPolicyAdminGrpc.KeyPolicyAdminImplB
     private final GetKeyPolicyUseCase getUseCase;
     private final UpdatePolicyUseCase updateUseCase;
     private final DeletePolicyUseCase deleteUseCase;
+    private final KeyPolicyMapper keyPolicyMapper;
 
     public KeyPolicyGrpcService(
             CreatePolicyUseCase createUseCase,
             GetKeyPolicyUseCase getUseCase,
             UpdatePolicyUseCase updateUseCase,
-            DeletePolicyUseCase deleteUseCase
+            DeletePolicyUseCase deleteUseCase,
+            KeyPolicyMapper keyPolicyMapper
     ) {
         this.createUseCase = createUseCase;
         this.getUseCase = getUseCase;
         this.updateUseCase = updateUseCase;
         this.deleteUseCase = deleteUseCase;
+        this.keyPolicyMapper = keyPolicyMapper;
     }
 
     // ==================================================
@@ -54,7 +58,7 @@ public class KeyPolicyGrpcService extends KeyPolicyAdminGrpc.KeyPolicyAdminImplB
 
             responseObserver.onNext(
                     CreateKeyPolicyResponse.newBuilder()
-                            .setPolicy(toProto(result))
+                            .setPolicy(keyPolicyMapper.toProto(result))
                             .build()
             );
             responseObserver.onCompleted();
@@ -79,7 +83,7 @@ public class KeyPolicyGrpcService extends KeyPolicyAdminGrpc.KeyPolicyAdminImplB
 
             responseObserver.onNext(
                     GetKeyPolicyByIdResponse.newBuilder()
-                            .setPolicy(toProto(result))
+                            .setPolicy(keyPolicyMapper.toProto(result))
                             .build()
             );
             responseObserver.onCompleted();
@@ -107,7 +111,7 @@ public class KeyPolicyGrpcService extends KeyPolicyAdminGrpc.KeyPolicyAdminImplB
 
             responseObserver.onNext(
                     GetKeyPolicyByPairResponse.newBuilder()
-                            .setPolicy(toProto(result))
+                            .setPolicy(keyPolicyMapper.toProto(result))
                             .build()
             );
             responseObserver.onCompleted();
@@ -134,7 +138,7 @@ public class KeyPolicyGrpcService extends KeyPolicyAdminGrpc.KeyPolicyAdminImplB
             GetKeyPoliciesBySignerResponse.Builder builder =
                     GetKeyPoliciesBySignerResponse.newBuilder();
 
-            policies.forEach(p -> builder.addPolicies(toProto(p)));
+            policies.forEach(p -> builder.addPolicies(keyPolicyMapper.toProto(p)));
 
             responseObserver.onNext(builder.build());
             responseObserver.onCompleted();
@@ -161,7 +165,7 @@ public class KeyPolicyGrpcService extends KeyPolicyAdminGrpc.KeyPolicyAdminImplB
             GetKeyPoliciesByVerifierResponse.Builder builder =
                     GetKeyPoliciesByVerifierResponse.newBuilder();
 
-            policies.forEach(p -> builder.addPolicies(toProto(p)));
+            policies.forEach(p -> builder.addPolicies(keyPolicyMapper.toProto(p)));
 
             responseObserver.onNext(builder.build());
             responseObserver.onCompleted();
@@ -193,7 +197,7 @@ public class KeyPolicyGrpcService extends KeyPolicyAdminGrpc.KeyPolicyAdminImplB
 
             responseObserver.onNext(
                     UpdateKeyPolicyResponse.newBuilder()
-                            .setPolicy(toProto(result))
+                            .setPolicy(keyPolicyMapper.toProto(result))
                             .build()
             );
             responseObserver.onCompleted();
@@ -226,27 +230,6 @@ public class KeyPolicyGrpcService extends KeyPolicyAdminGrpc.KeyPolicyAdminImplB
         } catch (Exception e) {
             responseObserver.onError(toStatus(e));
         }
-    }
-
-    // ==================================================
-    // MAPPER
-    // ==================================================
-
-    private vn.xime.trust.grpc.internal.keypolicy.KeyPolicyDto toProto(KeyPolicyDto dto) {
-        return vn.xime.trust.grpc.internal.keypolicy.KeyPolicyDto.newBuilder()
-                .setId(dto.getId())
-                .setSignerServiceId(dto.getSignerServiceId())
-                .setVerifierServiceId(dto.getVerifierServiceId())
-                .setKeyLifetimeSeconds(dto.getKeyLifetimeSec())
-                .setJwtTtlSeconds(dto.getJwtTtlSec())
-                .setPreloadSeconds(dto.getPreloadSec())
-                .setCreatedAt(dto.getCreatedAt().toEpochMilli())
-                .setUpdatedAt(
-                        dto.getUpdatedAt() != null
-                                ? dto.getUpdatedAt().toEpochMilli()
-                                : 0
-                )
-                .build();
     }
 
     // ==================================================

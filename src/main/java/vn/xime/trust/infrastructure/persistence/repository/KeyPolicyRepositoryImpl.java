@@ -2,6 +2,7 @@ package vn.xime.trust.infrastructure.persistence.repository;
 
 import org.springframework.stereotype.Repository;
 import vn.xime.trust.domain.model.KeyPolicy;
+import vn.xime.trust.domain.model.Id;
 import vn.xime.trust.domain.repository.KeyPolicyRepository;
 import vn.xime.trust.infrastructure.persistence.mapper.KeyPolicyMapper;
 
@@ -22,6 +23,12 @@ public class KeyPolicyRepositoryImpl implements KeyPolicyRepository {
         var entity = KeyPolicyMapper.toEntity(policy);
         var saved = repo.save(entity);
         return KeyPolicyMapper.toDomain(saved);
+    }
+
+    @Override
+    public Optional<KeyPolicy> findById(Id id) {
+        return repo.findByIdBytes(id.toBytes())
+                .map(KeyPolicyMapper::toDomain);
     }
 
     @Override
@@ -47,5 +54,10 @@ public class KeyPolicyRepositoryImpl implements KeyPolicyRepository {
                 .stream()
                 .map(KeyPolicyMapper::toDomain)
                 .toList();
+    }
+
+    @Override
+    public boolean deleteById(Id id) {
+        return repo.deleteByIdBytes(id.toBytes()) > 0;
     }
 }

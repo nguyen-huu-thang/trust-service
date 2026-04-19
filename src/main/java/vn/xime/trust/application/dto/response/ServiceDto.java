@@ -1,14 +1,16 @@
 package vn.xime.trust.application.dto.response;
 
+import java.time.Instant;
+
 public class ServiceDto {
 
     private final String id;
     private final String name;
     private final String tenant;
     private final String status;
-    private final long createdAt;
+    private final Instant createdAt;
 
-    public ServiceDto(String id, String name, String tenant, String status, long createdAt) {
+    public ServiceDto(String id, String name, String tenant, String status, Instant createdAt) {
         this.id = id;
         this.name = name;
         this.tenant = tenant;
@@ -32,7 +34,7 @@ public class ServiceDto {
         return status;
     }
 
-    public long getCreatedAt() {
+    public Instant getCreatedAt() {
         return createdAt;
     }
 }

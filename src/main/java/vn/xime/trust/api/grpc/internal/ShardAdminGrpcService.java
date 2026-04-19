@@ -2,6 +2,7 @@ package vn.xime.trust.api.grpc.internal;
 
 import io.grpc.stub.StreamObserver;
 import org.springframework.stereotype.Component;
+import vn.xime.trust.api.grpc.mapper.ShardMapper;
 import vn.xime.trust.application.dto.request.RegisterShardCommand;
 import vn.xime.trust.application.dto.request.UpdateShardStatusCommand;
 import vn.xime.trust.application.dto.response.ShardDto;
@@ -18,15 +19,18 @@ public class ShardAdminGrpcService extends ShardAdminGrpc.ShardAdminImplBase {
     private final RegisterShardUseCase registerUseCase;
     private final UpdateShardStatusUseCase updateStatusUseCase;
     private final GetShardsUseCase getUseCase;
+    private final ShardMapper shardMapper;
 
     public ShardAdminGrpcService(
             RegisterShardUseCase registerUseCase,
             UpdateShardStatusUseCase updateStatusUseCase,
-            GetShardsUseCase getUseCase
+            GetShardsUseCase getUseCase,
+            ShardMapper shardMapper
     ) {
         this.registerUseCase = registerUseCase;
         this.updateStatusUseCase = updateStatusUseCase;
         this.getUseCase = getUseCase;
+        this.shardMapper = shardMapper;
     }
 
     // ==================================================
@@ -51,7 +55,7 @@ public class ShardAdminGrpcService extends ShardAdminGrpc.ShardAdminImplBase {
 
             responseObserver.onNext(
                     RegisterShardResponse.newBuilder()
-                            .setShard(toProto(result))
+                            .setShard(shardMapper.toProto(result))
                             .build()
             );
             responseObserver.onCompleted();
@@ -106,7 +110,7 @@ public class ShardAdminGrpcService extends ShardAdminGrpc.ShardAdminImplBase {
 
             responseObserver.onNext(
                     GetShardByIdResponse.newBuilder()
-                            .setShard(toProto(shard))
+                            .setShard(shardMapper.toProto(shard))
                             .build()
             );
             responseObserver.onCompleted();
@@ -132,7 +136,7 @@ public class ShardAdminGrpcService extends ShardAdminGrpc.ShardAdminImplBase {
             GetShardsByServiceResponse.Builder builder =
                     GetShardsByServiceResponse.newBuilder();
 
-            shards.forEach(s -> builder.addShards(toProto(s)));
+            shards.forEach(s -> builder.addShards(shardMapper.toProto(s)));
 
             responseObserver.onNext(builder.build());
             responseObserver.onCompleted();
@@ -158,7 +162,7 @@ public class ShardAdminGrpcService extends ShardAdminGrpc.ShardAdminImplBase {
             GetAllShardsResponse.Builder builder =
                     GetAllShardsResponse.newBuilder();
 
-            shards.forEach(s -> builder.addShards(toProto(s)));
+            shards.forEach(s -> builder.addShards(shardMapper.toProto(s)));
 
             responseObserver.onNext(builder.build());
             responseObserver.onCompleted();
@@ -187,7 +191,7 @@ public class ShardAdminGrpcService extends ShardAdminGrpc.ShardAdminImplBase {
             GetAllShardsPagedResponse.Builder builder =
                     GetAllShardsPagedResponse.newBuilder();
 
-            shards.forEach(s -> builder.addShards(toProto(s)));
+            shards.forEach(s -> builder.addShards(shardMapper.toProto(s)));
 
             responseObserver.onNext(builder.build());
             responseObserver.onCompleted();
@@ -195,20 +199,5 @@ public class ShardAdminGrpcService extends ShardAdminGrpc.ShardAdminImplBase {
         } catch (Exception e) {
             responseObserver.onError(e);
         }
-    }
-
-    // ==================================================
-    // MAPPER
-    // ==================================================
-
-    private vn.xime.trust.grpc.internal.shard.ShardDto toProto(ShardDto dto) {
-        return vn.xime.trust.grpc.internal.shard.ShardDto.newBuilder()
-                .setId(dto.getId())
-                .setServiceId(dto.getServiceId())
-                .setHost(dto.getHost())
-                .setPort(dto.getPort())
-                .setStatus(dto.getStatus())
-                .setCreatedAt(dto.getCreatedAt())
-                .build();
     }
 }

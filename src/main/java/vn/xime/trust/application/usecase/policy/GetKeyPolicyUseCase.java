@@ -5,6 +5,7 @@ import vn.xime.trust.application.dto.response.KeyPolicyDto;
 import vn.xime.trust.domain.model.KeyPolicy;
 import vn.xime.trust.domain.repository.KeyPolicyRepository;
 import vn.xime.trust.domain.service.IdService;
+import vn.xime.trust.application.mapper.KeyPolicyMapper;
 
 import java.util.List;
 
@@ -12,9 +13,11 @@ import java.util.List;
 public class GetKeyPolicyUseCase {
 
     private final KeyPolicyRepository repository;
+    private final KeyPolicyMapper mapper;
 
-    public GetKeyPolicyUseCase(KeyPolicyRepository repository) {
+    public GetKeyPolicyUseCase(KeyPolicyRepository repository, KeyPolicyMapper mapper) {
         this.repository = repository;
+        this.mapper = mapper;
     }
 
     // =========================
@@ -30,7 +33,7 @@ public class GetKeyPolicyUseCase {
                         new IllegalStateException("KeyPolicy not found: " + id)
                 );
 
-        return toDto(policy);
+        return mapper.toDto(policy);
     }
 
     // =========================
@@ -53,7 +56,7 @@ public class GetKeyPolicyUseCase {
                         )
                 );
 
-        return toDto(policy);
+        return mapper.toDto(policy);
     }
 
     // =========================
@@ -66,7 +69,7 @@ public class GetKeyPolicyUseCase {
 
         return repository.findBySignerServiceId(signerServiceId)
                 .stream()
-                .map(this::toDto)
+                .map(mapper::toDto)
                 .toList();
     }
 
@@ -80,23 +83,7 @@ public class GetKeyPolicyUseCase {
 
         return repository.findByVerifierServiceId(verifierServiceId)
                 .stream()
-                .map(this::toDto)
+                .map(mapper::toDto)
                 .toList();
-    }
-
-    // =========================
-    // Mapper
-    // =========================
-    private KeyPolicyDto toDto(KeyPolicy p) {
-        return new KeyPolicyDto(
-                IdService.toString(p.getId()),
-                p.getSignerServiceId(),
-                p.getVerifierServiceId(),
-                p.getKeyLifetimeSeconds(),
-                p.getJwtTtlSeconds(),
-                p.getPreloadSeconds(),
-                p.getCreatedAt(),
-                p.getUpdatedAt()
-        );
     }
 }

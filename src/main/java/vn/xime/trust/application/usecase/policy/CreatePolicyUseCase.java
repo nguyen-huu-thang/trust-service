@@ -8,7 +8,7 @@ import vn.xime.trust.domain.factory.KeyPolicyFactory;
 import vn.xime.trust.domain.model.KeyPolicy;
 import vn.xime.trust.domain.repository.KeyPolicyRepository;
 import vn.xime.trust.domain.repository.ServiceRepository;
-import vn.xime.trust.domain.service.IdService;
+import vn.xime.trust.application.mapper.KeyPolicyMapper;
 
 @Component
 public class CreatePolicyUseCase {
@@ -16,15 +16,18 @@ public class CreatePolicyUseCase {
     private final KeyPolicyRepository keyPolicyRepository;
     private final ServiceRepository serviceRepository;
     private final KeyPolicyFactory keyPolicyFactory;
+    private final KeyPolicyMapper mapper;
 
     public CreatePolicyUseCase(
             KeyPolicyRepository keyPolicyRepository,
             ServiceRepository serviceRepository,
-            KeyPolicyFactory keyPolicyFactory
+            KeyPolicyFactory keyPolicyFactory,
+            KeyPolicyMapper mapper
     ) {
         this.keyPolicyRepository = keyPolicyRepository;
         this.serviceRepository = serviceRepository;
         this.keyPolicyFactory = keyPolicyFactory;
+        this.mapper = mapper;
     }
 
     @Transactional
@@ -117,23 +120,6 @@ public class CreatePolicyUseCase {
         // RETURN DTO
         // =========================
 
-        return toDto(saved);
-    }
-
-    // =========================
-    // Mapper
-    // =========================
-
-    private KeyPolicyDto toDto(KeyPolicy p) {
-        return new KeyPolicyDto(
-                IdService.toString(p.getId()),
-                p.getSignerServiceId(),
-                p.getVerifierServiceId(),
-                p.getKeyLifetimeSeconds(),
-                p.getJwtTtlSeconds(),
-                p.getPreloadSeconds(),
-                p.getCreatedAt(),
-                p.getUpdatedAt()
-        );
+        return mapper.toDto(saved);
     }
 }

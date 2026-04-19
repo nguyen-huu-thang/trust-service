@@ -3,6 +3,7 @@ package vn.xime.trust.api.grpc.internal;
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 import org.springframework.stereotype.Component;
+import vn.xime.trust.api.grpc.mapper.ServiceMapper;
 import vn.xime.trust.application.dto.request.CreateServiceCommand;
 import vn.xime.trust.application.dto.response.ServiceDto;
 import vn.xime.trust.application.usecase.service.*;
@@ -16,15 +17,18 @@ public class ServiceAdminGrpcService extends ServiceAdminGrpc.ServiceAdminImplBa
     private final CreateServiceUseCase createUseCase;
     private final GetServiceUseCase getUseCase;
     private final UpdateServiceStatusUseCase updateStatusUseCase;
+    private final ServiceMapper serviceMapper;
 
     public ServiceAdminGrpcService(
             CreateServiceUseCase createUseCase,
             GetServiceUseCase getUseCase,
-            UpdateServiceStatusUseCase updateStatusUseCase
+            UpdateServiceStatusUseCase updateStatusUseCase,
+            ServiceMapper serviceMapper
     ) {
         this.createUseCase = createUseCase;
         this.getUseCase = getUseCase;
         this.updateStatusUseCase = updateStatusUseCase;
+        this.serviceMapper = serviceMapper;
     }
 
     // ==================================================
@@ -48,7 +52,7 @@ public class ServiceAdminGrpcService extends ServiceAdminGrpc.ServiceAdminImplBa
 
             responseObserver.onNext(
                     CreateServiceResponse.newBuilder()
-                            .setService(toProto(result))
+                            .setService(serviceMapper.toProto(result))
                             .build()
             );
             responseObserver.onCompleted();
@@ -73,7 +77,7 @@ public class ServiceAdminGrpcService extends ServiceAdminGrpc.ServiceAdminImplBa
 
             responseObserver.onNext(
                     GetServiceByIdResponse.newBuilder()
-                            .setService(toProto(result))
+                            .setService(serviceMapper.toProto(result))
                             .build()
             );
             responseObserver.onCompleted();
@@ -99,7 +103,7 @@ public class ServiceAdminGrpcService extends ServiceAdminGrpc.ServiceAdminImplBa
             GetAllServicesResponse.Builder builder =
                     GetAllServicesResponse.newBuilder();
 
-            services.forEach(s -> builder.addServices(toProto(s)));
+            services.forEach(s -> builder.addServices(serviceMapper.toProto(s)));
 
             responseObserver.onNext(builder.build());
             responseObserver.onCompleted();
@@ -128,7 +132,7 @@ public class ServiceAdminGrpcService extends ServiceAdminGrpc.ServiceAdminImplBa
             GetAllServicesPagedResponse.Builder builder =
                     GetAllServicesPagedResponse.newBuilder();
 
-            services.forEach(s -> builder.addServices(toProto(s)));
+            services.forEach(s -> builder.addServices(serviceMapper.toProto(s)));
 
             responseObserver.onNext(builder.build());
             responseObserver.onCompleted();
@@ -158,7 +162,7 @@ public class ServiceAdminGrpcService extends ServiceAdminGrpc.ServiceAdminImplBa
             GetServicesByTenantResponse.Builder builder =
                     GetServicesByTenantResponse.newBuilder();
 
-            services.forEach(s -> builder.addServices(toProto(s)));
+            services.forEach(s -> builder.addServices(serviceMapper.toProto(s)));
 
             responseObserver.onNext(builder.build());
             responseObserver.onCompleted();
@@ -187,7 +191,7 @@ public class ServiceAdminGrpcService extends ServiceAdminGrpc.ServiceAdminImplBa
             GetServicesByTenantIsNullResponse.Builder builder =
                     GetServicesByTenantIsNullResponse.newBuilder();
 
-            services.forEach(s -> builder.addServices(toProto(s)));
+            services.forEach(s -> builder.addServices(serviceMapper.toProto(s)));
 
             responseObserver.onNext(builder.build());
             responseObserver.onCompleted();
@@ -223,20 +227,6 @@ public class ServiceAdminGrpcService extends ServiceAdminGrpc.ServiceAdminImplBa
         } catch (Exception e) {
             responseObserver.onError(toStatus(e));
         }
-    }
-
-    // ==================================================
-    // MAPPER
-    // ==================================================
-
-    private vn.xime.trust.grpc.internal.service.ServiceDto toProto(ServiceDto dto) {
-        return vn.xime.trust.grpc.internal.service.ServiceDto.newBuilder()
-                .setId(dto.getId())
-                .setName(dto.getName())
-                .setTenant(dto.getTenant() == null ? "" : dto.getTenant())
-                .setStatus(dto.getStatus())
-                .setCreatedAt(dto.getCreatedAt())
-                .build();
     }
 
     // ==================================================

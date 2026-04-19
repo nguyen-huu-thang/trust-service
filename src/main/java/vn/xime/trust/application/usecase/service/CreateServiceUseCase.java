@@ -7,19 +7,23 @@ import vn.xime.trust.application.dto.response.ServiceDto;
 import vn.xime.trust.domain.factory.ServiceFactory;
 import vn.xime.trust.domain.model.Service;
 import vn.xime.trust.domain.repository.ServiceRepository;
+import vn.xime.trust.application.mapper.ServiceMapper;
 
 @Component
 public class CreateServiceUseCase {
 
     private final ServiceRepository repository;
     private final ServiceFactory factory;
+    private final ServiceMapper mapper;
 
     public CreateServiceUseCase(
             ServiceRepository repository,
-            ServiceFactory factory
+            ServiceFactory factory,
+            ServiceMapper mapper
     ) {
         this.repository = repository;
         this.factory = factory;
+        this.mapper = mapper;
     }
 
     @Transactional
@@ -61,16 +65,6 @@ public class CreateServiceUseCase {
         // RETURN DTO
         // =========================
 
-        return toDto(service);
-    }
-
-    private ServiceDto toDto(Service s) {
-        return new ServiceDto(
-                s.getId(),
-                s.getName(),
-                s.getTenant(),
-                s.getStatus().name(),
-                s.getCreatedAt().toEpochMilli()
-        );
+        return mapper.toDto(service);
     }
 }
