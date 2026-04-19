@@ -1,87 +1,121 @@
 package vn.xime.trust.application.usecase.key;
 
 import org.springframework.stereotype.Component;
-import vn.xime.trust.application.dto.request.GetKeysRequestDto;
-import vn.xime.trust.application.dto.response.KeyResponseDto;
-import vn.xime.trust.application.dto.response.KeyResponseDto;
-import vn.xime.trust.application.mapper.KeyMapper;
+import vn.xime.trust.domain.model.Id;
 import vn.xime.trust.domain.model.Key;
 import vn.xime.trust.domain.repository.KeyRepository;
-import vn.xime.trust.domain.service.KeyLifecycleDomainService;
+import vn.xime.trust.application.dto.response.KeyResponseDto;
+import vn.xime.trust.application.dto.response.PrivateKeyDto;
+import vn.xime.trust.application.dto.response.PublicKeyDto;
+import vn.xime.trust.application.port.out.KeyEncryptionService;
+import vn.xime.trust.application.mapper.KeyMapper;
 
-import java.time.Instant;
+
 import java.util.List;
-import java.util.Optional;
 
 @Component
 public class GetKeysUseCase {
 
     private final KeyRepository keyRepository;
-    private final KeyLifecycleDomainService lifecycleService;
     private final KeyMapper keyMapper;
+    private final KeyEncryptionService keyEncryptionService;
+
 
     public GetKeysUseCase(
             KeyRepository keyRepository,
-            KeyLifecycleDomainService lifecycleService,
-            KeyMapper keyMapper
+            KeyMapper keyMapper,
+            KeyEncryptionService keyEncryptionService
     ) {
         this.keyRepository = keyRepository;
-        this.lifecycleService = lifecycleService;
         this.keyMapper = keyMapper;
+        this.keyEncryptionService = keyEncryptionService;
     }
 
-    public KeyResponseDto execute(GetKeysRequestDto query) {
+    // ==================================================
+    // ADMIN
+    // ==================================================
 
-        Instant now = Instant.now();
-
-        // =========================
-        // LOAD DATA
-        // =========================
-
-        List<Key> keys;
-
-        if (query.getId() != null) {
-            // get by id
-            Optional<Key> key = keyRepository.findById(query.getId());
-
-            keys = key.map(List::of).orElse(List.of());
-        } else {
-            keys = keyRepository.findBySignerAndVerifier(
-                    query.getSignerServiceId(),
-                    query.getVerifierServiceId()
-            );
+    public KeyResponseDto getById(Id id) {
+        if (id == null) {
+            throw new IllegalArgumentException("id is required");
         }
 
-        // =========================
-        // FILTER
-        // =========================
+        Key key = keyRepository.findById(id)
+                .orElseThrow(() -> new IllegalStateException("Key not found"));
 
-        keys = keys.stream()
-                .filter(k -> query.isIncludeDeleted() || !k.isDeleted())
-                .filter(k -> k.getExpiresAt().isAfter(now)) // 🔥 CRITICAL
+        return keyMapper.toResponseDto(key);
+    }
+
+    public List<KeyResponseDto> getBySigner(String signerServiceId) {
+        if (signerServiceId == null || signerServiceId.isBlank()) {
+            throw new IllegalArgumentException("signerServiceId is required");
+        }
+
+        return keyRepository.findBySignerServiceId(signerServiceId)
+                .stream()
+                .map(keyMapper::toResponseDto)
                 .toList();
+    }
 
-        // =========================
-        // PAGINATION (simple)
-        // =========================
+    public List<KeyResponseDto> getBySignerAndVerifier(
+            String signerServiceId,
+            String verifierServiceId
+    ) {
+        if (signerServiceId == null || signerServiceId.isBlank()) {
+            throw new IllegalArgumentException("signerServiceId is required");
+        }
 
-        int limit = query.getLimit() > 0 ? query.getLimit() : 50;
+        if (verifierServiceId == null || verifierServiceId.isBlank()) {
+            throw new IllegalArgumentException("verifierServiceId is required");
+        }
 
-        List<Key> page = keys.stream()
-                .limit(limit)
+        return keyRepository.findBySignerAndVerifier(
+                        signerServiceId,
+                        verifierServiceId
+                )
+                .stream()
+                .map(keyMapper::toResponseDto)
                 .toList();
+    }
 
-        // =========================
-        // MAP DTO
-        // =========================
+    // ==================================================
+    // SIGNING (PRIVATE KEY)
+    // ==================================================
 
-        List<KeyResponseDto> result = page.stream()
-                .map(k -> keyMapper.toDto(k, query.isIncludePrivate()))
+    public List<PrivateKeyDto> getActiveForSigning(String signerServiceId) {
+        if (signerServiceId == null || signerServiceId.isBlank()) {
+            throw new IllegalArgumentException("signerServiceId is required");
+        }
+
+        return keyRepository.findActiveKeysBySigner(signerServiceId)
+                .stream()
+                .map(key -> {
+
+                    if (key.getPrivateKeyEncrypted() == null) {
+                        throw new IllegalStateException("Private key is missing");
+                    }
+
+                    String decrypted = keyEncryptionService.decrypt(
+                            key.getPrivateKeyEncrypted()
+                    );
+
+                    return keyMapper.toPrivateKeyDto(key, decrypted);
+                })
                 .toList();
+    }
 
-        return new KeyResponseDto(
-                result,
-                null // TODO: cursor
-        );
+    // ==================================================
+    // VERIFYING (PUBLIC KEY)
+    // ==================================================
+
+    public List<PublicKeyDto> getActiveForVerifier(String verifierServiceId) {
+        if (verifierServiceId == null || verifierServiceId.isBlank()) {
+            throw new IllegalArgumentException("verifierServiceId is required");
+        }
+
+        return keyRepository.findActiveKeysByVerifier(verifierServiceId)
+                .stream()
+                .map(keyMapper::toPublicKeyDto)
+                .toList();
     }
 }

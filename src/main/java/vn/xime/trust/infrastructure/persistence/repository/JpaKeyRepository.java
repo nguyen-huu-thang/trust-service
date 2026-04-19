@@ -19,6 +19,8 @@ public interface JpaKeyRepository extends JpaRepository<KeyEntity, byte[]> {
 
     List<KeyEntity> findBySignerServiceIdAndIsDeletedFalse(String signerServiceId);
 
+    List<KeyEntity> findByVerifierServiceIdAndIsDeletedFalse(String verifierServiceId);
+
     // 🔥 trust pair
     List<KeyEntity> findBySignerServiceIdAndVerifierServiceId(
             String signerServiceId,

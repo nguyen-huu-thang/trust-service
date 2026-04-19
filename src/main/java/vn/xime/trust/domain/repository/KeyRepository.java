@@ -18,6 +18,9 @@ public interface KeyRepository {
     // 🔥 dùng cho SIGNING (lọc active)
     List<Key> findActiveKeysBySigner(String signerServiceId);
 
+    // 🔥 dùng cho VERIFYING (lọc active)
+    List<Key> findActiveKeysByVerifier(String verifierServiceId);
+
     // 🔥 trust pair
     List<Key> findBySignerAndVerifier(String signerServiceId, String verifierServiceId);
 }

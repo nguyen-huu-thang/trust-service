@@ -48,6 +48,14 @@ public class KeyRepositoryImpl implements KeyRepository {
     }
 
     @Override
+    public List<Key> findActiveKeysByVerifier(String verifierServiceId) {
+        return repo.findByVerifierServiceIdAndIsDeletedFalse(verifierServiceId)
+                .stream()
+                .map(KeyMapper::toDomain)
+                .toList();
+    }
+
+    @Override
     public List<Key> findBySignerAndVerifier(String signerServiceId, String verifierServiceId) {
         return repo.findBySignerServiceIdAndVerifierServiceId(
                         signerServiceId,

@@ -16,19 +16,24 @@ service KeyAdmin {
   rpc GenerateKey (GenerateKeyRequest)
       returns (GenerateKeyResponse);
 
-  // Schedule rotation (generate key in future)
+  // Schedule rotation
   rpc ScheduleKeyRotation (ScheduleKeyRotationRequest)
       returns (ScheduleKeyRotationResponse);
 
-  // Get keys (core API)
-  rpc ListKeys (ListKeysRequest)
-      returns (ListKeysResponse);
+  // =========================
+  // GET (ADMIN ONLY)
+  // =========================
 
-  // Get key by id (kid)
-  rpc GetKey (GetKeyRequest)
-      returns (GetKeyResponse);
+  rpc GetKeyById (GetKeyByIdRequest)
+      returns (GetKeyByIdResponse);
 
-  // Soft delete (optional, rarely used)
+  rpc GetKeysBySigner (GetKeysBySignerRequest)
+      returns (GetKeysBySignerResponse);
+
+  rpc GetKeysBySignerAndVerifier (GetKeysBySignerAndVerifierRequest)
+      returns (GetKeysBySignerAndVerifierResponse);
+
+  // Delete
   rpc DeleteKey (DeleteKeyRequest)
       returns (DeleteKeyResponse);
 }
@@ -43,10 +48,10 @@ message GenerateKeyRequest {
   string signer_service_id = 1;
   string verifier_service_id = 2;
 
-  string algorithm = 3; // RSA / EC
+  string algorithm = 3;
   int32 key_size = 4;
 
-  int64 activate_at = 5; // optional (default = now)
+  int64 activate_at = 5;
 }
 
 message GenerateKeyResponse {
@@ -63,7 +68,7 @@ message ScheduleKeyRotationRequest {
   string signer_service_id = 1;
   string verifier_service_id = 2;
 
-  int64 activate_at = 3; // MUST be in future
+  int64 activate_at = 3;
 }
 
 message ScheduleKeyRotationResponse {
@@ -72,46 +77,45 @@ message ScheduleKeyRotationResponse {
 
 
 // ==================================================
-// QUERY
+// GET (ADMIN)
 // ==================================================
 
-message ListKeysRequest {
-
-  string signer_service_id = 1;
-  string verifier_service_id = 2;
-
-  // filters
-  bool include_deleted = 3;
-  bool include_private = 4; // 🔥 chỉ internal mới được dùng
-
-  int32 limit = 5;
-  string cursor = 6;
+message GetKeyByIdRequest {
+  string id = 1; // 🔥 đổi từ bytes → string (Base62)
 }
 
-message ListKeysResponse {
-  repeated KeyDto keys = 1;
-  string next_cursor = 2;
-}
-
-
-// --------------------------------------------------
-
-message GetKeyRequest {
-  bytes id = 1; // KSUID
-  bool include_private = 2;
-}
-
-message GetKeyResponse {
+message GetKeyByIdResponse {
   KeyDto key = 1;
 }
 
+// --------------------------------------------------
+
+message GetKeysBySignerRequest {
+  string signer_service_id = 1;
+}
+
+message GetKeysBySignerResponse {
+  repeated KeyDto keys = 1;
+}
+
+// --------------------------------------------------
+
+message GetKeysBySignerAndVerifierRequest {
+  string signer_service_id = 1;
+  string verifier_service_id = 2;
+}
+
+message GetKeysBySignerAndVerifierResponse {
+  repeated KeyDto keys = 1;
+}
+
 
 // ==================================================
-// DELETE
+// DELETE (GIỮ NGUYÊN nhưng fix id)
 // ==================================================
 
 message DeleteKeyRequest {
-  bytes id = 1;
+  string id = 1; // 🔥 đổi từ bytes → string
 }
 
 message DeleteKeyResponse {
@@ -125,7 +129,7 @@ message DeleteKeyResponse {
 
 message KeyDto {
 
-  bytes id = 1; // KSUID
+  string id = 1; // 🔥 đổi từ bytes → string
 
   string signer_service_id = 2;
   string verifier_service_id = 3;
@@ -133,13 +137,10 @@ message KeyDto {
   string algorithm = 4;
   int32 key_size = 5;
 
-  // key material
   string public_key = 6;
 
-  // ⚠️ chỉ trả khi include_private = true
   string private_key_encrypted = 7;
 
-  // lifecycle
   int64 created_at = 8;
   int64 activate_at = 9;
   int64 expires_at = 10;

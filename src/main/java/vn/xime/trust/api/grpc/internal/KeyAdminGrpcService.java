@@ -1,13 +1,13 @@
 package vn.xime.trust.api.grpc.internal;
 
-import com.google.protobuf.ByteString;
 import io.grpc.stub.StreamObserver;
 import org.springframework.stereotype.Component;
+import vn.xime.trust.grpc.internal.key.*;
+import vn.xime.trust.domain.service.IdService;
+import vn.xime.trust.application.usecase.key.*;
 import vn.xime.trust.application.dto.request.*;
 import vn.xime.trust.application.dto.response.KeyResponseDto;
-import vn.xime.trust.application.dto.response.KeyResponseDto;
-import vn.xime.trust.application.usecase.key.*;
-import vn.xime.trust.grpc.internal.key.*;
+import vn.xime.trust.api.grpc.mapper.KeyMapper;
 
 import java.time.Instant;
 import java.util.List;
@@ -19,17 +19,20 @@ public class KeyAdminGrpcService extends KeyAdminGrpc.KeyAdminImplBase {
     private final ScheduleKeyRotationUseCase rotationUseCase;
     private final GetKeysUseCase getKeysUseCase;
     private final DeleteKeyUseCase deleteKeyUseCase;
+    private final KeyMapper mapper;
 
     public KeyAdminGrpcService(
             GenerateKeyUseCase generateKeyUseCase,
             ScheduleKeyRotationUseCase rotationUseCase,
             GetKeysUseCase getKeysUseCase,
-            DeleteKeyUseCase deleteKeyUseCase
+            DeleteKeyUseCase deleteKeyUseCase,
+            KeyMapper mapper
     ) {
         this.generateKeyUseCase = generateKeyUseCase;
         this.rotationUseCase = rotationUseCase;
         this.getKeysUseCase = getKeysUseCase;
         this.deleteKeyUseCase = deleteKeyUseCase;
+        this.mapper = mapper;
     }
 
     // ==================================================
@@ -42,29 +45,27 @@ public class KeyAdminGrpcService extends KeyAdminGrpc.KeyAdminImplBase {
             StreamObserver<GenerateKeyResponse> responseObserver
     ) {
         try {
-            GenerateKeyCommand cmd = new GenerateKeyCommand();
-            cmd.setSignerServiceId(request.getSignerServiceId());
-            cmd.setVerifierServiceId(request.getVerifierServiceId());
-            cmd.setAlgorithm(request.getAlgorithm());
-            cmd.setKeySize(request.getKeySize());
-
-            if (request.getActivateAt() > 0) {
-                cmd.setActivateAt(Instant.ofEpochMilli(request.getActivateAt()));
-            }
+            GenerateKeyCommand cmd = new GenerateKeyCommand(
+                request.getSignerServiceId(),
+                request.getVerifierServiceId(),
+                request.getAlgorithm(),
+                request.getKeySize(),
+                request.getActivateAt() > 0 ? Instant.ofEpochMilli(request.getActivateAt()) : null
+            );
 
             String id = generateKeyUseCase.execute(cmd);
 
-            KeyResponseDto dto = getById(id, true);
+            KeyResponseDto dto = getKeysUseCase.getById(IdService.fromString(id));
 
-            GenerateKeyResponse response = GenerateKeyResponse.newBuilder()
-                    .setKey(toProto(dto))
-                    .build();
-
-            responseObserver.onNext(response);
+            responseObserver.onNext(
+                    GenerateKeyResponse.newBuilder()
+                            .setKey(mapper.toProto(dto))
+                            .build()
+            );
             responseObserver.onCompleted();
 
         } catch (Exception e) {
-            responseObserver.onError(e);
+            responseObserver.onError(mapper.toStatus(e));
         }
     }
 
@@ -78,96 +79,108 @@ public class KeyAdminGrpcService extends KeyAdminGrpc.KeyAdminImplBase {
             StreamObserver<ScheduleKeyRotationResponse> responseObserver
     ) {
         try {
-            ScheduleKeyRotationCommand cmd = new ScheduleKeyRotationCommand();
-            cmd.setSignerServiceId(request.getSignerServiceId());
-            cmd.setVerifierServiceId(request.getVerifierServiceId());
-            cmd.setActivateAt(Instant.ofEpochMilli(request.getActivateAt()));
+            ScheduleKeyRotationCommand cmd = new ScheduleKeyRotationCommand(
+                request.getSignerServiceId(),
+                request.getVerifierServiceId(),
+                request.getActivateAt() > 0 ? Instant.ofEpochMilli(request.getActivateAt()) : null
+            );
 
             String id = rotationUseCase.execute(cmd);
 
-            KeyResponseDto dto = getById(id, true);
+            KeyResponseDto dto = getKeysUseCase.getById(IdService.fromString(id));
 
-            ScheduleKeyRotationResponse response =
+            responseObserver.onNext(
                     ScheduleKeyRotationResponse.newBuilder()
-                            .setKey(toProto(dto))
-                            .build();
-
-            responseObserver.onNext(response);
+                            .setKey(mapper.toProto(dto))
+                            .build()
+            );
             responseObserver.onCompleted();
 
         } catch (Exception e) {
-            responseObserver.onError(e);
+            responseObserver.onError(mapper.toStatus(e));
         }
     }
 
     // ==================================================
-    // LIST KEYS
+    // GET: BY ID
     // ==================================================
 
     @Override
-    public void listKeys(
-            ListKeysRequest request,
-            StreamObserver<ListKeysResponse> responseObserver
+    public void getKeyById(
+            GetKeyByIdRequest request,
+            StreamObserver<GetKeyByIdResponse> responseObserver
     ) {
         try {
-            GetKeysRequestDto query = new GetKeysRequestDto();
-            query.setSignerServiceId(request.getSignerServiceId());
-            query.setVerifierServiceId(request.getVerifierServiceId());
-            query.setIncludeDeleted(request.getIncludeDeleted());
-            query.setIncludePrivate(request.getIncludePrivate());
-            query.setLimit(request.getLimit());
-            query.setCursor(request.getCursor());
 
-            KeyResponseDto result = getKeysUseCase.execute(query);
+            KeyResponseDto dto =
+                    getKeysUseCase.getById(IdService.fromString(request.getId()));
 
-            List<KeyDto> keys = result.getKeys().stream()
-                    .map(this::toProto)
-                    .toList();
-
-            ListKeysResponse response = ListKeysResponse.newBuilder()
-                    .addAllKeys(keys)
-                    .setNextCursor(result.getNextCursor() == null ? "" : result.getNextCursor())
-                    .build();
-
-            responseObserver.onNext(response);
+            responseObserver.onNext(
+                    GetKeyByIdResponse.newBuilder()
+                            .setKey(mapper.toProto(dto))
+                            .build()
+            );
             responseObserver.onCompleted();
 
         } catch (Exception e) {
-            responseObserver.onError(e);
+            responseObserver.onError(mapper.toStatus(e));
         }
     }
 
     // ==================================================
-    // GET KEY
+    // GET: BY SIGNER
     // ==================================================
 
     @Override
-    public void getKey(
-            GetKeyRequest request,
-            StreamObserver<GetKeyResponse> responseObserver
+    public void getKeysBySigner(
+            GetKeysBySignerRequest request,
+            StreamObserver<GetKeysBySignerResponse> responseObserver
     ) {
         try {
-            GetKeysRequestDto query = new GetKeysRequestDto();
-            query.setId(request.getId().toByteArray());
-            query.setIncludePrivate(request.getIncludePrivate());
 
-            KeyResponseDto result = getKeysUseCase.execute(query);
+            List<KeyResponseDto> list =
+                    getKeysUseCase.getBySigner(request.getSignerServiceId());
 
-            if (result.getKeys().isEmpty()) {
-                throw new IllegalStateException("Key not found");
-            }
+            GetKeysBySignerResponse.Builder builder =
+                    GetKeysBySignerResponse.newBuilder();
 
-            KeyDto proto = toProto(result.getKeys().get(0));
+            list.forEach(k -> builder.addKeys(mapper.toProto(k)));
 
-            GetKeyResponse response = GetKeyResponse.newBuilder()
-                    .setKey(proto)
-                    .build();
-
-            responseObserver.onNext(response);
+            responseObserver.onNext(builder.build());
             responseObserver.onCompleted();
 
         } catch (Exception e) {
-            responseObserver.onError(e);
+            responseObserver.onError(mapper.toStatus(e));
+        }
+    }
+
+    // ==================================================
+    // GET: BY SIGNER + VERIFIER
+    // ==================================================
+
+    @Override
+    public void getKeysBySignerAndVerifier(
+            GetKeysBySignerAndVerifierRequest request,
+            StreamObserver<GetKeysBySignerAndVerifierResponse> responseObserver
+    ) {
+        try {
+
+            List<KeyResponseDto> list =
+                    getKeysUseCase.getBySignerAndVerifier(
+                            request.getSignerServiceId(),
+                            request.getVerifierServiceId()
+                    );
+
+            GetKeysBySignerAndVerifierResponse.Builder builder =
+                    GetKeysBySignerAndVerifierResponse.newBuilder();
+
+            list.forEach(k -> builder.addKeys(mapper.toProto(k)));
+
+            responseObserver.onNext(builder.build());
+            responseObserver.onCompleted();
+
+        } catch (Exception e) {
+            responseObserver.onError(mapper.toStatus(e));
         }
     }
 
@@ -181,53 +194,20 @@ public class KeyAdminGrpcService extends KeyAdminGrpc.KeyAdminImplBase {
             StreamObserver<DeleteKeyResponse> responseObserver
     ) {
         try {
-            DeleteKeyCommand cmd = new DeleteKeyCommand();
-            cmd.setId(request.getId().toByteArray());
+
+            DeleteKeyCommand cmd = new DeleteKeyCommand(request.getId());
 
             deleteKeyUseCase.execute(cmd);
 
-            DeleteKeyResponse response = DeleteKeyResponse.newBuilder()
-                    .setStatus("OK")
-                    .build();
-
-            responseObserver.onNext(response);
+            responseObserver.onNext(
+                    DeleteKeyResponse.newBuilder()
+                            .setStatus("OK")
+                            .build()
+            );
             responseObserver.onCompleted();
 
         } catch (Exception e) {
-            responseObserver.onError(e);
+            responseObserver.onError(mapper.toStatus(e));
         }
-    }
-
-    // ==================================================
-    // INTERNAL HELPER
-    // ==================================================
-
-    private KeyResponseDto getById(String base62Id, boolean includePrivate) {
-        GetKeysRequestDto q = new GetKeysRequestDto();
-        q.setId(vn.xime.trust.domain.service.IdService.fromBase62(base62Id));
-        q.setIncludePrivate(includePrivate);
-
-        return getKeysUseCase.execute(q).getKeys().get(0);
-    }
-
-    private KeyDto toProto(KeyResponseDto dto) {
-
-        KeyDto.Builder b = KeyDto.newBuilder()
-                .setId(ByteString.copyFrom(
-                        vn.xime.trust.domain.service.IdService.fromBase62(dto.getId())
-                ))
-                .setSignerServiceId(dto.getSignerServiceId())
-                .setVerifierServiceId(dto.getVerifierServiceId())
-                .setAlgorithm(dto.getAlgorithm())
-                .setKeySize(dto.getKeySize())
-                .setPublicKey(dto.getPublicKey())
-                .setActivateAt(dto.getActivateAt().toEpochMilli())
-                .setExpiresAt(dto.getExpiresAt().toEpochMilli());
-
-        if (dto.getPrivateKeyEncrypted() != null) {
-            b.setPrivateKeyEncrypted(dto.getPrivateKeyEncrypted());
-        }
-
-        return b.build();
     }
 }

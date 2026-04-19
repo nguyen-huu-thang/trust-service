@@ -27,7 +27,7 @@ public class DeleteKeyUseCase {
         // LOAD KEY
         // =========================
 
-        Key key = keyRepository.findById(cmd.getId())
+        Key key = keyRepository.findById(IdService.fromString(cmd.getId()))
                 .orElseThrow(() -> new IllegalStateException("Key not found"));
 
         // =========================

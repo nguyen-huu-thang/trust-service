@@ -4,30 +4,29 @@ import java.time.Instant;
 
 public class ScheduleKeyRotationCommand {
 
-    private String signerServiceId;
-    private String verifierServiceId;
+    private final String signerServiceId;
+    private final String verifierServiceId;
 
-    private String algorithm; // optional
-    private int keySize;      // optional
-
-    private Instant activateAt;
+    private final Instant activateAt;
 
 
-    
+    public ScheduleKeyRotationCommand(
+            String signerServiceId,
+            String verifierServiceId,
+            Instant activateAt
+    ) {
+        this.signerServiceId = signerServiceId;
+        this.verifierServiceId = verifierServiceId;
+        this.activateAt = activateAt;
+    }
+
+
     public String getSignerServiceId() {
         return signerServiceId;
     }
 
     public String getVerifierServiceId() {
         return verifierServiceId;
-    }
-
-    public String getAlgorithm() {
-        return algorithm;
-    }
-
-    public int getKeySize() {
-        return keySize;
     }
 
     public Instant getActivateAt() {

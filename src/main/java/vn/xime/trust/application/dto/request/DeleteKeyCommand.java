@@ -2,9 +2,13 @@ package vn.xime.trust.application.dto.request;
 
 public class DeleteKeyCommand {
 
-    private byte[] id;
+    private final String id;
 
-    public byte[] getId() {
+    public DeleteKeyCommand(String id) {
+        this.id = id;
+    }
+
+    public String getId() {
         return id;
     }
 }
