@@ -2,7 +2,7 @@ package vn.xime.trust.application.dto.response;
 
 import java.time.Instant;
 
-public class KeysResponseDto {
+public class KeyResponseDto {
 
     private final String kid;
     private final String publicKey;
@@ -11,7 +11,7 @@ public class KeysResponseDto {
     private final Instant activateAt;
     private final Instant expiresAt;
 
-    public KeysResponseDto(
+    public KeyResponseDto(
             String kid,
             String publicKey,
             String algorithm,

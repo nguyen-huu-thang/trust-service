@@ -5,6 +5,7 @@ import vn.xime.trust.domain.model.Key;
 import java.time.Instant;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 
 public class KeyLifecycleDomainService {
 
@@ -14,6 +15,7 @@ public class KeyLifecycleDomainService {
 
     public List<Key> getKeysForVerify(List<Key> keys, Instant now) {
         return keys.stream()
+                .filter(k -> !k.isDeleted())
                 .filter(k -> k.canVerify(now))
                 .toList();
     }
@@ -24,6 +26,7 @@ public class KeyLifecycleDomainService {
 
     public Key getKeyForSign(List<Key> keys, Instant now) {
         return keys.stream()
+                .filter(k -> !k.isDeleted())
                 .filter(k -> k.canSign(now))
                 .max(Comparator.comparing(Key::getActivateAt))
                 .orElseThrow(() ->
@@ -35,11 +38,11 @@ public class KeyLifecycleDomainService {
     // NEXT (PRELOAD)
     // =========================
 
-    public Key getNextKey(List<Key> keys, Instant now) {
+    public Optional<Key> getNextKey(List<Key> keys, Instant now) {
         return keys.stream()
+                .filter(k -> !k.isDeleted())
                 .filter(k -> k.getActivateAt().isAfter(now))
-                .min(Comparator.comparing(Key::getActivateAt))
-                .orElse(null);
+                .min(Comparator.comparing(Key::getActivateAt));
     }
 
     // =========================

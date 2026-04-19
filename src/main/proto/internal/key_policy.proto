@@ -12,21 +12,39 @@ option java_multiple_files = true;
 
 service KeyPolicyAdmin {
 
-  // Create policy (unique pair signer-verifier)
+  // Create policy
   rpc CreateKeyPolicy (CreateKeyPolicyRequest)
       returns (CreateKeyPolicyResponse);
 
-  // Get single policy
-  rpc GetKeyPolicy (GetKeyPolicyRequest)
-      returns (GetKeyPolicyResponse);
+  // =========================
+  // GET APIs (match usecase)
+  // =========================
 
-  // List policies (filter)
-  rpc ListKeyPolicies (ListKeyPoliciesRequest)
-      returns (ListKeyPoliciesResponse);
+  rpc GetKeyPolicyById (GetKeyPolicyByIdRequest)
+      returns (GetKeyPolicyByIdResponse);
 
-  // Update policy
+  rpc GetKeyPolicyByPair (GetKeyPolicyByPairRequest)
+      returns (GetKeyPolicyByPairResponse);
+
+  rpc GetKeyPoliciesBySigner (GetKeyPoliciesBySignerRequest)
+      returns (GetKeyPoliciesBySignerResponse);
+
+  rpc GetKeyPoliciesByVerifier (GetKeyPoliciesByVerifierRequest)
+      returns (GetKeyPoliciesByVerifierResponse);
+
+  // =========================
+  // UPDATE
+  // =========================
+
   rpc UpdateKeyPolicy (UpdateKeyPolicyRequest)
       returns (UpdateKeyPolicyResponse);
+
+  // =========================
+  // DELETE
+  // =========================
+
+  rpc DeleteKeyPolicy (DeleteKeyPolicyRequest)
+      returns (DeleteKeyPolicyResponse);
 }
 
 
@@ -49,49 +67,78 @@ message CreateKeyPolicyResponse {
 }
 
 
-// --------------------------------------------------
+// ==================================================
+// GET
+// ==================================================
 
-message GetKeyPolicyRequest {
-  string signer_service_id = 1;
-  string verifier_service_id = 2;
+message GetKeyPolicyByIdRequest {
+  string id = 1;
 }
 
-message GetKeyPolicyResponse {
+message GetKeyPolicyByIdResponse {
   KeyPolicyDto policy = 1;
 }
 
-
 // --------------------------------------------------
 
-message ListKeyPoliciesRequest {
-
+message GetKeyPolicyByPairRequest {
   string signer_service_id = 1;
   string verifier_service_id = 2;
-
-  int32 limit = 3;
-  string cursor = 4;
 }
 
-message ListKeyPoliciesResponse {
-  repeated KeyPolicyDto policies = 1;
-  string next_cursor = 2;
+message GetKeyPolicyByPairResponse {
+  KeyPolicyDto policy = 1;
 }
-
 
 // --------------------------------------------------
+
+message GetKeyPoliciesBySignerRequest {
+  string signer_service_id = 1;
+}
+
+message GetKeyPoliciesBySignerResponse {
+  repeated KeyPolicyDto policies = 1;
+}
+
+// --------------------------------------------------
+
+message GetKeyPoliciesByVerifierRequest {
+  string verifier_service_id = 1;
+}
+
+message GetKeyPoliciesByVerifierResponse {
+  repeated KeyPolicyDto policies = 1;
+}
+
+
+// ==================================================
+// UPDATE
+// ==================================================
 
 message UpdateKeyPolicyRequest {
 
-  string signer_service_id = 1;
-  string verifier_service_id = 2;
+  string id = 1;
 
-  int64 key_lifetime_seconds = 3;
-  int64 jwt_ttl_seconds = 4;
-  int64 preload_seconds = 5;
+  int64 key_lifetime_seconds = 2;
+  int64 jwt_ttl_seconds = 3;
+  int64 preload_seconds = 4;
 }
 
 message UpdateKeyPolicyResponse {
   KeyPolicyDto policy = 1;
+}
+
+
+// ==================================================
+// DELETE
+// ==================================================
+
+message DeleteKeyPolicyRequest {
+  string id = 1;
+}
+
+message DeleteKeyPolicyResponse {
+  bool success = 1;
 }
 
 
@@ -101,7 +148,7 @@ message UpdateKeyPolicyResponse {
 
 message KeyPolicyDto {
 
-  bytes id = 1; // KSUID
+  string id = 1; // 🔥 đổi từ bytes → string (Base62)
 
   string signer_service_id = 2;
   string verifier_service_id = 3;

@@ -4,27 +4,29 @@ import io.grpc.stub.StreamObserver;
 import org.springframework.stereotype.Component;
 import vn.xime.trust.application.dto.request.RegisterShardCommand;
 import vn.xime.trust.application.dto.request.UpdateShardStatusCommand;
+import vn.xime.trust.application.dto.response.ShardDto;
 import vn.xime.trust.application.usecase.shard.GetShardsUseCase;
 import vn.xime.trust.application.usecase.shard.RegisterShardUseCase;
 import vn.xime.trust.application.usecase.shard.UpdateShardStatusUseCase;
-import vn.xime.trust.application.dto.response.ShardDto;
 import vn.xime.trust.grpc.internal.shard.*;
+
+import java.util.List;
 
 @Component
 public class ShardAdminGrpcService extends ShardAdminGrpc.ShardAdminImplBase {
 
     private final RegisterShardUseCase registerUseCase;
     private final UpdateShardStatusUseCase updateStatusUseCase;
-    private final GetShardsUseCase listUseCase;
+    private final GetShardsUseCase getUseCase;
 
     public ShardAdminGrpcService(
             RegisterShardUseCase registerUseCase,
             UpdateShardStatusUseCase updateStatusUseCase,
-            GetShardsUseCase listUseCase
+            GetShardsUseCase getUseCase
     ) {
         this.registerUseCase = registerUseCase;
         this.updateStatusUseCase = updateStatusUseCase;
-        this.listUseCase = listUseCase;
+        this.getUseCase = getUseCase;
     }
 
     // ==================================================
@@ -47,11 +49,11 @@ public class ShardAdminGrpcService extends ShardAdminGrpc.ShardAdminImplBase {
 
             ShardDto result = registerUseCase.execute(cmd);
 
-            RegisterShardResponse response = RegisterShardResponse.newBuilder()
-                    .setShard(toProto(result))
-                    .build();
-
-            responseObserver.onNext(response);
+            responseObserver.onNext(
+                    RegisterShardResponse.newBuilder()
+                            .setShard(toProto(result))
+                            .build()
+            );
             responseObserver.onCompleted();
 
         } catch (Exception e) {
@@ -77,12 +79,11 @@ public class ShardAdminGrpcService extends ShardAdminGrpc.ShardAdminImplBase {
 
             String status = updateStatusUseCase.execute(cmd);
 
-            UpdateShardStatusResponse response =
+            responseObserver.onNext(
                     UpdateShardStatusResponse.newBuilder()
                             .setStatus(status)
-                            .build();
-
-            responseObserver.onNext(response);
+                            .build()
+            );
             responseObserver.onCompleted();
 
         } catch (Exception e) {
@@ -91,30 +92,102 @@ public class ShardAdminGrpcService extends ShardAdminGrpc.ShardAdminImplBase {
     }
 
     // ==================================================
-    // LIST
+    // GET: BY ID
     // ==================================================
 
     @Override
-    public void listShards(
-            ListShardsRequest request,
-            StreamObserver<ListShardsResponse> responseObserver
+    public void getShardById(
+            GetShardByIdRequest request,
+            StreamObserver<GetShardByIdResponse> responseObserver
     ) {
         try {
 
-            GetShardsUseCase.Result result = listUseCase.execute(
-                    request.getServiceId(),
-                    request.getStatus(),
-                    request.getLimit(),
-                    request.getCursor()
+            ShardDto shard = getUseCase.getById(request.getId());
+
+            responseObserver.onNext(
+                    GetShardByIdResponse.newBuilder()
+                            .setShard(toProto(shard))
+                            .build()
+            );
+            responseObserver.onCompleted();
+
+        } catch (Exception e) {
+            responseObserver.onError(e);
+        }
+    }
+
+    // ==================================================
+    // GET: BY SERVICE
+    // ==================================================
+
+    @Override
+    public void getShardsByService(
+            GetShardsByServiceRequest request,
+            StreamObserver<GetShardsByServiceResponse> responseObserver
+    ) {
+        try {
+
+            List<ShardDto> shards = getUseCase.getByServiceId(request.getServiceId());
+
+            GetShardsByServiceResponse.Builder builder =
+                    GetShardsByServiceResponse.newBuilder();
+
+            shards.forEach(s -> builder.addShards(toProto(s)));
+
+            responseObserver.onNext(builder.build());
+            responseObserver.onCompleted();
+
+        } catch (Exception e) {
+            responseObserver.onError(e);
+        }
+    }
+
+    // ==================================================
+    // GET: ALL
+    // ==================================================
+
+    @Override
+    public void getAllShards(
+            GetAllShardsRequest request,
+            StreamObserver<GetAllShardsResponse> responseObserver
+    ) {
+        try {
+
+            List<ShardDto> shards = getUseCase.getAll();
+
+            GetAllShardsResponse.Builder builder =
+                    GetAllShardsResponse.newBuilder();
+
+            shards.forEach(s -> builder.addShards(toProto(s)));
+
+            responseObserver.onNext(builder.build());
+            responseObserver.onCompleted();
+
+        } catch (Exception e) {
+            responseObserver.onError(e);
+        }
+    }
+
+    // ==================================================
+    // GET: PAGED
+    // ==================================================
+
+    @Override
+    public void getAllShardsPaged(
+            GetAllShardsPagedRequest request,
+            StreamObserver<GetAllShardsPagedResponse> responseObserver
+    ) {
+        try {
+
+            List<ShardDto> shards = getUseCase.getAll(
+                    request.getPage(),
+                    request.getSize()
             );
 
-            ListShardsResponse.Builder builder = ListShardsResponse.newBuilder();
+            GetAllShardsPagedResponse.Builder builder =
+                    GetAllShardsPagedResponse.newBuilder();
 
-            result.shards().forEach(s -> builder.addShards(toProto(s)));
-
-            if (result.nextCursor() != null) {
-                builder.setNextCursor(result.nextCursor());
-            }
+            shards.forEach(s -> builder.addShards(toProto(s)));
 
             responseObserver.onNext(builder.build());
             responseObserver.onCompleted();

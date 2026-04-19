@@ -2,7 +2,7 @@ package vn.xime.trust.application.usecase.key;
 
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
-import vn.xime.trust.application.dto.request.GenerateKeyCommand;
+import vn.xime.trust.application.dto.request.ScheduleKeyRotationCommand;
 import vn.xime.trust.application.port.out.KeyEncryptionService;
 import vn.xime.trust.application.port.out.KeyGenerator;
 import vn.xime.trust.domain.factory.KeyFactory;
@@ -19,7 +19,7 @@ import java.time.Instant;
 import java.util.List;
 
 @Component
-public class GenerateKeyUseCase {
+public class ScheduleKeyRotationUseCase {
 
     private final KeyRepository keyRepository;
     private final ServiceRepository serviceRepository;
@@ -31,7 +31,7 @@ public class GenerateKeyUseCase {
     private final KeyFactory keyFactory;
     private final KeyValidationDomainService validationService;
 
-    public GenerateKeyUseCase(
+    public ScheduleKeyRotationUseCase(
             KeyRepository keyRepository,
             ServiceRepository serviceRepository,
             KeyPolicyRepository keyPolicyRepository,
@@ -50,7 +50,7 @@ public class GenerateKeyUseCase {
     }
 
     @Transactional
-    public String execute(GenerateKeyCommand cmd) {
+    public String execute(ScheduleKeyRotationCommand cmd) {
 
         Instant now = Instant.now();
 
@@ -78,18 +78,29 @@ public class GenerateKeyUseCase {
                 .orElseThrow(() -> new IllegalStateException("KeyPolicy not found"));
 
         // =========================
-        // TIME CALCULATION
+        // VALIDATE ACTIVATE TIME (STRICT)
         // =========================
 
-        Instant activateAt =
-                cmd.getActivateAt() != null ? cmd.getActivateAt() : now;
+        if (cmd.getActivateAt() == null) {
+            throw new IllegalArgumentException("activateAt is required for rotation");
+        }
+
+        Instant activateAt = cmd.getActivateAt();
+
+        if (!activateAt.isAfter(now)) {
+            throw new IllegalArgumentException("activateAt must be in the future");
+        }
+
+        // =========================
+        // CALCULATE EXPIRES
+        // =========================
 
         Instant expiresAt = activateAt
                 .plusSeconds(policy.getKeyLifetimeSeconds())
                 .plusSeconds(policy.getJwtTtlSeconds());
 
         // =========================
-        // LOAD EXISTING KEYS (CRITICAL)
+        // LOAD EXISTING KEYS
         // =========================
 
         List<Key> existingKeys =
@@ -99,7 +110,7 @@ public class GenerateKeyUseCase {
                 );
 
         // =========================
-        // VALIDATE KEY CHAIN (CRITICAL)
+        // VALIDATE KEY CHAIN
         // =========================
 
         validationService.validateNewKey(
@@ -114,11 +125,13 @@ public class GenerateKeyUseCase {
         // GENERATE KEY PAIR
         // =========================
 
-        KeyAlgorithm algorithm = parseAlgorithm(cmd.getAlgorithm());
+        KeyAlgorithm algorithm = resolveAlgorithm(cmd, existingKeys);
+
+        int keySize = resolveKeySize(cmd, existingKeys);
 
         var pair = keyGenerator.generate(
                 algorithm.name(),
-                cmd.getKeySize()
+                keySize
         );
 
         String encryptedPrivateKey =
@@ -134,7 +147,7 @@ public class GenerateKeyUseCase {
                 pair.getPublicKey(),
                 encryptedPrivateKey,
                 algorithm,
-                cmd.getKeySize(),
+                keySize,
                 activateAt,
                 expiresAt
         );
@@ -149,14 +162,37 @@ public class GenerateKeyUseCase {
     }
 
     // =========================
-    // INTERNAL
+    // INTERNAL LOGIC
     // =========================
 
-    private KeyAlgorithm parseAlgorithm(String raw) {
-        try {
-            return KeyAlgorithm.valueOf(raw.toUpperCase());
-        } catch (Exception e) {
-            throw new IllegalArgumentException("Invalid algorithm: " + raw);
+    private KeyAlgorithm resolveAlgorithm(
+            ScheduleKeyRotationCommand cmd,
+            List<Key> existingKeys
+    ) {
+        if (cmd.getAlgorithm() != null) {
+            return KeyAlgorithm.valueOf(cmd.getAlgorithm().toUpperCase());
         }
+
+        // fallback → dùng key gần nhất
+        return existingKeys.stream()
+                .filter(k -> !k.isDeleted())
+                .max((a, b) -> a.getActivateAt().compareTo(b.getActivateAt()))
+                .map(Key::getAlgorithm)
+                .orElseThrow(() -> new IllegalStateException("No existing key to infer algorithm"));
+    }
+
+    private int resolveKeySize(
+            ScheduleKeyRotationCommand cmd,
+            List<Key> existingKeys
+    ) {
+        if (cmd.getKeySize() > 0) {
+            return cmd.getKeySize();
+        }
+
+        return existingKeys.stream()
+                .filter(k -> !k.isDeleted())
+                .max((a, b) -> a.getActivateAt().compareTo(b.getActivateAt()))
+                .map(Key::getKeySize)
+                .orElseThrow(() -> new IllegalStateException("No existing key to infer key size"));
     }
 }

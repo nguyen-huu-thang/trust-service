@@ -2,8 +2,9 @@ package vn.xime.trust.application.dto.response;
 
 import java.time.Instant;
 
-public class TrustDto {
+public class KeyPolicyDto {
 
+    private final String id;
     private final String signerServiceId;
     private final String verifierServiceId;
 
@@ -12,21 +13,30 @@ public class TrustDto {
     private final long preloadSec;
 
     private final Instant createdAt;
+    private final Instant updatedAt;
 
-    public TrustDto(
-            String signerServiceId,
-            String verifierServiceId,
-            long keyLifetimeSec,
-            long jwtTtlSec,
-            long preloadSec,
-            Instant createdAt
+    public KeyPolicyDto(
+        String id,
+        String signerServiceId,
+        String verifierServiceId,
+        long keyLifetimeSec,
+        long jwtTtlSec,
+        long preloadSec,
+        Instant createdAt,
+        Instant updatedAt
     ) {
+        this.id = id;
         this.signerServiceId = signerServiceId;
         this.verifierServiceId = verifierServiceId;
         this.keyLifetimeSec = keyLifetimeSec;
         this.jwtTtlSec = jwtTtlSec;
         this.preloadSec = preloadSec;
         this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+    }
+
+    public String getId() {
+        return id;
     }
 
     public String getSignerServiceId() {
@@ -51,5 +61,9 @@ public class TrustDto {
 
     public Instant getCreatedAt() {
         return createdAt;
+    }
+
+    public Instant getUpdatedAt() {
+        return updatedAt;
     }
 }

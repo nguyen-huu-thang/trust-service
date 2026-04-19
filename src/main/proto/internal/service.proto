@@ -5,6 +5,7 @@ package trust.internal.service;
 option java_package = "vn.xime.trust.grpc.internal.service";
 option java_multiple_files = true;
 
+
 // ==================================================
 // SERVICE MANAGEMENT
 // ==================================================
@@ -15,15 +16,26 @@ service ServiceAdmin {
   rpc CreateService (CreateServiceRequest)
       returns (CreateServiceResponse);
 
-  // Get single service
-  rpc GetService (GetServiceRequest)
-      returns (GetServiceResponse);
+  // =========================
+  // GET APIs (match usecase)
+  // =========================
 
-  // List services (filter + pagination)
-  rpc ListServices (ListServicesRequest)
-      returns (ListServicesResponse);
+  rpc GetServiceById (GetServiceByIdRequest)
+      returns (GetServiceByIdResponse);
 
-  // Update service status (ACTIVE / DISABLED)
+  rpc GetAllServices (GetAllServicesRequest)
+      returns (GetAllServicesResponse);
+
+  rpc GetAllServicesPaged (GetAllServicesPagedRequest)
+      returns (GetAllServicesPagedResponse);
+
+  rpc GetServicesByTenant (GetServicesByTenantRequest)
+      returns (GetServicesByTenantResponse);
+
+  rpc GetServicesByTenantIsNull (GetServicesByTenantIsNullRequest)
+      returns (GetServicesByTenantIsNullResponse);
+
+  // Update service status
   rpc UpdateServiceStatus (UpdateServiceStatusRequest)
       returns (UpdateServiceStatusResponse);
 }
@@ -34,7 +46,7 @@ service ServiceAdmin {
 // ==================================================
 
 message CreateServiceRequest {
-  string id = 1;          // PK
+  string id = 1;
   string name = 2;
   string tenant = 3;
 }
@@ -43,42 +55,65 @@ message CreateServiceResponse {
   ServiceDto service = 1;
 }
 
+// ==================================================
+// GET APIs
+// ==================================================
 
-// --------------------------------------------------
-
-message GetServiceRequest {
+message GetServiceByIdRequest {
   string id = 1;
 }
 
-message GetServiceResponse {
+message GetServiceByIdResponse {
   ServiceDto service = 1;
 }
 
+// --------------------------------------------------
+
+message GetAllServicesRequest {}
+
+message GetAllServicesResponse {
+  repeated ServiceDto services = 1;
+}
 
 // --------------------------------------------------
 
-message ListServicesRequest {
-
-  // filters
-  string tenant = 1;
-  string status = 2;
-
-  // pagination
-  int32 limit = 3;
-  string cursor = 4;   // dùng KSUID hoặc created_at
+message GetAllServicesPagedRequest {
+  int32 page = 1;
+  int32 size = 2;
 }
 
-message ListServicesResponse {
+message GetAllServicesPagedResponse {
   repeated ServiceDto services = 1;
-  string next_cursor = 2;
 }
 
+// --------------------------------------------------
+
+message GetServicesByTenantRequest {
+  string tenant = 1;
+  int32 page = 2;
+  int32 size = 3;
+}
+
+message GetServicesByTenantResponse {
+  repeated ServiceDto services = 1;
+}
+
+// --------------------------------------------------
+
+message GetServicesByTenantIsNullRequest {
+  int32 page = 1;
+  int32 size = 2;
+}
+
+message GetServicesByTenantIsNullResponse {
+  repeated ServiceDto services = 1;
+}
 
 // --------------------------------------------------
 
 message UpdateServiceStatusRequest {
   string id = 1;
-  string status = 2; // ACTIVE / DISABLED
+  string status = 2;
 }
 
 message UpdateServiceStatusResponse {

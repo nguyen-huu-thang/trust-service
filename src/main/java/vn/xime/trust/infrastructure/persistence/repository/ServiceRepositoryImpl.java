@@ -3,11 +3,9 @@ package vn.xime.trust.infrastructure.persistence.repository;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Repository;
 import vn.xime.trust.domain.model.Service;
-import vn.xime.trust.domain.model.ServiceStatus;
 import vn.xime.trust.domain.repository.ServiceRepository;
 import vn.xime.trust.infrastructure.persistence.mapper.ServiceMapper;
 
-import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
@@ -45,25 +43,32 @@ public class ServiceRepositoryImpl implements ServiceRepository {
                 .toList();
     }
 
+    // =========================
+    // Pagination
+    // =========================
+
     @Override
-    public List<Service> search(
-            String tenant,
-            ServiceStatus status,
-            int limit,
-            String cursor
-    ) {
-        var statusStr = status != null ? status.name() : null;
-
-        Instant cursorTime = null;
-        if (cursor != null) {
-            cursorTime = Instant.parse(cursor); // ISO-8601
-        }
-
-        var pageable = PageRequest.of(0, limit);
-
-        return repo.search(tenant, statusStr, cursorTime, pageable)
-                .stream()
+    public List<Service> findAll(int page, int size) {
+        return repo.findAll(PageRequest.of(page, size))
                 .map(ServiceMapper::toDomain)
-                .toList();
+                .getContent();
+    }
+
+    // =========================
+    // Tenant
+    // =========================
+
+    @Override
+    public List<Service> findByTenant(String tenant, int page, int size) {
+        return repo.findByTenant(tenant, PageRequest.of(page, size))
+                .map(ServiceMapper::toDomain)
+                .getContent();
+    }
+
+    @Override
+    public List<Service> findByTenantIsNull(int page, int size) {
+        return repo.findByTenantIsNull(PageRequest.of(page, size))
+                .map(ServiceMapper::toDomain)
+                .getContent();
     }
 }

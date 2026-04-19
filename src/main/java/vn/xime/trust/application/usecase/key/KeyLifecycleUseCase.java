@@ -48,15 +48,6 @@ public class KeyLifecycleUseCase {
     }
 
     // =========================
-    // NEXT
-    // =========================
-
-    public Key getNextKey(String serviceId, Instant now) {
-        List<Key> keys = loadKeys(serviceId);
-        return lifecycle.getNextKey(keys, now);
-    }
-
-    // =========================
     // CLEANUP
     // =========================
 

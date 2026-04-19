@@ -65,10 +65,6 @@ public class Key {
         return !deleted && now.isBefore(expiresAt);
     }
 
-    public boolean isActiveAt(Instant now) {
-        return canSign(now);
-    }
-
     public boolean isExpiredAt(Instant now) {
         return !now.isBefore(expiresAt);
     }

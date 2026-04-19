@@ -1,8 +1,8 @@
 package vn.xime.trust.infrastructure.persistence.repository;
 
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Repository;
 import vn.xime.trust.domain.model.Shard;
-import vn.xime.trust.domain.model.ShardStatus;
 import vn.xime.trust.domain.repository.ShardRepository;
 import vn.xime.trust.infrastructure.persistence.mapper.ShardMapper;
 
@@ -45,17 +45,17 @@ public class ShardRepositoryImpl implements ShardRepository {
     }
 
     @Override
-    public List<Shard> search(
-            String serviceId,
-            ShardStatus status,
-            int limit,
-            String cursor
-    ) {
-        var statusStr = status != null ? status.name() : null;
-
-        return repo.search(serviceId, statusStr, cursor, limit)
+    public List<Shard> findAll() {
+        return repo.findAll()
                 .stream()
                 .map(ShardMapper::toDomain)
                 .toList();
+    }
+
+    @Override
+    public List<Shard> findAll(int page, int size) {
+        return repo.findAll(PageRequest.of(page, size))
+                .map(ShardMapper::toDomain)
+                .getContent();
     }
 }

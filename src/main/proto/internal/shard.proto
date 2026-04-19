@@ -20,9 +20,21 @@ service ShardAdmin {
   rpc UpdateShardStatus (UpdateShardStatusRequest)
       returns (UpdateShardStatusResponse);
 
-  // List shards (filter)
-  rpc ListShards (ListShardsRequest)
-      returns (ListShardsResponse);
+  // =========================
+  // GET APIs (match usecase)
+  // =========================
+
+  rpc GetShardById (GetShardByIdRequest)
+      returns (GetShardByIdResponse);
+
+  rpc GetShardsByService (GetShardsByServiceRequest)
+      returns (GetShardsByServiceResponse);
+
+  rpc GetAllShards (GetAllShardsRequest)
+      returns (GetAllShardsResponse);
+
+  rpc GetAllShardsPaged (GetAllShardsPagedRequest)
+      returns (GetAllShardsPagedResponse);
 }
 
 
@@ -31,7 +43,7 @@ service ShardAdmin {
 // ==================================================
 
 message RegisterShardRequest {
-  string id = 1;             // PK (ngắn)
+  string id = 1;
   string service_id = 2;
 
   string host = 3;
@@ -42,34 +54,56 @@ message RegisterShardResponse {
   ShardDto shard = 1;
 }
 
-
 // --------------------------------------------------
 
 message UpdateShardStatusRequest {
   string shard_id = 1;
-  string status = 2; // INACTIVE / ACTIVE / MAINTENANCE / FAILED
+  string status = 2;
 }
 
 message UpdateShardStatusResponse {
   string status = 1;
 }
 
-// --------------------------------------------------
+// ==================================================
+// GET APIs
+// ==================================================
 
-message ListShardsRequest {
-
-  // filters
-  string service_id = 1;
-  string status = 2;
-
-  // pagination
-  int32 limit = 3;
-  string cursor = 4;
+message GetShardByIdRequest {
+  string id = 1;
 }
 
-message ListShardsResponse {
+message GetShardByIdResponse {
+  ShardDto shard = 1;
+}
+
+// --------------------------------------------------
+
+message GetShardsByServiceRequest {
+  string service_id = 1;
+}
+
+message GetShardsByServiceResponse {
   repeated ShardDto shards = 1;
-  string next_cursor = 2;
+}
+
+// --------------------------------------------------
+
+message GetAllShardsRequest {}
+
+message GetAllShardsResponse {
+  repeated ShardDto shards = 1;
+}
+
+// --------------------------------------------------
+
+message GetAllShardsPagedRequest {
+  int32 page = 1;
+  int32 size = 2;
+}
+
+message GetAllShardsPagedResponse {
+  repeated ShardDto shards = 1;
 }
 
 

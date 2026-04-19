@@ -1,7 +1,6 @@
 package vn.xime.trust.domain.repository;
 
 import vn.xime.trust.domain.model.Service;
-import vn.xime.trust.domain.model.ServiceStatus;
 
 import java.util.Optional;
 import java.util.List;
@@ -16,10 +15,9 @@ public interface ServiceRepository {
 
     List<Service> findAll();
 
-    List<Service> search(
-        String tenant,
-        ServiceStatus status,
-        int limit,
-        String cursor
-    );
+    List<Service> findAll(int page, int size);
+
+    List<Service> findByTenant(String tenant, int page, int size);
+
+    List<Service> findByTenantIsNull(int page, int size);
 }

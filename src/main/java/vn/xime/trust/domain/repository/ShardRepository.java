@@ -1,7 +1,6 @@
 package vn.xime.trust.domain.repository;
 
 import vn.xime.trust.domain.model.Shard;
-import vn.xime.trust.domain.model.ShardStatus;
 
 import java.util.List;
 import java.util.Optional;
@@ -16,10 +15,7 @@ public interface ShardRepository {
 
     List<Shard> findByServiceId(String serviceId);
 
-    List<Shard> search(
-            String serviceId,
-            ShardStatus status,
-            int limit,
-            String cursor
-    );
+    List<Shard> findAll();
+
+    List<Shard> findAll(int page, int size);
 }
