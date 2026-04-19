@@ -7,7 +7,7 @@ import vn.xime.trust.grpc.internal.key.KeyDto;
 
 
 @Component
-public class KeyMapper {
+public class KeyGrpcMapper {
 
     public KeyDto toProto(KeyResponseDto dto) {
         return KeyDto.newBuilder()

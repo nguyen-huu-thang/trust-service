@@ -2,7 +2,7 @@ package vn.xime.trust.api.grpc.internal;
 
 import io.grpc.stub.StreamObserver;
 import org.springframework.stereotype.Component;
-import vn.xime.trust.api.grpc.mapper.ShardMapper;
+import vn.xime.trust.api.grpc.mapper.ShardGrpcMapper;
 import vn.xime.trust.application.dto.request.RegisterShardCommand;
 import vn.xime.trust.application.dto.request.UpdateShardStatusCommand;
 import vn.xime.trust.application.dto.response.ShardDto;
@@ -19,13 +19,13 @@ public class ShardAdminGrpcService extends ShardAdminGrpc.ShardAdminImplBase {
     private final RegisterShardUseCase registerUseCase;
     private final UpdateShardStatusUseCase updateStatusUseCase;
     private final GetShardsUseCase getUseCase;
-    private final ShardMapper shardMapper;
+    private final ShardGrpcMapper shardMapper;
 
     public ShardAdminGrpcService(
             RegisterShardUseCase registerUseCase,
             UpdateShardStatusUseCase updateStatusUseCase,
             GetShardsUseCase getUseCase,
-            ShardMapper shardMapper
+            ShardGrpcMapper shardMapper
     ) {
         this.registerUseCase = registerUseCase;
         this.updateStatusUseCase = updateStatusUseCase;

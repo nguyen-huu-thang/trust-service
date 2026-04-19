@@ -7,7 +7,7 @@ import vn.xime.trust.domain.service.IdService;
 import vn.xime.trust.application.usecase.key.*;
 import vn.xime.trust.application.dto.request.*;
 import vn.xime.trust.application.dto.response.KeyResponseDto;
-import vn.xime.trust.api.grpc.mapper.KeyMapper;
+import vn.xime.trust.api.grpc.mapper.KeyGrpcMapper;
 
 import java.time.Instant;
 import java.util.List;
@@ -19,14 +19,14 @@ public class KeyAdminGrpcService extends KeyAdminGrpc.KeyAdminImplBase {
     private final ScheduleKeyRotationUseCase rotationUseCase;
     private final GetKeysUseCase getKeysUseCase;
     private final DeleteKeyUseCase deleteKeyUseCase;
-    private final KeyMapper mapper;
+    private final KeyGrpcMapper mapper;
 
     public KeyAdminGrpcService(
             GenerateKeyUseCase generateKeyUseCase,
             ScheduleKeyRotationUseCase rotationUseCase,
             GetKeysUseCase getKeysUseCase,
             DeleteKeyUseCase deleteKeyUseCase,
-            KeyMapper mapper
+            KeyGrpcMapper mapper
     ) {
         this.generateKeyUseCase = generateKeyUseCase;
         this.rotationUseCase = rotationUseCase;

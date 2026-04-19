@@ -4,7 +4,7 @@ import org.springframework.stereotype.Component;
 import vn.xime.trust.application.dto.response.ShardDto;
 
 @Component
-public class ShardMapper {
+public class ShardGrpcMapper {
 
     public vn.xime.trust.grpc.internal.shard.ShardDto toProto(ShardDto dto) {
         return vn.xime.trust.grpc.internal.shard.ShardDto.newBuilder()

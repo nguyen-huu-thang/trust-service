@@ -125,14 +125,8 @@ public class ScheduleKeyRotationUseCase {
         // GENERATE KEY PAIR
         // =========================
 
-        KeyAlgorithm algorithm = resolveAlgorithm(cmd, existingKeys);
 
-        int keySize = resolveKeySize(cmd, existingKeys);
-
-        var pair = keyGenerator.generate(
-                algorithm.name(),
-                keySize
-        );
+        var pair = keyGenerator.generate("RSA", 2048);
 
         String encryptedPrivateKey =
                 encryptionService.encrypt(pair.getPrivateKey());
@@ -146,8 +140,8 @@ public class ScheduleKeyRotationUseCase {
                 cmd.getVerifierServiceId(),
                 pair.getPublicKey(),
                 encryptedPrivateKey,
-                algorithm,
-                keySize,
+                KeyAlgorithm.RSA,
+                2048,
                 activateAt,
                 expiresAt
         );
@@ -159,40 +153,5 @@ public class ScheduleKeyRotationUseCase {
         keyRepository.save(key);
 
         return IdService.toBase62(key.getId());
-    }
-
-    // =========================
-    // INTERNAL LOGIC
-    // =========================
-
-    private KeyAlgorithm resolveAlgorithm(
-            ScheduleKeyRotationCommand cmd,
-            List<Key> existingKeys
-    ) {
-        if (cmd.getAlgorithm() != null) {
-            return KeyAlgorithm.valueOf(cmd.getAlgorithm().toUpperCase());
-        }
-
-        // fallback → dùng key gần nhất
-        return existingKeys.stream()
-                .filter(k -> !k.isDeleted())
-                .max((a, b) -> a.getActivateAt().compareTo(b.getActivateAt()))
-                .map(Key::getAlgorithm)
-                .orElseThrow(() -> new IllegalStateException("No existing key to infer algorithm"));
-    }
-
-    private int resolveKeySize(
-            ScheduleKeyRotationCommand cmd,
-            List<Key> existingKeys
-    ) {
-        if (cmd.getKeySize() > 0) {
-            return cmd.getKeySize();
-        }
-
-        return existingKeys.stream()
-                .filter(k -> !k.isDeleted())
-                .max((a, b) -> a.getActivateAt().compareTo(b.getActivateAt()))
-                .map(Key::getKeySize)
-                .orElseThrow(() -> new IllegalStateException("No existing key to infer key size"));
     }
 }

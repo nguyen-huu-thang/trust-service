@@ -3,7 +3,7 @@ package vn.xime.trust.api.grpc.internal;
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 import org.springframework.stereotype.Component;
-import vn.xime.trust.api.grpc.mapper.ServiceMapper;
+import vn.xime.trust.api.grpc.mapper.ServiceGrpcMapper;
 import vn.xime.trust.application.dto.request.CreateServiceCommand;
 import vn.xime.trust.application.dto.response.ServiceDto;
 import vn.xime.trust.application.usecase.service.*;
@@ -17,13 +17,13 @@ public class ServiceAdminGrpcService extends ServiceAdminGrpc.ServiceAdminImplBa
     private final CreateServiceUseCase createUseCase;
     private final GetServiceUseCase getUseCase;
     private final UpdateServiceStatusUseCase updateStatusUseCase;
-    private final ServiceMapper serviceMapper;
+    private final ServiceGrpcMapper serviceMapper;
 
     public ServiceAdminGrpcService(
             CreateServiceUseCase createUseCase,
             GetServiceUseCase getUseCase,
             UpdateServiceStatusUseCase updateStatusUseCase,
-            ServiceMapper serviceMapper
+            ServiceGrpcMapper serviceMapper
     ) {
         this.createUseCase = createUseCase;
         this.getUseCase = getUseCase;

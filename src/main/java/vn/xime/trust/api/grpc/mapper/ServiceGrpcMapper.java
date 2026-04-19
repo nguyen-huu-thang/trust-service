@@ -4,7 +4,7 @@ import org.springframework.stereotype.Component;
 import vn.xime.trust.application.dto.response.ServiceDto;
 
 @Component
-public class ServiceMapper {
+public class ServiceGrpcMapper {
 
     public vn.xime.trust.grpc.internal.service.ServiceDto toProto(ServiceDto dto) {
         return vn.xime.trust.grpc.internal.service.ServiceDto.newBuilder()

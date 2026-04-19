@@ -4,7 +4,7 @@ import org.springframework.stereotype.Component;
 import vn.xime.trust.application.dto.response.KeyPolicyDto;
 
 @Component
-public class KeyPolicyMapper {
+public class KeyPolicyGrpcMapper {
 
     public vn.xime.trust.grpc.internal.keypolicy.KeyPolicyDto toProto(KeyPolicyDto dto) {
         return vn.xime.trust.grpc.internal.keypolicy.KeyPolicyDto.newBuilder()
