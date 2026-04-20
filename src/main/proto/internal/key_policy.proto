@@ -12,13 +12,8 @@ option java_multiple_files = true;
 
 service KeyPolicyAdmin {
 
-  // Create policy
   rpc CreateKeyPolicy (CreateKeyPolicyRequest)
       returns (CreateKeyPolicyResponse);
-
-  // =========================
-  // GET APIs (match usecase)
-  // =========================
 
   rpc GetKeyPolicyById (GetKeyPolicyByIdRequest)
       returns (GetKeyPolicyByIdResponse);
@@ -32,16 +27,8 @@ service KeyPolicyAdmin {
   rpc GetKeyPoliciesByVerifier (GetKeyPoliciesByVerifierRequest)
       returns (GetKeyPoliciesByVerifierResponse);
 
-  // =========================
-  // UPDATE
-  // =========================
-
   rpc UpdateKeyPolicy (UpdateKeyPolicyRequest)
       returns (UpdateKeyPolicyResponse);
-
-  // =========================
-  // DELETE
-  // =========================
 
   rpc DeleteKeyPolicy (DeleteKeyPolicyRequest)
       returns (DeleteKeyPolicyResponse);
@@ -57,9 +44,13 @@ message CreateKeyPolicyRequest {
   string signer_service_id = 1;
   string verifier_service_id = 2;
 
-  int64 key_lifetime_seconds = 3;
-  int64 jwt_ttl_seconds = 4;
-  int64 preload_seconds = 5;
+  // 🔥 NEW (crypto policy)
+  string algorithm = 3;   // RSA / ECDSA
+  int32 key_size = 4;     // 2048 / 256...
+
+  int64 key_lifetime_seconds = 5;
+  int64 jwt_ttl_seconds = 6;
+  int64 preload_seconds = 7;
 }
 
 message CreateKeyPolicyResponse {
@@ -119,9 +110,13 @@ message UpdateKeyPolicyRequest {
 
   string id = 1;
 
-  int64 key_lifetime_seconds = 2;
-  int64 jwt_ttl_seconds = 3;
-  int64 preload_seconds = 4;
+  // 🔥 NEW (allow updating crypto)
+  string algorithm = 2;
+  int32 key_size = 3;
+
+  int64 key_lifetime_seconds = 4;
+  int64 jwt_ttl_seconds = 5;
+  int64 preload_seconds = 6;
 }
 
 message UpdateKeyPolicyResponse {
@@ -148,15 +143,19 @@ message DeleteKeyPolicyResponse {
 
 message KeyPolicyDto {
 
-  string id = 1; // 🔥 đổi từ bytes → string (Base62)
+  string id = 1;
 
   string signer_service_id = 2;
   string verifier_service_id = 3;
 
-  int64 key_lifetime_seconds = 4;
-  int64 jwt_ttl_seconds = 5;
-  int64 preload_seconds = 6;
+  // 🔥 NEW
+  string algorithm = 4;
+  int32 key_size = 5;
 
-  int64 created_at = 7;
-  int64 updated_at = 8;
+  int64 key_lifetime_seconds = 6;
+  int64 jwt_ttl_seconds = 7;
+  int64 preload_seconds = 8;
+
+  int64 created_at = 9;
+  int64 updated_at = 10;
 }

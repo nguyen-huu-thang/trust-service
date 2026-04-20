@@ -4,6 +4,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import vn.xime.trust.application.dto.request.UpdateKeyPolicyCommand;
 import vn.xime.trust.application.dto.response.KeyPolicyDto;
+import vn.xime.trust.domain.model.KeyAlgorithm;
 import vn.xime.trust.domain.model.KeyPolicy;
 import vn.xime.trust.domain.repository.KeyPolicyRepository;
 import vn.xime.trust.domain.service.IdService;
@@ -31,6 +32,14 @@ public class UpdatePolicyUseCase {
             throw new IllegalArgumentException("id is required");
         }
 
+        if (cmd.getAlgorithm() == null || cmd.getAlgorithm().isBlank()) {
+            throw new IllegalArgumentException("algorithm is required");
+        }
+
+        if (cmd.getKeySize() <= 0) {
+            throw new IllegalArgumentException("keySize must be > 0");
+        }
+
         if (cmd.getKeyLifetimeSec() <= 0) {
             throw new IllegalArgumentException("keyLifetime must be > 0");
         }
@@ -44,15 +53,25 @@ public class UpdatePolicyUseCase {
         }
 
         // =========================
+        // PARSE ALGORITHM
+        // =========================
+
+        KeyAlgorithm algorithm;
+        try {
+            algorithm = KeyAlgorithm.valueOf(cmd.getAlgorithm().trim().toUpperCase());
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Invalid algorithm: " + cmd.getAlgorithm());
+        }
+
+        // =========================
         // DOMAIN RULE VALIDATION
         // =========================
 
-        if (cmd.getJwtTtlSec() > cmd.getKeyLifetimeSec()) {
-            throw new IllegalArgumentException("jwtTtl must be <= keyLifetime");
-        }
-
-        if (cmd.getPreloadSec() > cmd.getKeyLifetimeSec()) {
-            throw new IllegalArgumentException("preload must be <= keyLifetime");
+        if (cmd.getKeyLifetimeSec() <
+                cmd.getJwtTtlSec() + cmd.getPreloadSec()) {
+            throw new IllegalArgumentException(
+                    "keyLifetime must be >= jwtTtl + preload"
+            );
         }
 
         // =========================
@@ -69,9 +88,11 @@ public class UpdatePolicyUseCase {
         // =========================
 
         KeyPolicy updated = existing.updated(
-            cmd.getKeyLifetimeSec(),
-            cmd.getJwtTtlSec(),
-            cmd.getPreloadSec()
+                algorithm,
+                cmd.getKeySize(),
+                cmd.getKeyLifetimeSec(),
+                cmd.getJwtTtlSec(),
+                cmd.getPreloadSec()
         );
 
         // =========================

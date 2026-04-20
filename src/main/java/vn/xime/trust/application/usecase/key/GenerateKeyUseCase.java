@@ -32,13 +32,13 @@ public class GenerateKeyUseCase {
     private final KeyValidationDomainService validationService;
 
     public GenerateKeyUseCase(
-            KeyRepository keyRepository,
-            ServiceRepository serviceRepository,
-            KeyPolicyRepository keyPolicyRepository,
-            KeyGenerator keyGenerator,
-            KeyEncryptionService encryptionService,
-            KeyFactory keyFactory,
-            KeyValidationDomainService validationService
+        KeyRepository keyRepository,
+        ServiceRepository serviceRepository,
+        KeyPolicyRepository keyPolicyRepository,
+        KeyGenerator keyGenerator,
+        KeyEncryptionService encryptionService,
+        KeyFactory keyFactory,
+        KeyValidationDomainService validationService
     ) {
         this.keyRepository = keyRepository;
         this.serviceRepository = serviceRepository;
@@ -78,18 +78,30 @@ public class GenerateKeyUseCase {
                 .orElseThrow(() -> new IllegalStateException("KeyPolicy not found"));
 
         // =========================
+        // VALIDATE POLICY (CRITICAL)
+        // =========================
+
+        if (policy.getKeyLifetimeSeconds() <
+                policy.getJwtTtlSeconds() + policy.getPreloadSeconds()) {
+            throw new IllegalStateException(
+                    "Invalid policy: key_lifetime must be >= jwt_ttl + preload"
+            );
+        }
+
+        // =========================
         // TIME CALCULATION
         // =========================
 
         Instant activateAt =
-                cmd.getActivateAt() != null ? cmd.getActivateAt() : now;
+                cmd.getActivateAt() != null
+                        ? cmd.getActivateAt()
+                        : now.plusSeconds(policy.getPreloadSeconds());
 
         Instant expiresAt = activateAt
-                .plusSeconds(policy.getKeyLifetimeSeconds())
-                .plusSeconds(policy.getJwtTtlSeconds());
+                .plusSeconds(policy.getKeyLifetimeSeconds());
 
         // =========================
-        // LOAD EXISTING KEYS (CRITICAL)
+        // LOAD EXISTING KEYS
         // =========================
 
         List<Key> existingKeys =
@@ -99,7 +111,7 @@ public class GenerateKeyUseCase {
                 );
 
         // =========================
-        // VALIDATE KEY CHAIN (CRITICAL)
+        // VALIDATE KEY CHAIN
         // =========================
 
         validationService.validateNewKey(
@@ -111,14 +123,15 @@ public class GenerateKeyUseCase {
         );
 
         // =========================
-        // GENERATE KEY PAIR
+        // 🔥 GENERATE KEY (FROM POLICY)
         // =========================
 
-        KeyAlgorithm algorithm = parseAlgorithm(cmd.getAlgorithm());
+        KeyAlgorithm algorithm = policy.getAlgorithm();
+        int keySize = policy.getKeySize();
 
         var pair = keyGenerator.generate(
                 algorithm.name(),
-                cmd.getKeySize()
+                keySize
         );
 
         String encryptedPrivateKey =
@@ -134,7 +147,7 @@ public class GenerateKeyUseCase {
                 pair.getPublicKey(),
                 encryptedPrivateKey,
                 algorithm,
-                cmd.getKeySize(),
+                keySize,
                 activateAt,
                 expiresAt
         );
@@ -146,17 +159,5 @@ public class GenerateKeyUseCase {
         keyRepository.save(key);
 
         return IdService.toBase62(key.getId());
-    }
-
-    // =========================
-    // INTERNAL
-    // =========================
-
-    private KeyAlgorithm parseAlgorithm(String raw) {
-        try {
-            return KeyAlgorithm.valueOf(raw.toUpperCase());
-        } catch (Exception e) {
-            throw new IllegalArgumentException("Invalid algorithm: " + raw);
-        }
     }
 }

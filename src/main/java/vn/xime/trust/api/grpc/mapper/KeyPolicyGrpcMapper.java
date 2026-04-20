@@ -11,6 +11,8 @@ public class KeyPolicyGrpcMapper {
                 .setId(dto.getId())
                 .setSignerServiceId(dto.getSignerServiceId())
                 .setVerifierServiceId(dto.getVerifierServiceId())
+                .setAlgorithm(dto.getAlgorithm())
+                .setKeySize(dto.getKeySize())
                 .setKeyLifetimeSeconds(dto.getKeyLifetimeSec())
                 .setJwtTtlSeconds(dto.getJwtTtlSec())
                 .setPreloadSeconds(dto.getPreloadSec())

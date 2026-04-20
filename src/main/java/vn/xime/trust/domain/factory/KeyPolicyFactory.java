@@ -1,6 +1,7 @@
 package vn.xime.trust.domain.factory;
 
 import vn.xime.trust.domain.model.Id;
+import vn.xime.trust.domain.model.KeyAlgorithm;
 import vn.xime.trust.domain.model.KeyPolicy;
 
 import java.time.Instant;
@@ -10,10 +11,13 @@ public class KeyPolicyFactory {
     public KeyPolicy create(
             String signerServiceId,
             String verifierServiceId,
+            KeyAlgorithm algorithm,
+            int keySize,
             long keyLifetimeSeconds,
             long jwtTtlSeconds,
             long preloadSeconds
     ) {
+
         // =========================
         // VALIDATE
         // =========================
@@ -30,6 +34,14 @@ public class KeyPolicyFactory {
             throw new IllegalArgumentException("signer and verifier must be different");
         }
 
+        if (algorithm == null) {
+            throw new IllegalArgumentException("algorithm is required");
+        }
+
+        if (keySize <= 0) {
+            throw new IllegalArgumentException("keySize must be > 0");
+        }
+
         if (keyLifetimeSeconds <= 0) {
             throw new IllegalArgumentException("keyLifetimeSeconds must be > 0");
         }
@@ -40,6 +52,13 @@ public class KeyPolicyFactory {
 
         if (preloadSeconds < 0) {
             throw new IllegalArgumentException("preloadSeconds must be >= 0");
+        }
+
+        // 🔥 domain rule (quan trọng)
+        if (keyLifetimeSeconds < jwtTtlSeconds + preloadSeconds) {
+            throw new IllegalArgumentException(
+                    "keyLifetime must be >= jwtTtl + preload"
+            );
         }
 
         // =========================
@@ -53,11 +72,13 @@ public class KeyPolicyFactory {
                 id,
                 signerServiceId,
                 verifierServiceId,
+                algorithm,
+                keySize,
                 keyLifetimeSeconds,
                 jwtTtlSeconds,
                 preloadSeconds,
                 now,
-                null // updatedAt
+                null
         );
     }
 }

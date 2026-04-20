@@ -78,7 +78,18 @@ public class ScheduleKeyRotationUseCase {
                 .orElseThrow(() -> new IllegalStateException("KeyPolicy not found"));
 
         // =========================
-        // VALIDATE ACTIVATE TIME (STRICT)
+        // VALIDATE POLICY
+        // =========================
+
+        if (policy.getKeyLifetimeSeconds() <
+                policy.getJwtTtlSeconds() + policy.getPreloadSeconds()) {
+            throw new IllegalStateException(
+                    "Invalid policy: key_lifetime must be >= jwt_ttl + preload"
+            );
+        }
+
+        // =========================
+        // VALIDATE ACTIVATE TIME
         // =========================
 
         if (cmd.getActivateAt() == null) {
@@ -91,13 +102,18 @@ public class ScheduleKeyRotationUseCase {
             throw new IllegalArgumentException("activateAt must be in the future");
         }
 
+        if (activateAt.isBefore(now.plusSeconds(policy.getPreloadSeconds()))) {
+            throw new IllegalArgumentException(
+                    "activateAt must be >= now + preload_seconds"
+            );
+        }
+
         // =========================
         // CALCULATE EXPIRES
         // =========================
 
         Instant expiresAt = activateAt
-                .plusSeconds(policy.getKeyLifetimeSeconds())
-                .plusSeconds(policy.getJwtTtlSeconds());
+                .plusSeconds(policy.getKeyLifetimeSeconds());
 
         // =========================
         // LOAD EXISTING KEYS
@@ -122,11 +138,16 @@ public class ScheduleKeyRotationUseCase {
         );
 
         // =========================
-        // GENERATE KEY PAIR
+        // 🔥 GENERATE KEY (FROM POLICY)
         // =========================
 
+        KeyAlgorithm algorithm = policy.getAlgorithm();
+        int keySize = policy.getKeySize();
 
-        var pair = keyGenerator.generate("RSA", 2048);
+        var pair = keyGenerator.generate(
+                algorithm.name(),
+                keySize
+        );
 
         String encryptedPrivateKey =
                 encryptionService.encrypt(pair.getPrivateKey());
@@ -140,8 +161,8 @@ public class ScheduleKeyRotationUseCase {
                 cmd.getVerifierServiceId(),
                 pair.getPublicKey(),
                 encryptedPrivateKey,
-                KeyAlgorithm.RSA,
-                2048,
+                algorithm,
+                keySize,
                 activateAt,
                 expiresAt
         );

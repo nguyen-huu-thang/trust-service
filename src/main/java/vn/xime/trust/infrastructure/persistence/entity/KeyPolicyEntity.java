@@ -45,17 +45,33 @@ public class KeyPolicyEntity {
     private String verifierServiceId;
 
     // =========================
-    // POLICY
+    // 🔥 CRYPTO POLICY
     // =========================
 
     /**
-     * Thời gian key còn hiệu lực để VERIFY
+     * RSA / ECDSA
+     */
+    @Column(name = "algorithm", nullable = false, length = 20)
+    private String algorithm;
+
+    /**
+     * 2048 / 3072 / 4096 / 256 / 384...
+     */
+    @Column(name = "key_size", nullable = false)
+    private Integer keySize;
+
+    // =========================
+    // LIFECYCLE POLICY
+    // =========================
+
+    /**
+     * Thời gian sống của key
      */
     @Column(name = "key_lifetime_seconds", nullable = false)
     private Long keyLifetimeSeconds;
 
     /**
-     * TTL của JWT
+     * Thời gian sống của JWT do identity kí.
      */
     @Column(name = "jwt_ttl_seconds", nullable = false)
     private Long jwtTtlSeconds;
@@ -102,6 +118,22 @@ public class KeyPolicyEntity {
 
     public void setVerifierServiceId(String verifierServiceId) {
         this.verifierServiceId = verifierServiceId;
+    }
+
+    public String getAlgorithm() {
+        return algorithm;
+    }
+
+    public void setAlgorithm(String algorithm) {
+        this.algorithm = algorithm;
+    }
+
+    public Integer getKeySize() {
+        return keySize;
+    }
+
+    public void setKeySize(Integer keySize) {
+        this.keySize = keySize;
     }
 
     public Long getKeyLifetimeSeconds() {

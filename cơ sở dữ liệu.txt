@@ -63,7 +63,11 @@ id BYTEA PRIMARY KEY   -- 🔥 KSUID (20 bytes)
 signer_service_id VARCHAR(20) NOT NULL
 verifier_service_id VARCHAR(20) NOT NULL
 
--- policy
+-- crypto policy (🔥 NEW)
+algorithm VARCHAR(20) NOT NULL     -- RSA / ECDSA
+key_size INT NOT NULL              -- 2048 / 3072 / 4096 / 256 / 384...
+
+-- lifecycle policy
 key_lifetime_seconds BIGINT NOT NULL
 jwt_ttl_seconds BIGINT NOT NULL
 preload_seconds BIGINT NOT NULL
@@ -82,6 +86,9 @@ REFERENCES services(id)
 UNIQUE(signer_service_id, verifier_service_id)
 
 CHECK (signer_service_id != verifier_service_id)
+
+-- 🔥 validate crypto (optional but recommended)
+CHECK (key_size > 0)
 
 -- indexes
 CREATE INDEX idx_policies_signer

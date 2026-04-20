@@ -1,6 +1,7 @@
 package vn.xime.trust.infrastructure.persistence.mapper;
 
 import vn.xime.trust.domain.model.Id;
+import vn.xime.trust.domain.model.KeyAlgorithm;
 import vn.xime.trust.domain.model.KeyPolicy;
 import vn.xime.trust.infrastructure.persistence.entity.KeyPolicyEntity;
 
@@ -21,15 +22,21 @@ public class KeyPolicyMapper {
         requireNonNull(e.getId(), "id");
         requireNonNull(e.getSignerServiceId(), "signerServiceId");
         requireNonNull(e.getVerifierServiceId(), "verifierServiceId");
+        requireNonNull(e.getAlgorithm(), "algorithm");
+        requireNonNull(e.getKeySize(), "keySize");
         requireNonNull(e.getKeyLifetimeSeconds(), "keyLifetimeSeconds");
         requireNonNull(e.getJwtTtlSeconds(), "jwtTtlSeconds");
         requireNonNull(e.getPreloadSeconds(), "preloadSeconds");
         requireNonNull(e.getCreatedAt(), "createdAt");
 
+        KeyAlgorithm algorithm = toAlgorithm(e.getAlgorithm());
+
         return new KeyPolicy(
                 toId(e.getId()),
                 e.getSignerServiceId(),
                 e.getVerifierServiceId(),
+                algorithm,
+                e.getKeySize(),
                 e.getKeyLifetimeSeconds(),
                 e.getJwtTtlSeconds(),
                 e.getPreloadSeconds(),
@@ -53,6 +60,11 @@ public class KeyPolicyMapper {
         e.setId(toBytes(d.getId()));
         e.setSignerServiceId(d.getSignerServiceId());
         e.setVerifierServiceId(d.getVerifierServiceId());
+
+        // 🔥 enum -> string
+        e.setAlgorithm(d.getAlgorithm().name());
+        e.setKeySize(d.getKeySize());
+
         e.setKeyLifetimeSeconds(d.getKeyLifetimeSeconds());
         e.setJwtTtlSeconds(d.getJwtTtlSeconds());
         e.setPreloadSeconds(d.getPreloadSeconds());
@@ -60,6 +72,18 @@ public class KeyPolicyMapper {
         e.setUpdatedAt(d.getUpdatedAt());
 
         return e;
+    }
+
+    // =========================
+    // ALGORITHM MAPPING
+    // =========================
+
+    private static KeyAlgorithm toAlgorithm(String raw) {
+        try {
+            return KeyAlgorithm.valueOf(raw.trim().toUpperCase());
+        } catch (Exception ex) {
+            throw new IllegalStateException("Invalid algorithm in DB: " + raw);
+        }
     }
 
     // =========================

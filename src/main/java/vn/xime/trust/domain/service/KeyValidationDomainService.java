@@ -29,20 +29,16 @@ public class KeyValidationDomainService {
             throw new IllegalArgumentException("expiresAt is required");
         }
 
-        if (newExpiresAt.isBefore(newActivateAt)) {
+        if (!newExpiresAt.isAfter(newActivateAt)) {
             throw new IllegalArgumentException("expiresAt must be after activateAt");
         }
-
-        // =========================
-        // ACTIVATE TIME VALIDATION
-        // =========================
 
         if (newActivateAt.isBefore(now.minusSeconds(5))) {
             throw new IllegalArgumentException("activateAt cannot be in the past");
         }
 
         // =========================
-        // FILTER VALID KEYS
+        // FILTER + SORT
         // =========================
 
         List<Key> keys = existingKeys.stream()
@@ -51,7 +47,7 @@ public class KeyValidationDomainService {
                 .toList();
 
         if (keys.isEmpty()) {
-            return; // first key → always valid
+            return; // first key always valid
         }
 
         // =========================
@@ -66,7 +62,7 @@ public class KeyValidationDomainService {
         }
 
         // =========================
-        // FIND NEIGHBORS
+        // FIND PREV / NEXT
         // =========================
 
         Key prev = null;
@@ -82,18 +78,22 @@ public class KeyValidationDomainService {
         }
 
         // =========================
-        // ORDERING (NO BACK INSERT)
+        // PRELOAD RULE
         // =========================
 
-        if (next != null && prev != null) {
-            // new key is inserted between → dangerous
-            throw new IllegalStateException("Cannot insert key between existing keys");
+        Instant minActivate = now.plusSeconds(policy.getPreloadSeconds());
+
+        if (newActivateAt.isBefore(minActivate)) {
+            throw new IllegalStateException(
+                    "Key must respect preload window"
+            );
         }
 
         // =========================
         // VERIFY GUARANTEE (CRITICAL)
         // =========================
 
+        // previous key must still verify JWT issued before rotation
         if (prev != null) {
             Instant minRequiredExpire = newActivateAt.plusSeconds(policy.getJwtTtlSeconds());
 
@@ -105,29 +105,35 @@ public class KeyValidationDomainService {
         }
 
         // =========================
-        // PRELOAD RULE (RECOMMENDED)
-        // =========================
-
-        if (prev != null) {
-            Instant minActivate = now.plusSeconds(policy.getPreloadSeconds());
-
-            if (newActivateAt.isBefore(minActivate)) {
-                throw new IllegalStateException(
-                        "Key must be scheduled before preload window"
-                );
-            }
-        }
-
-        // =========================
         // FUTURE COLLISION
         // =========================
 
         if (next != null) {
+
+            // new key must activate before next key
             if (!newActivateAt.isBefore(next.getActivateAt())) {
                 throw new IllegalStateException(
                         "New key conflicts with next key activation"
                 );
             }
+
+            // new key must not break next key verify window
+            Instant minExpireForNext = next.getActivateAt().plusSeconds(policy.getJwtTtlSeconds());
+
+            if (newExpiresAt.isBefore(minExpireForNext)) {
+                throw new IllegalStateException(
+                        "New key expires too early → next key verification may fail"
+                );
+            }
         }
+
+        // =========================
+        // OPTIONAL: STRICT MODE
+        // =========================
+        // Nếu bạn muốn KHÔNG cho insert giữa, bật lại:
+        //
+        // if (prev != null && next != null) {
+        //     throw new IllegalStateException("Cannot insert key between existing keys");
+        // }
     }
 }

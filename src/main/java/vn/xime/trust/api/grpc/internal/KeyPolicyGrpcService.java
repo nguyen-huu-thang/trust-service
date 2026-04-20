@@ -49,6 +49,8 @@ public class KeyPolicyGrpcService extends KeyPolicyAdminGrpc.KeyPolicyAdminImplB
             CreateKeyPolicyCommand cmd = new CreateKeyPolicyCommand(
                     request.getSignerServiceId(),
                     request.getVerifierServiceId(),
+                    request.getAlgorithm(),     // 🔥 NEW
+                    request.getKeySize(),       // 🔥 NEW
                     request.getKeyLifetimeSeconds(),
                     request.getJwtTtlSeconds(),
                     request.getPreloadSeconds()
@@ -188,6 +190,8 @@ public class KeyPolicyGrpcService extends KeyPolicyAdminGrpc.KeyPolicyAdminImplB
 
             UpdateKeyPolicyCommand cmd = new UpdateKeyPolicyCommand(
                     request.getId(),
+                    request.getAlgorithm(),     // 🔥 NEW
+                    request.getKeySize(),       // 🔥 NEW
                     request.getKeyLifetimeSeconds(),
                     request.getJwtTtlSeconds(),
                     request.getPreloadSeconds()

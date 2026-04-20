@@ -10,6 +10,9 @@ public class KeyPolicy {
     private final String signerServiceId;
     private final String verifierServiceId;
 
+    private final KeyAlgorithm algorithm;
+    private final int keySize;
+
     private final long keyLifetimeSeconds;
     private final long jwtTtlSeconds;
     private final long preloadSeconds;
@@ -21,6 +24,8 @@ public class KeyPolicy {
             Id id,
             String signerServiceId,
             String verifierServiceId,
+            KeyAlgorithm algorithm,
+            int keySize,
             long keyLifetimeSeconds,
             long jwtTtlSeconds,
             long preloadSeconds,
@@ -35,6 +40,13 @@ public class KeyPolicy {
         this.signerServiceId = Objects.requireNonNull(signerServiceId);
         this.verifierServiceId = Objects.requireNonNull(verifierServiceId);
 
+        this.algorithm = Objects.requireNonNull(algorithm);
+
+        if (keySize <= 0) {
+            throw new IllegalArgumentException("keySize must be > 0");
+        }
+        this.keySize = keySize;
+
         this.keyLifetimeSeconds = keyLifetimeSeconds;
         this.jwtTtlSeconds = jwtTtlSeconds;
         this.preloadSeconds = preloadSeconds;
@@ -48,7 +60,7 @@ public class KeyPolicy {
     // =========================
 
     public Id getId() {
-    return id;
+        return id;
     }
 
     public String getSignerServiceId() {
@@ -57,6 +69,14 @@ public class KeyPolicy {
 
     public String getVerifierServiceId() {
         return verifierServiceId;
+    }
+
+    public KeyAlgorithm getAlgorithm() {
+        return algorithm;
+    }
+
+    public int getKeySize() {
+        return keySize;
     }
 
     public long getKeyLifetimeSeconds() {
@@ -79,7 +99,13 @@ public class KeyPolicy {
         return updatedAt;
     }
 
+    // =========================
+    // UPDATE
+    // =========================
+
     public KeyPolicy updated(
+            KeyAlgorithm algorithm,
+            int keySize,
             long keyLifetimeSeconds,
             long jwtTtlSeconds,
             long preloadSeconds
@@ -88,11 +114,13 @@ public class KeyPolicy {
                 this.id,
                 this.signerServiceId,
                 this.verifierServiceId,
+                algorithm,
+                keySize,
                 keyLifetimeSeconds,
                 jwtTtlSeconds,
                 preloadSeconds,
                 this.createdAt,
-                Instant.now() // update timestamp
+                Instant.now()
         );
     }
 }
