@@ -16,20 +16,17 @@ import java.util.List;
 public class KeyAdminGrpcService extends KeyAdminGrpc.KeyAdminImplBase {
 
     private final GenerateKeyUseCase generateKeyUseCase;
-    private final ScheduleKeyRotationUseCase rotationUseCase;
     private final GetKeysUseCase getKeysUseCase;
     private final DeleteKeyUseCase deleteKeyUseCase;
     private final KeyGrpcMapper mapper;
 
     public KeyAdminGrpcService(
             GenerateKeyUseCase generateKeyUseCase,
-            ScheduleKeyRotationUseCase rotationUseCase,
             GetKeysUseCase getKeysUseCase,
             DeleteKeyUseCase deleteKeyUseCase,
             KeyGrpcMapper mapper
     ) {
         this.generateKeyUseCase = generateKeyUseCase;
-        this.rotationUseCase = rotationUseCase;
         this.getKeysUseCase = getKeysUseCase;
         this.deleteKeyUseCase = deleteKeyUseCase;
         this.mapper = mapper;
@@ -59,38 +56,6 @@ public class KeyAdminGrpcService extends KeyAdminGrpc.KeyAdminImplBase {
 
             responseObserver.onNext(
                     GenerateKeyResponse.newBuilder()
-                            .setKey(mapper.toProto(dto))
-                            .build()
-            );
-            responseObserver.onCompleted();
-
-        } catch (Exception e) {
-            responseObserver.onError(mapper.toStatus(e));
-        }
-    }
-
-    // ==================================================
-    // ROTATION
-    // ==================================================
-
-    @Override
-    public void scheduleKeyRotation(
-            ScheduleKeyRotationRequest request,
-            StreamObserver<ScheduleKeyRotationResponse> responseObserver
-    ) {
-        try {
-            ScheduleKeyRotationCommand cmd = new ScheduleKeyRotationCommand(
-                request.getSignerServiceId(),
-                request.getVerifierServiceId(),
-                request.getActivateAt() > 0 ? Instant.ofEpochMilli(request.getActivateAt()) : null
-            );
-
-            String id = rotationUseCase.execute(cmd);
-
-            KeyResponseDto dto = getKeysUseCase.getById(IdService.fromString(id));
-
-            responseObserver.onNext(
-                    ScheduleKeyRotationResponse.newBuilder()
                             .setKey(mapper.toProto(dto))
                             .build()
             );

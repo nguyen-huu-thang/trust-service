@@ -12,7 +12,7 @@ public class KeyPolicyDto {
     private final int keySize;
 
     private final long keyLifetimeSec;
-    private final long jwtTtlSec;
+    private final long rotationIntervalSeconds;
     private final long preloadSec;
 
     private final Instant createdAt;
@@ -25,7 +25,7 @@ public class KeyPolicyDto {
         String algorithm,
         int keySize,
         long keyLifetimeSec,
-        long jwtTtlSec,
+        long rotationIntervalSeconds,
         long preloadSec,
         Instant createdAt,
         Instant updatedAt
@@ -36,7 +36,7 @@ public class KeyPolicyDto {
         this.algorithm = algorithm;
         this.keySize = keySize;
         this.keyLifetimeSec = keyLifetimeSec;
-        this.jwtTtlSec = jwtTtlSec;
+        this.rotationIntervalSeconds = rotationIntervalSeconds;
         this.preloadSec = preloadSec;
         this.createdAt = createdAt;
         this.updatedAt = updatedAt;
@@ -66,8 +66,8 @@ public class KeyPolicyDto {
         return keyLifetimeSec;
     }
 
-    public long getJwtTtlSec() {
-        return jwtTtlSec;
+    public long getRotationIntervalSeconds() {
+        return rotationIntervalSeconds;
     }
 
     public long getPreloadSec() {

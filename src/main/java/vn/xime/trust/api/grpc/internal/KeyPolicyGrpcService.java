@@ -52,7 +52,7 @@ public class KeyPolicyGrpcService extends KeyPolicyAdminGrpc.KeyPolicyAdminImplB
                     request.getAlgorithm(),     // 🔥 NEW
                     request.getKeySize(),       // 🔥 NEW
                     request.getKeyLifetimeSeconds(),
-                    request.getJwtTtlSeconds(),
+                    request.getRotationIntervalSeconds(),
                     request.getPreloadSeconds()
             );
 
@@ -193,7 +193,7 @@ public class KeyPolicyGrpcService extends KeyPolicyAdminGrpc.KeyPolicyAdminImplB
                     request.getAlgorithm(),     // 🔥 NEW
                     request.getKeySize(),       // 🔥 NEW
                     request.getKeyLifetimeSeconds(),
-                    request.getJwtTtlSeconds(),
+                    request.getRotationIntervalSeconds(),
                     request.getPreloadSeconds()
             );
 

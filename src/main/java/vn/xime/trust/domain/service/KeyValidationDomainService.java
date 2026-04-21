@@ -95,7 +95,7 @@ public class KeyValidationDomainService {
 
         // previous key must still verify JWT issued before rotation
         if (prev != null) {
-            Instant minRequiredExpire = newActivateAt.plusSeconds(policy.getJwtTtlSeconds());
+            Instant minRequiredExpire = newActivateAt.plusSeconds(policy.getRotationIntervalSeconds());
 
             if (prev.getExpiresAt().isBefore(minRequiredExpire)) {
                 throw new IllegalStateException(
@@ -118,7 +118,7 @@ public class KeyValidationDomainService {
             }
 
             // new key must not break next key verify window
-            Instant minExpireForNext = next.getActivateAt().plusSeconds(policy.getJwtTtlSeconds());
+            Instant minExpireForNext = next.getActivateAt().plusSeconds(policy.getRotationIntervalSeconds());
 
             if (newExpiresAt.isBefore(minExpireForNext)) {
                 throw new IllegalStateException(

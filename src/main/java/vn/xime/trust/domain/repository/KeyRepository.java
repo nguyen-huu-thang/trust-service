@@ -23,4 +23,7 @@ public interface KeyRepository {
 
     // 🔥 trust pair
     List<Key> findBySignerAndVerifier(String signerServiceId, String verifierServiceId);
+
+    // Cleanup Expired Keys
+    List<Key> findAllNotDeleted();
 }

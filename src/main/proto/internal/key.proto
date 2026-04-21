@@ -16,10 +16,6 @@ service KeyAdmin {
   rpc GenerateKey (GenerateKeyRequest)
       returns (GenerateKeyResponse);
 
-  // Schedule rotation
-  rpc ScheduleKeyRotation (ScheduleKeyRotationRequest)
-      returns (ScheduleKeyRotationResponse);
-
   // =========================
   // GET (ADMIN ONLY)
   // =========================
@@ -57,24 +53,6 @@ message GenerateKeyRequest {
 message GenerateKeyResponse {
   KeyDto key = 1;
 }
-
-
-// ==================================================
-// ROTATION
-// ==================================================
-
-message ScheduleKeyRotationRequest {
-
-  string signer_service_id = 1;
-  string verifier_service_id = 2;
-
-  int64 activate_at = 3;
-}
-
-message ScheduleKeyRotationResponse {
-  KeyDto key = 1;
-}
-
 
 // ==================================================
 // GET (ADMIN)

@@ -14,7 +14,7 @@ public class KeyPolicy {
     private final int keySize;
 
     private final long keyLifetimeSeconds;
-    private final long jwtTtlSeconds;
+    private final long rotationIntervalSeconds;
     private final long preloadSeconds;
 
     private final Instant createdAt;
@@ -27,7 +27,7 @@ public class KeyPolicy {
             KeyAlgorithm algorithm,
             int keySize,
             long keyLifetimeSeconds,
-            long jwtTtlSeconds,
+            long rotationIntervalSeconds,
             long preloadSeconds,
             Instant createdAt,
             Instant updatedAt
@@ -48,7 +48,7 @@ public class KeyPolicy {
         this.keySize = keySize;
 
         this.keyLifetimeSeconds = keyLifetimeSeconds;
-        this.jwtTtlSeconds = jwtTtlSeconds;
+        this.rotationIntervalSeconds = rotationIntervalSeconds;
         this.preloadSeconds = preloadSeconds;
 
         this.createdAt = Objects.requireNonNull(createdAt);
@@ -83,8 +83,8 @@ public class KeyPolicy {
         return keyLifetimeSeconds;
     }
 
-    public long getJwtTtlSeconds() {
-        return jwtTtlSeconds;
+    public long getRotationIntervalSeconds() {
+        return rotationIntervalSeconds;
     }
 
     public long getPreloadSeconds() {
@@ -107,7 +107,7 @@ public class KeyPolicy {
             KeyAlgorithm algorithm,
             int keySize,
             long keyLifetimeSeconds,
-            long jwtTtlSeconds,
+            long rotationIntervalSeconds,
             long preloadSeconds
     ) {
         return new KeyPolicy(
@@ -117,7 +117,7 @@ public class KeyPolicy {
                 algorithm,
                 keySize,
                 keyLifetimeSeconds,
-                jwtTtlSeconds,
+                rotationIntervalSeconds,
                 preloadSeconds,
                 this.createdAt,
                 Instant.now()

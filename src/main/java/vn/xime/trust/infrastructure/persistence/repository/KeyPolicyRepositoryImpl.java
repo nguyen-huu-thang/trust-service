@@ -57,6 +57,14 @@ public class KeyPolicyRepositoryImpl implements KeyPolicyRepository {
     }
 
     @Override
+    public List<KeyPolicy> findAll() {
+        return repo.findAll()
+                .stream()
+                .map(KeyPolicyMapper::toDomain)
+                .toList();
+    }
+
+    @Override
     public boolean deleteById(Id id) {
         return repo.deleteByIdBytes(id.toBytes()) > 0;
     }

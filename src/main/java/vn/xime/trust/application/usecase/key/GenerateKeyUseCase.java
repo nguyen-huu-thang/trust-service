@@ -13,6 +13,7 @@ import vn.xime.trust.domain.repository.KeyPolicyRepository;
 import vn.xime.trust.domain.repository.KeyRepository;
 import vn.xime.trust.domain.repository.ServiceRepository;
 import vn.xime.trust.domain.service.IdService;
+import vn.xime.trust.domain.service.KeyPolicyDomainService;
 import vn.xime.trust.domain.service.KeyValidationDomainService;
 
 import java.time.Instant;
@@ -29,16 +30,19 @@ public class GenerateKeyUseCase {
     private final KeyEncryptionService encryptionService;
 
     private final KeyFactory keyFactory;
+
     private final KeyValidationDomainService validationService;
+    private final KeyPolicyDomainService policyDomainService;
 
     public GenerateKeyUseCase(
-        KeyRepository keyRepository,
-        ServiceRepository serviceRepository,
-        KeyPolicyRepository keyPolicyRepository,
-        KeyGenerator keyGenerator,
-        KeyEncryptionService encryptionService,
-        KeyFactory keyFactory,
-        KeyValidationDomainService validationService
+            KeyRepository keyRepository,
+            ServiceRepository serviceRepository,
+            KeyPolicyRepository keyPolicyRepository,
+            KeyGenerator keyGenerator,
+            KeyEncryptionService encryptionService,
+            KeyFactory keyFactory,
+            KeyValidationDomainService validationService,
+            KeyPolicyDomainService policyDomainService
     ) {
         this.keyRepository = keyRepository;
         this.serviceRepository = serviceRepository;
@@ -47,6 +51,7 @@ public class GenerateKeyUseCase {
         this.encryptionService = encryptionService;
         this.keyFactory = keyFactory;
         this.validationService = validationService;
+        this.policyDomainService = policyDomainService;
     }
 
     @Transactional
@@ -55,8 +60,16 @@ public class GenerateKeyUseCase {
         Instant now = Instant.now();
 
         // =========================
-        // VALIDATE SERVICE
+        // VALIDATE SERVICE (application-level)
         // =========================
+
+        if (cmd.getSignerServiceId() == null || cmd.getSignerServiceId().isBlank()) {
+            throw new IllegalArgumentException("signerServiceId is required");
+        }
+
+        if (cmd.getVerifierServiceId() == null || cmd.getVerifierServiceId().isBlank()) {
+            throw new IllegalArgumentException("verifierServiceId is required");
+        }
 
         if (!serviceRepository.existsById(cmd.getSignerServiceId())) {
             throw new IllegalStateException("Signer service not found");
@@ -78,27 +91,39 @@ public class GenerateKeyUseCase {
                 .orElseThrow(() -> new IllegalStateException("KeyPolicy not found"));
 
         // =========================
-        // VALIDATE POLICY (CRITICAL)
+        // DOMAIN: VALIDATE POLICY
         // =========================
 
-        if (policy.getKeyLifetimeSeconds() <
-                policy.getJwtTtlSeconds() + policy.getPreloadSeconds()) {
-            throw new IllegalStateException(
-                    "Invalid policy: key_lifetime must be >= jwt_ttl + preload"
-            );
-        }
+        policyDomainService.validatePolicy(policy);
 
         // =========================
-        // TIME CALCULATION
+        // DOMAIN: RESOLVE ACTIVATE TIME
         // =========================
 
-        Instant activateAt =
-                cmd.getActivateAt() != null
-                        ? cmd.getActivateAt()
-                        : now.plusSeconds(policy.getPreloadSeconds());
+        Instant activateAt = policyDomainService.resolveActivateAt(
+                cmd.getActivateAt(),
+                policy,
+                now
+        );
 
-        Instant expiresAt = activateAt
-                .plusSeconds(policy.getKeyLifetimeSeconds());
+        // =========================
+        // DOMAIN: VALIDATE ACTIVATE TIME 🔥 (NEW)
+        // =========================
+
+        policyDomainService.validateActivateAt(
+                activateAt,
+                policy,
+                now
+        );
+
+        // =========================
+        // DOMAIN: CALCULATE EXPIRES
+        // =========================
+
+        Instant expiresAt = policyDomainService.calculateExpiresAt(
+                activateAt,
+                policy
+        );
 
         // =========================
         // LOAD EXISTING KEYS
@@ -111,7 +136,7 @@ public class GenerateKeyUseCase {
                 );
 
         // =========================
-        // VALIDATE KEY CHAIN
+        // DOMAIN: VALIDATE KEY CHAIN
         // =========================
 
         validationService.validateNewKey(
@@ -123,7 +148,7 @@ public class GenerateKeyUseCase {
         );
 
         // =========================
-        // 🔥 GENERATE KEY (FROM POLICY)
+        // INFRA: GENERATE KEY
         // =========================
 
         KeyAlgorithm algorithm = policy.getAlgorithm();
@@ -138,7 +163,7 @@ public class GenerateKeyUseCase {
                 encryptionService.encrypt(pair.getPrivateKey());
 
         // =========================
-        // BUILD DOMAIN
+        // DOMAIN: BUILD KEY
         // =========================
 
         Key key = keyFactory.create(
@@ -158,6 +183,6 @@ public class GenerateKeyUseCase {
 
         keyRepository.save(key);
 
-        return IdService.toBase62(key.getId());
+        return IdService.toString(key.getId());
     }
 }

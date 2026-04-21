@@ -14,7 +14,7 @@ public class KeyPolicyGrpcMapper {
                 .setAlgorithm(dto.getAlgorithm())
                 .setKeySize(dto.getKeySize())
                 .setKeyLifetimeSeconds(dto.getKeyLifetimeSec())
-                .setJwtTtlSeconds(dto.getJwtTtlSec())
+                .setRotationIntervalSeconds(dto.getRotationIntervalSeconds())
                 .setPreloadSeconds(dto.getPreloadSec())
                 .setCreatedAt(dto.getCreatedAt().toEpochMilli())
                 .setUpdatedAt(

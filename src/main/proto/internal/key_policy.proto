@@ -49,7 +49,7 @@ message CreateKeyPolicyRequest {
   int32 key_size = 4;     // 2048 / 256...
 
   int64 key_lifetime_seconds = 5;
-  int64 jwt_ttl_seconds = 6;
+  int64 rotation_interval_seconds = 6;
   int64 preload_seconds = 7;
 }
 
@@ -115,7 +115,7 @@ message UpdateKeyPolicyRequest {
   int32 key_size = 3;
 
   int64 key_lifetime_seconds = 4;
-  int64 jwt_ttl_seconds = 5;
+  int64 rotation_interval_seconds = 5;
   int64 preload_seconds = 6;
 }
 
@@ -153,7 +153,7 @@ message KeyPolicyDto {
   int32 key_size = 5;
 
   int64 key_lifetime_seconds = 6;
-  int64 jwt_ttl_seconds = 7;
+  int64 rotation_interval_seconds = 7;
   int64 preload_seconds = 8;
 
   int64 created_at = 9;

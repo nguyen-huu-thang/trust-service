@@ -71,10 +71,10 @@ public class KeyPolicyEntity {
     private Long keyLifetimeSeconds;
 
     /**
-     * Thời gian sống của JWT do identity kí.
+     * Thời gian rotation key.
      */
-    @Column(name = "jwt_ttl_seconds", nullable = false)
-    private Long jwtTtlSeconds;
+    @Column(name = "rotation_seconds", nullable = false)
+    private Long rotationIntervalSeconds;
 
     /**
      * preload key trước khi activate
@@ -144,12 +144,12 @@ public class KeyPolicyEntity {
         this.keyLifetimeSeconds = keyLifetimeSeconds;
     }
 
-    public Long getJwtTtlSeconds() {
-        return jwtTtlSeconds;
+    public Long getRotationIntervalSeconds() {
+        return rotationIntervalSeconds;
     }
 
-    public void setJwtTtlSeconds(Long jwtTtlSeconds) {
-        this.jwtTtlSeconds = jwtTtlSeconds;
+    public void setRotationIntervalSeconds(Long rotationIntervalSeconds) {
+        this.rotationIntervalSeconds = rotationIntervalSeconds;
     }
 
     public Long getPreloadSeconds() {

@@ -10,13 +10,12 @@ import java.util.Optional;
 public class KeyLifecycleDomainService {
 
     // =========================
-    // VERIFY
+    // COMMON FILTER
     // =========================
 
-    public List<Key> getKeysForVerify(List<Key> keys, Instant now) {
+    private List<Key> filterActive(List<Key> keys) {
         return keys.stream()
                 .filter(k -> !k.isDeleted())
-                .filter(k -> k.canVerify(now))
                 .toList();
     }
 
@@ -25,8 +24,7 @@ public class KeyLifecycleDomainService {
     // =========================
 
     public Key getKeyForSign(List<Key> keys, Instant now) {
-        return keys.stream()
-                .filter(k -> !k.isDeleted())
+        return filterActive(keys).stream()
                 .filter(k -> k.canSign(now))
                 .max(Comparator.comparing(Key::getActivateAt))
                 .orElseThrow(() ->
@@ -35,12 +33,31 @@ public class KeyLifecycleDomainService {
     }
 
     // =========================
+    // OPTIONAL: SIGN (SAFE)
+    // =========================
+
+    public Optional<Key> findKeyForSign(List<Key> keys, Instant now) {
+        return filterActive(keys).stream()
+                .filter(k -> k.canSign(now))
+                .max(Comparator.comparing(Key::getActivateAt));
+    }
+
+    // =========================
+    // VERIFY
+    // =========================
+
+    public List<Key> getKeysForVerify(List<Key> keys, Instant now) {
+        return filterActive(keys).stream()
+                .filter(k -> k.canVerify(now))
+                .toList();
+    }
+
+    // =========================
     // NEXT (PRELOAD)
     // =========================
 
     public Optional<Key> getNextKey(List<Key> keys, Instant now) {
-        return keys.stream()
-                .filter(k -> !k.isDeleted())
+        return filterActive(keys).stream()
                 .filter(k -> k.getActivateAt().isAfter(now))
                 .min(Comparator.comparing(Key::getActivateAt));
     }
@@ -54,12 +71,10 @@ public class KeyLifecycleDomainService {
     }
 
     // =========================
-    // COMMON FILTER
+    // OPTIONAL HELPERS
     // =========================
 
-    public List<Key> filterNotDeleted(List<Key> keys) {
-        return keys.stream()
-                .filter(k -> !k.isDeleted())
-                .toList();
+    public List<Key> getAllActive(List<Key> keys) {
+        return filterActive(keys);
     }
 }

@@ -16,7 +16,7 @@ public class KeyPolicyMapper {
                 p.getAlgorithm().name(),
                 p.getKeySize(),
                 p.getKeyLifetimeSeconds(),
-                p.getJwtTtlSeconds(),
+                p.getRotationIntervalSeconds(),
                 p.getPreloadSeconds(),
                 p.getCreatedAt(),
                 p.getUpdatedAt()

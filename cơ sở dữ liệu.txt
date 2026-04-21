@@ -69,7 +69,7 @@ key_size INT NOT NULL              -- 2048 / 3072 / 4096 / 256 / 384...
 
 -- lifecycle policy
 key_lifetime_seconds BIGINT NOT NULL
-jwt_ttl_seconds BIGINT NOT NULL
+rotation_interval_seconds BIGINT NOT NULL
 preload_seconds BIGINT NOT NULL
 
 -- audit

@@ -19,5 +19,7 @@ public interface KeyPolicyRepository {
 
     List<KeyPolicy> findByVerifierServiceId(String verifierServiceId);
 
+    List<KeyPolicy> findAll();
+
     boolean deleteById(Id id);
 }

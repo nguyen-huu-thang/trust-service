@@ -9,6 +9,7 @@ import vn.xime.trust.domain.factory.KeyFactory;
 import vn.xime.trust.domain.factory.KeyPolicyFactory;
 import vn.xime.trust.domain.factory.ShardFactory;
 import vn.xime.trust.domain.service.KeyValidationDomainService;
+import vn.xime.trust.domain.service.KeyPolicyDomainService;
 
 
 @Configuration
@@ -42,5 +43,10 @@ public class UseCaseConfig {
     @Bean
     public KeyValidationDomainService keyValidationDomainService() {
         return new KeyValidationDomainService();
+    }
+
+    @Bean
+    public KeyPolicyDomainService keyPolicyDomainService() {
+        return new KeyPolicyDomainService();
     }
 }

@@ -24,6 +24,8 @@ public interface JpaKeyPolicyRepository extends JpaRepository<KeyPolicyEntity, b
 
     List<KeyPolicyEntity> findByVerifierServiceId(String verifierServiceId);
 
+    List<KeyPolicyEntity> findAll();
+
     @Modifying
     @Query("DELETE FROM KeyPolicyEntity k WHERE k.id = :id")
     int deleteByIdBytes(@Param("id") byte[] id);

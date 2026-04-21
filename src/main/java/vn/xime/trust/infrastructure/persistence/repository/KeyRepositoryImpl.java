@@ -65,4 +65,12 @@ public class KeyRepositoryImpl implements KeyRepository {
                 .map(KeyMapper::toDomain)
                 .toList();
     }
+
+    @Override
+    public List<Key> findAllNotDeleted() {
+        return repo.findByIsDeletedFalse()
+                .stream()
+                .map(KeyMapper::toDomain)
+                .toList();
+    }
 }

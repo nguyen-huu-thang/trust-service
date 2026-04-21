@@ -25,7 +25,7 @@ public class KeyPolicyMapper {
         requireNonNull(e.getAlgorithm(), "algorithm");
         requireNonNull(e.getKeySize(), "keySize");
         requireNonNull(e.getKeyLifetimeSeconds(), "keyLifetimeSeconds");
-        requireNonNull(e.getJwtTtlSeconds(), "jwtTtlSeconds");
+        requireNonNull(e.getRotationIntervalSeconds(), "rotationIntervalSeconds");
         requireNonNull(e.getPreloadSeconds(), "preloadSeconds");
         requireNonNull(e.getCreatedAt(), "createdAt");
 
@@ -38,7 +38,7 @@ public class KeyPolicyMapper {
                 algorithm,
                 e.getKeySize(),
                 e.getKeyLifetimeSeconds(),
-                e.getJwtTtlSeconds(),
+                e.getRotationIntervalSeconds(),
                 e.getPreloadSeconds(),
                 e.getCreatedAt(),
                 e.getUpdatedAt()
@@ -66,7 +66,7 @@ public class KeyPolicyMapper {
         e.setKeySize(d.getKeySize());
 
         e.setKeyLifetimeSeconds(d.getKeyLifetimeSeconds());
-        e.setJwtTtlSeconds(d.getJwtTtlSeconds());
+        e.setRotationIntervalSeconds(d.getRotationIntervalSeconds());
         e.setPreloadSeconds(d.getPreloadSeconds());
         e.setCreatedAt(d.getCreatedAt());
         e.setUpdatedAt(d.getUpdatedAt());
