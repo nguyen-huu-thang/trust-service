@@ -97,14 +97,15 @@ public class GenerateKeyUseCase {
         policyDomainService.validatePolicy(policy);
 
         // =========================
-        // DOMAIN: RESOLVE ACTIVATE TIME
+        // RESOLVE ACTIVATE TIME
         // =========================
 
-        Instant activateAt = policyDomainService.resolveActivateAt(
-                cmd.getActivateAt(),
-                policy,
-                now
-        );
+        Instant activateAt;
+        if (cmd.getActivateAt() == null) {
+            activateAt = now;
+        } else {
+            activateAt = cmd.getActivateAt();
+        }
 
         // =========================
         // DOMAIN: VALIDATE ACTIVATE TIME 🔥 (NEW)
@@ -112,7 +113,6 @@ public class GenerateKeyUseCase {
 
         policyDomainService.validateActivateAt(
                 activateAt,
-                policy,
                 now
         );
 

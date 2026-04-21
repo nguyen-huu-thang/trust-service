@@ -7,21 +7,21 @@ import vn.xime.trust.application.dto.response.KeyPolicyDto;
 public class KeyPolicyGrpcMapper {
 
     public vn.xime.trust.grpc.internal.keypolicy.KeyPolicyDto toProto(KeyPolicyDto dto) {
-        return vn.xime.trust.grpc.internal.keypolicy.KeyPolicyDto.newBuilder()
-                .setId(dto.getId())
-                .setSignerServiceId(dto.getSignerServiceId())
-                .setVerifierServiceId(dto.getVerifierServiceId())
-                .setAlgorithm(dto.getAlgorithm())
-                .setKeySize(dto.getKeySize())
-                .setKeyLifetimeSeconds(dto.getKeyLifetimeSec())
-                .setRotationIntervalSeconds(dto.getRotationIntervalSeconds())
-                .setPreloadSeconds(dto.getPreloadSec())
-                .setCreatedAt(dto.getCreatedAt().toEpochMilli())
-                .setUpdatedAt(
-                        dto.getUpdatedAt() != null
-                                ? dto.getUpdatedAt().toEpochMilli()
-                                : 0
-                )
-                .build();
+        var builder = vn.xime.trust.grpc.internal.keypolicy.KeyPolicyDto.newBuilder()
+        .setId(dto.getId())
+        .setSignerServiceId(dto.getSignerServiceId())
+        .setVerifierServiceId(dto.getVerifierServiceId())
+        .setAlgorithm(dto.getAlgorithm())
+        .setKeySize(dto.getKeySize())
+        .setKeyLifetimeSeconds(dto.getKeyLifetimeSec())
+        .setRotationIntervalSeconds(dto.getRotationIntervalSeconds())
+        .setPreloadSeconds(dto.getPreloadSec())
+        .setCreatedAt(dto.getCreatedAt().toEpochMilli());
+
+        if (dto.getUpdatedAt() != null) {
+            builder.setUpdatedAt(dto.getUpdatedAt().toEpochMilli());
+        }
+
+        return builder.build();
     }
 }

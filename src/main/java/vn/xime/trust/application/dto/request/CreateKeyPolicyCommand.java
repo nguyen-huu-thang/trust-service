@@ -5,12 +5,11 @@ public class CreateKeyPolicyCommand {
     private final String signerServiceId;
     private final String verifierServiceId;
 
-    // 🔥 NEW
     private final String algorithm;
     private final int keySize;
 
     private final long keyLifetimeSec;
-    private final long jwtTtlSec;
+    private final long rotationIntervalSeconds;
     private final long preloadSec;
 
     public CreateKeyPolicyCommand(
@@ -19,7 +18,7 @@ public class CreateKeyPolicyCommand {
             String algorithm,
             int keySize,
             long keyLifetimeSec,
-            long jwtTtlSec,
+            long rotationIntervalSeconds,
             long preloadSec
     ) {
         this.signerServiceId = signerServiceId;
@@ -27,7 +26,7 @@ public class CreateKeyPolicyCommand {
         this.algorithm = algorithm;
         this.keySize = keySize;
         this.keyLifetimeSec = keyLifetimeSec;
-        this.jwtTtlSec = jwtTtlSec;
+        this.rotationIntervalSeconds = rotationIntervalSeconds;
         this.preloadSec = preloadSec;
     }
 
@@ -51,8 +50,8 @@ public class CreateKeyPolicyCommand {
         return keyLifetimeSec;
     }
 
-    public long getJwtTtlSec() {
-        return jwtTtlSec;
+    public long getRotationIntervalSeconds() {
+        return rotationIntervalSeconds;
     }
 
     public long getPreloadSec() {

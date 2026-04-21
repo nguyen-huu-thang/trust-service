@@ -46,14 +46,26 @@ public class KeyPolicyGrpcService extends KeyPolicyAdminGrpc.KeyPolicyAdminImplB
     ) {
         try {
 
+            Long lifetime = request.hasKeyLifetimeSeconds()
+                    ? request.getKeyLifetimeSeconds().getValue()
+                    : null;
+
+            Long rotation = request.hasRotationIntervalSeconds()
+                    ? request.getRotationIntervalSeconds().getValue()
+                    : null;
+
+            Long preload = request.hasPreloadSeconds()
+                    ? request.getPreloadSeconds().getValue()
+                    : null;
+
             CreateKeyPolicyCommand cmd = new CreateKeyPolicyCommand(
                     request.getSignerServiceId(),
                     request.getVerifierServiceId(),
-                    request.getAlgorithm(),     // 🔥 NEW
-                    request.getKeySize(),       // 🔥 NEW
-                    request.getKeyLifetimeSeconds(),
-                    request.getRotationIntervalSeconds(),
-                    request.getPreloadSeconds()
+                    request.getAlgorithm(),
+                    request.getKeySize(),
+                    lifetime,
+                    rotation,
+                    preload
             );
 
             KeyPolicyDto result = createUseCase.execute(cmd);
@@ -188,13 +200,33 @@ public class KeyPolicyGrpcService extends KeyPolicyAdminGrpc.KeyPolicyAdminImplB
     ) {
         try {
 
+            String algorithm = request.hasAlgorithm()
+                    ? request.getAlgorithm().getValue()
+                    : null;
+
+            Integer keySize = request.hasKeySize()
+                    ? request.getKeySize().getValue()
+                    : null;
+
+            Long lifetime = request.hasKeyLifetimeSeconds()
+                    ? request.getKeyLifetimeSeconds().getValue()
+                    : null;
+
+            Long rotation = request.hasRotationIntervalSeconds()
+                    ? request.getRotationIntervalSeconds().getValue()
+                    : null;
+
+            Long preload = request.hasPreloadSeconds()
+                    ? request.getPreloadSeconds().getValue()
+                    : null;
+
             UpdateKeyPolicyCommand cmd = new UpdateKeyPolicyCommand(
                     request.getId(),
-                    request.getAlgorithm(),     // 🔥 NEW
-                    request.getKeySize(),       // 🔥 NEW
-                    request.getKeyLifetimeSeconds(),
-                    request.getRotationIntervalSeconds(),
-                    request.getPreloadSeconds()
+                    algorithm,
+                    keySize,
+                    lifetime,
+                    rotation,
+                    preload
             );
 
             KeyPolicyDto result = updateUseCase.execute(cmd);

@@ -18,7 +18,7 @@ public class KeyValidationDomainService {
     ) {
 
         // =========================
-        // BASIC
+        // BASIC VALIDATION
         // =========================
 
         if (newActivateAt == null) {
@@ -33,6 +33,7 @@ public class KeyValidationDomainService {
             throw new IllegalArgumentException("expiresAt must be after activateAt");
         }
 
+        // small clock skew tolerance
         if (newActivateAt.isBefore(now.minusSeconds(5))) {
             throw new IllegalArgumentException("activateAt cannot be in the past");
         }
@@ -62,78 +63,26 @@ public class KeyValidationDomainService {
         }
 
         // =========================
-        // FIND PREV / NEXT
+        // APPEND-ONLY RULE
         // =========================
 
-        Key prev = null;
-        Key next = null;
+        // Key mới phải luôn nằm SAU key cuối cùng
+        Key last = keys.get(keys.size() - 1);
 
-        for (Key k : keys) {
-            if (k.getActivateAt().isBefore(newActivateAt)) {
-                prev = k;
-            } else if (k.getActivateAt().isAfter(newActivateAt)) {
-                next = k;
-                break;
-            }
-        }
-
-        // =========================
-        // PRELOAD RULE
-        // =========================
-
-        Instant minActivate = now.plusSeconds(policy.getPreloadSeconds());
-
-        if (newActivateAt.isBefore(minActivate)) {
+        if (!newActivateAt.isAfter(last.getActivateAt())) {
             throw new IllegalStateException(
-                    "Key must respect preload window"
+                    "New key must be after the last key"
             );
         }
 
         // =========================
-        // VERIFY GUARANTEE (CRITICAL)
+        // ROTATION INTERVAL RULE
         // =========================
 
-        // previous key must still verify JWT issued before rotation
-        if (prev != null) {
-            Instant minRequiredExpire = newActivateAt.plusSeconds(policy.getRotationIntervalSeconds());
-
-            if (prev.getExpiresAt().isBefore(minRequiredExpire)) {
-                throw new IllegalStateException(
-                        "Previous key expires too early → JWT verification may fail"
-                );
-            }
+        if (newExpiresAt.isBefore(newActivateAt.plusSeconds(policy.getRotationIntervalSeconds()))) {
+            throw new IllegalStateException(
+                    "New key's expiresAt cannot be before its activateAt plus rotation interval"
+            );
         }
-
-        // =========================
-        // FUTURE COLLISION
-        // =========================
-
-        if (next != null) {
-
-            // new key must activate before next key
-            if (!newActivateAt.isBefore(next.getActivateAt())) {
-                throw new IllegalStateException(
-                        "New key conflicts with next key activation"
-                );
-            }
-
-            // new key must not break next key verify window
-            Instant minExpireForNext = next.getActivateAt().plusSeconds(policy.getRotationIntervalSeconds());
-
-            if (newExpiresAt.isBefore(minExpireForNext)) {
-                throw new IllegalStateException(
-                        "New key expires too early → next key verification may fail"
-                );
-            }
-        }
-
-        // =========================
-        // OPTIONAL: STRICT MODE
-        // =========================
-        // Nếu bạn muốn KHÔNG cho insert giữa, bật lại:
-        //
-        // if (prev != null && next != null) {
-        //     throw new IllegalStateException("Cannot insert key between existing keys");
-        // }
     }
 }

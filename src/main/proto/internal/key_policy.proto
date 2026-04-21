@@ -5,6 +5,8 @@ package trust.internal.keypolicy;
 option java_package = "vn.xime.trust.grpc.internal.keypolicy";
 option java_multiple_files = true;
 
+import "google/protobuf/wrappers.proto";
+
 
 // ==================================================
 // KEY POLICY MANAGEMENT
@@ -36,7 +38,7 @@ service KeyPolicyAdmin {
 
 
 // ==================================================
-// REQUEST / RESPONSE
+// CREATE
 // ==================================================
 
 message CreateKeyPolicyRequest {
@@ -44,13 +46,13 @@ message CreateKeyPolicyRequest {
   string signer_service_id = 1;
   string verifier_service_id = 2;
 
-  // 🔥 NEW (crypto policy)
-  string algorithm = 3;   // RSA / ECDSA
-  int32 key_size = 4;     // 2048 / 256...
+  string algorithm = 3;
+  int32 key_size = 4;
 
-  int64 key_lifetime_seconds = 5;
-  int64 rotation_interval_seconds = 6;
-  int64 preload_seconds = 7;
+  // optional (domain sẽ fill default)
+  google.protobuf.Int64Value key_lifetime_seconds = 5;
+  google.protobuf.Int64Value rotation_interval_seconds = 6;
+  google.protobuf.Int64Value preload_seconds = 7;
 }
 
 message CreateKeyPolicyResponse {
@@ -103,20 +105,19 @@ message GetKeyPoliciesByVerifierResponse {
 
 
 // ==================================================
-// UPDATE
+// UPDATE (🔥 PARTIAL UPDATE SUPPORT)
 // ==================================================
 
 message UpdateKeyPolicyRequest {
 
   string id = 1;
 
-  // 🔥 NEW (allow updating crypto)
-  string algorithm = 2;
-  int32 key_size = 3;
+  google.protobuf.StringValue algorithm = 2;
+  google.protobuf.Int32Value key_size = 3;
 
-  int64 key_lifetime_seconds = 4;
-  int64 rotation_interval_seconds = 5;
-  int64 preload_seconds = 6;
+  google.protobuf.Int64Value key_lifetime_seconds = 4;
+  google.protobuf.Int64Value rotation_interval_seconds = 5;
+  google.protobuf.Int64Value preload_seconds = 6;
 }
 
 message UpdateKeyPolicyResponse {
@@ -138,7 +139,7 @@ message DeleteKeyPolicyResponse {
 
 
 // ==================================================
-// DTO
+// DTO (RESPONSE)
 // ==================================================
 
 message KeyPolicyDto {
@@ -148,7 +149,6 @@ message KeyPolicyDto {
   string signer_service_id = 2;
   string verifier_service_id = 3;
 
-  // 🔥 NEW
   string algorithm = 4;
   int32 key_size = 5;
 

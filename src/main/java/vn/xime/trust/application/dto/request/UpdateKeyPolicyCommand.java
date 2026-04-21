@@ -4,27 +4,27 @@ public class UpdateKeyPolicyCommand {
 
     private final String id;
 
-    // 🔥 NEW
+    // optional fields (nullable for partial update)
     private final String algorithm;
-    private final int keySize;
+    private final Integer keySize;
 
-    private final long keyLifetimeSec;
-    private final long jwtTtlSec;
-    private final long preloadSec;
+    private final Long keyLifetimeSec;
+    private final Long rotationIntervalSeconds;
+    private final Long preloadSec;
 
     public UpdateKeyPolicyCommand(
             String id,
             String algorithm,
-            int keySize,
-            long keyLifetimeSec,
-            long jwtTtlSec,
-            long preloadSec
+            Integer keySize,
+            Long keyLifetimeSec,
+            Long rotationIntervalSeconds,
+            Long preloadSec
     ) {
         this.id = id;
         this.algorithm = algorithm;
         this.keySize = keySize;
         this.keyLifetimeSec = keyLifetimeSec;
-        this.jwtTtlSec = jwtTtlSec;
+        this.rotationIntervalSeconds = rotationIntervalSeconds;
         this.preloadSec = preloadSec;
     }
 
@@ -36,19 +36,19 @@ public class UpdateKeyPolicyCommand {
         return algorithm;
     }
 
-    public int getKeySize() {
+    public Integer getKeySize() {
         return keySize;
     }
 
-    public long getKeyLifetimeSec() {
+    public Long getKeyLifetimeSec() {
         return keyLifetimeSec;
     }
 
-    public long getJwtTtlSec() {
-        return jwtTtlSec;
+    public Long getRotationIntervalSeconds() {
+        return rotationIntervalSeconds;
     }
 
-    public long getPreloadSec() {
+    public Long getPreloadSec() {
         return preloadSec;
     }
 }
