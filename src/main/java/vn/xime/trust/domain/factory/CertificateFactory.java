@@ -52,7 +52,8 @@ public class CertificateFactory {
                 privateKeyEncrypted,
                 now,               // issuedAt
                 expiresAt,
-                CertificateStatus.ACTIVE
+                CertificateStatus.ACTIVE,
+                false
         );
     }
 }

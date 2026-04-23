@@ -10,7 +10,6 @@ import vn.xime.trust.domain.repository.CertRefreshTokenRepository;
 import vn.xime.trust.domain.repository.CertificateRepository;
 import vn.xime.trust.domain.service.CertRefreshTokenDomainService;
 import vn.xime.trust.domain.service.CertificateSelectionService;
-import vn.xime.trust.domain.service.CertificateValidationService;
 
 import java.time.Instant;
 import java.util.List;
@@ -32,7 +31,6 @@ public class RotateCertificateUseCase {
     private final CertRefreshTokenRepository tokenRepository;
 
     private final CertificateSelectionService selectionService;
-    private final CertificateValidationService validationService;
     private final CertRefreshTokenDomainService tokenDomainService;
 
     private final CertificateFactory certificateFactory;
@@ -44,7 +42,6 @@ public class RotateCertificateUseCase {
             CertificateRepository certificateRepository,
             CertRefreshTokenRepository tokenRepository,
             CertificateSelectionService selectionService,
-            CertificateValidationService validationService,
             CertRefreshTokenDomainService tokenDomainService,
             CertificateFactory certificateFactory,
             CertRefreshTokenFactory tokenFactory,
@@ -53,7 +50,6 @@ public class RotateCertificateUseCase {
         this.certificateRepository = certificateRepository;
         this.tokenRepository = tokenRepository;
         this.selectionService = selectionService;
-        this.validationService = validationService;
         this.tokenDomainService = tokenDomainService;
         this.certificateFactory = certificateFactory;
         this.tokenFactory = tokenFactory;

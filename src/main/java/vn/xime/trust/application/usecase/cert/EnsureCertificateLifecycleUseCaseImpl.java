@@ -14,16 +14,15 @@ import java.time.Instant;
 import java.util.List;
 
 /**
- * EnsureCertificateLifecycleUseCaseImpl
+ * Ensure Certificate Lifecycle
  *
  * Scheduler entry point:
  * - đảm bảo mỗi service luôn có cert hợp lệ
- * - tự động rotate theo policy
+ * - tự động rotate theo policy của cert
  */
 @Slf4j
 @RequiredArgsConstructor
-public class EnsureCertificateLifecycleUseCaseImpl
-        implements EnsureCertificateLifecycleUseCase {
+public class EnsureCertificateLifecycleUseCaseImpl implements EnsureCertificateLifecycleUseCase {
 
     private final ServiceRepository serviceRepository;
     private final CertificateRepository certificateRepository;
@@ -37,7 +36,10 @@ public class EnsureCertificateLifecycleUseCaseImpl
 
         Instant now = Instant.now();
 
-        List<String> serviceIds = serviceRepository.findAllActiveServiceIds();
+        List<String> serviceIds = serviceRepository.findAllActiveServices()
+                .stream()
+                .map(s -> s.getId())
+                .toList();
 
         for (String serviceId : serviceIds) {
 

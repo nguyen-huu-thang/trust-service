@@ -7,7 +7,6 @@ import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Base64;
-import java.util.Map;
 import java.util.Objects;
 
 /**
@@ -18,7 +17,7 @@ import java.util.Objects;
  *
  * - HMAC-SHA256
  * - self-contained
- * - dùng cho refresh token
+ * - dùng cho refresh cert
  */
 public class TokenService {
 

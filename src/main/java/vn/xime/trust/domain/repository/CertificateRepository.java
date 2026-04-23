@@ -17,7 +17,9 @@ public interface CertificateRepository {
 
     List<Certificate> findValidCertificates(String serviceId, Instant now);
 
-    // Optional<Certificate> findTopByServiceIdOrderByIssuedAtDesc(String serviceId); làm sau
+    List<Certificate> findAllNotDeleted();
 
-    // Optional<Certificate> findLatestByServiceId(String serviceId); làm sau
+    boolean deleteById(Id id);
+
+    void deleteAllByIds(List<Id> ids);
 }

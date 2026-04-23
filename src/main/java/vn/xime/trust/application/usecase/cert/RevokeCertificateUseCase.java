@@ -8,7 +8,7 @@ import vn.xime.trust.domain.model.Id;
 import vn.xime.trust.domain.repository.CertificateRepository;
 import vn.xime.trust.domain.service.CertificateValidationService;
 
-import java.time.Instant;
+// import java.time.Instant;
 
 @Component
 public class RevokeCertificateUseCase {
@@ -27,7 +27,7 @@ public class RevokeCertificateUseCase {
     @Transactional
     public String execute(Id certificateId, String reason) {
 
-        Instant now = Instant.now();
+        // Instant now = Instant.now();
 
         // =========================
         // VALIDATION
@@ -69,15 +69,7 @@ public class RevokeCertificateUseCase {
         // DOMAIN STATE CHANGE
         // =========================
 
-        Certificate revoked = new Certificate(
-                cert.getId(),
-                cert.getServiceId(),
-                cert.getPublicCert(),
-                cert.getPrivateKeyEncrypted(),
-                cert.getIssuedAt(),
-                cert.getExpiresAt(),
-                CertificateStatus.REVOKED
-        );
+        Certificate revoked = cert.markRevoked();
 
         // =========================
         // SAVE

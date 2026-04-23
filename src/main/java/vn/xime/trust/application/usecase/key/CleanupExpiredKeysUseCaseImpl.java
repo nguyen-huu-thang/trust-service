@@ -8,6 +8,7 @@ import vn.xime.trust.domain.repository.KeyRepository;
 import vn.xime.trust.domain.service.KeyLifecycleDomainService;
 
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 
 @Component
@@ -31,28 +32,52 @@ public class CleanupExpiredKeysUseCaseImpl implements CleanupExpiredKeysUseCase 
         Instant now = Instant.now();
 
         // =========================
-        // LOAD CANDIDATES
+        // LOAD ALL NON-DELETED
         // =========================
 
         List<Key> keys = keyRepository.findAllNotDeleted();
 
+        List<Key> toSoftDelete = new ArrayList<>();
+        List<Key> toHardDelete = new ArrayList<>();
+
         for (Key key : keys) {
 
             // =========================
-            // DOMAIN RULE
+            // HARD DELETE (ưu tiên)
             // =========================
 
-            if (!keyLifecycleDomainService.shouldBeDeleted(key, now)) {
+            if (keyLifecycleDomainService.shouldBeHardDeleted(key, now)) {
+                toHardDelete.add(key);
                 continue;
             }
 
             // =========================
-            // MARK DELETED
+            // SOFT DELETE
             // =========================
 
-            Key deletedKey = key.markDeleted();
+            if (keyLifecycleDomainService.shouldBeDeleted(key, now)) {
+                toSoftDelete.add(key);
+            }
+        }
 
-            keyRepository.save(deletedKey);
+        // =========================
+        // APPLY SOFT DELETE
+        // =========================
+
+        for (Key key : toSoftDelete) {
+            keyRepository.save(key.markDeleted());
+        }
+
+        // =========================
+        // APPLY HARD DELETE
+        // =========================
+
+        if (!toHardDelete.isEmpty()) {
+            keyRepository.deleteAllByIds(
+                    toHardDelete.stream()
+                            .map(Key::getId)
+                            .toList()
+            );
         }
     }
 }

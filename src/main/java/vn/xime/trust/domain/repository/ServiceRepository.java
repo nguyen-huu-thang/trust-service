@@ -20,4 +20,6 @@ public interface ServiceRepository {
     List<Service> findByTenant(String tenant, int page, int size);
 
     List<Service> findByTenantIsNull(int page, int size);
+
+    List<Service> findAllActiveServices();
 }

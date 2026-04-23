@@ -7,6 +7,7 @@ import vn.xime.trust.domain.model.Certificate;
 import vn.xime.trust.domain.repository.CertificateRepository;
 import vn.xime.trust.domain.repository.ServiceRepository;
 import vn.xime.trust.domain.service.CertificateLifecycleService;
+import vn.xime.trust.domain.service.CertificateSelectionService;
 import vn.xime.trust.application.port.out.KeyEncryptionService;
 import vn.xime.trust.application.port.out.KeyGenerator;
 
@@ -23,6 +24,7 @@ public class IssueCertificateUseCase {
 
     private final CertificateFactory certificateFactory;
     private final CertificateLifecycleService lifecycleService;
+    private final CertificateSelectionService selectionService;
 
     public IssueCertificateUseCase(
             CertificateRepository certificateRepository,
@@ -30,7 +32,8 @@ public class IssueCertificateUseCase {
             KeyGenerator keyGenerator,
             KeyEncryptionService encryptionService,
             CertificateFactory certificateFactory,
-            CertificateLifecycleService lifecycleService
+            CertificateLifecycleService lifecycleService,
+            CertificateSelectionService selectionService
     ) {
         this.certificateRepository = certificateRepository;
         this.serviceRepository = serviceRepository;
@@ -38,6 +41,7 @@ public class IssueCertificateUseCase {
         this.encryptionService = encryptionService;
         this.certificateFactory = certificateFactory;
         this.lifecycleService = lifecycleService;
+        this.selectionService = selectionService;
     }
 
     @Transactional

@@ -16,6 +16,7 @@ public class Certificate {
     private final Instant expiresAt;
 
     private final CertificateStatus status;
+    private final boolean deleted;
 
     public Certificate(
             Id id,
@@ -24,7 +25,8 @@ public class Certificate {
             String privateKeyEncrypted,
             Instant issuedAt,
             Instant expiresAt,
-            CertificateStatus status
+            CertificateStatus status,
+            boolean deleted
     ) {
         if (expiresAt.isBefore(issuedAt)) {
             throw new IllegalArgumentException("expiresAt must be after issuedAt");
@@ -37,6 +39,7 @@ public class Certificate {
         this.issuedAt = Objects.requireNonNull(issuedAt);
         this.expiresAt = Objects.requireNonNull(expiresAt);
         this.status = Objects.requireNonNull(status);
+        this.deleted = deleted;
     }
 
     // =========================
@@ -89,5 +92,39 @@ public class Certificate {
 
     public CertificateStatus getStatus() {
         return status;
+    }
+
+    public boolean isDeleted() {
+        return deleted;
+    }
+
+    // =========================
+    // STATE CHANGE
+    // =========================
+
+    public Certificate markDeleted() {
+        return new Certificate(
+                id,
+                serviceId,
+                publicCert,
+                privateKeyEncrypted,
+                issuedAt,
+                expiresAt,
+                status,
+                true
+        );
+    }
+
+    public Certificate markRevoked() {
+        return new Certificate(
+                id,
+                serviceId,
+                publicCert,
+                privateKeyEncrypted,
+                issuedAt,
+                expiresAt,
+                CertificateStatus.REVOKED,
+                deleted
+        );
     }
 }

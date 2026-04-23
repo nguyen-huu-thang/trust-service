@@ -1,10 +1,9 @@
 package vn.xime.trust.application.usecase.cert;
 
-import vn.xime.trust.application.usecase.cert.TokenService;
 import vn.xime.trust.domain.factory.CertRefreshTokenFactory;
+import vn.xime.trust.domain.factory.IdFactory;
 import vn.xime.trust.domain.model.CertRefreshToken;
 import vn.xime.trust.domain.model.Certificate;
-import vn.xime.trust.domain.model.Id;
 import vn.xime.trust.domain.repository.CertRefreshTokenRepository;
 import vn.xime.trust.domain.repository.CertificateRepository;
 import vn.xime.trust.domain.service.CertificateSelectionService;
@@ -91,7 +90,7 @@ public class IssueRefreshTokenUseCase {
         // 3. GENERATE TOKEN
         // =========================
 
-        String tokenId = Id.generate().toString(); // hoặc IdFactory nếu bạn có
+        String tokenId = IdFactory.generate().toString();
 
         Instant expiresAt = currentCert.getExpiresAt(); // align với cert
 

@@ -9,6 +9,10 @@ import java.util.stream.Collectors;
 
 public class CertificateLifecycleService {
 
+    // 🔥 5 YEARS
+    private static final long HARD_DELETE_RETENTION_SECONDS =
+            60L * 60 * 24 * 365 * 5;
+
     // =========================
     // FILTER (COMMON)
     // =========================
@@ -32,14 +36,27 @@ public class CertificateLifecycleService {
     }
 
     // =========================
-    // CLEANUP RULE
+    // SOFT DELETE RULE
     // =========================
 
-    /**
-     * xác định cert có nên bị cleanup khỏi hệ thống không
-     */
     public boolean shouldBeDeleted(Certificate cert, Instant now) {
         return cert.isExpired(now);
+    }
+
+    // =========================
+    // HARD DELETE RULE (NEW)
+    // =========================
+
+    public boolean shouldBeHardDeleted(Certificate cert, Instant now) {
+
+        // chỉ xét cert đã expired
+        if (!cert.isExpired(now)) {
+            return false;
+        }
+
+        return cert.getExpiresAt()
+                .plusSeconds(HARD_DELETE_RETENTION_SECONDS)
+                .isBefore(now);
     }
 
     // =========================

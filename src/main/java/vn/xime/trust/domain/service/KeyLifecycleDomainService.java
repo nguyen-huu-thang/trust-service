@@ -9,6 +9,10 @@ import java.util.Optional;
 
 public class KeyLifecycleDomainService {
 
+    // 🔥 3 YEARS
+    private static final long HARD_DELETE_RETENTION_SECONDS =
+            60L * 60 * 24 * 365 * 3;
+
     // =========================
     // COMMON FILTER
     // =========================
@@ -63,11 +67,28 @@ public class KeyLifecycleDomainService {
     }
 
     // =========================
-    // CLEANUP RULE
+    // SOFT DELETE RULE
     // =========================
 
     public boolean shouldBeDeleted(Key key, Instant now) {
         return key.isExpiredAt(now);
+    }
+
+    // =========================
+    // HARD DELETE RULE (NEW)
+    // =========================
+
+    public boolean shouldBeHardDeleted(Key key, Instant now) {
+
+        // chỉ xét key đã expired
+        if (!key.isExpiredAt(now)) {
+            return false;
+        }
+
+        // expires_at + 3 years
+        return key.getExpiresAt()
+                .plusSeconds(HARD_DELETE_RETENTION_SECONDS)
+                .isBefore(now);
     }
 
     // =========================
