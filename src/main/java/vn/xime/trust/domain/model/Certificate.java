@@ -110,7 +110,7 @@ public class Certificate {
                 privateKeyEncrypted,
                 issuedAt,
                 expiresAt,
-                status,
+                CertificateStatus.EXPIRED,
                 true
         );
     }

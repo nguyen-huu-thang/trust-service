@@ -9,9 +9,55 @@ import java.util.stream.Collectors;
 
 public class CertificateLifecycleService {
 
-    // 🔥 5 YEARS
+    // =========================
+    // CONFIG (MVP - HARDCODE)
+    // =========================
+
+    // 🔥 cert rotate ~100 ngày
+    private static final long ROTATION_INTERVAL_SECONDS =
+            60L * 60 * 24 * 100;
+
+    // 🔥 cert lifetime ~1 năm
+    private static final long CERT_LIFETIME_SECONDS =
+            60L * 60 * 24 * 365;
+
+    // 🔥 retention 5 năm
     private static final long HARD_DELETE_RETENTION_SECONDS =
             60L * 60 * 24 * 365 * 5;
+
+    // =========================
+    // ISSUE POLICY
+    // =========================
+
+    /**
+     * quyết định có cần tạo cert mới không
+     */
+    public boolean shouldIssueNewCert(
+            Certificate latest,
+            Instant now
+    ) {
+        if (latest == null) {
+            return true;
+        }
+
+        // nếu cert đã expired → KHÔNG auto issue
+        if (latest.isExpired(now)) {
+            return false;
+        }
+
+        // nếu đã đến thời điểm rotate
+        Instant nextRotationTime = latest.getIssuedAt()
+                .plusSeconds(ROTATION_INTERVAL_SECONDS);
+
+        return now.isAfter(nextRotationTime);
+    }
+
+    /**
+     * tính expiresAt cho cert mới
+     */
+    public Instant calculateExpiresAt(Instant issuedAt) {
+        return issuedAt.plusSeconds(CERT_LIFETIME_SECONDS);
+    }
 
     // =========================
     // FILTER (COMMON)
@@ -44,12 +90,11 @@ public class CertificateLifecycleService {
     }
 
     // =========================
-    // HARD DELETE RULE (NEW)
+    // HARD DELETE RULE
     // =========================
 
     public boolean shouldBeHardDeleted(Certificate cert, Instant now) {
 
-        // chỉ xét cert đã expired
         if (!cert.isExpired(now)) {
             return false;
         }
@@ -85,9 +130,6 @@ public class CertificateLifecycleService {
     // SAFETY CHECK
     // =========================
 
-    /**
-     * kiểm tra service có còn cert active nào không
-     */
     public boolean hasActiveCertificate(
             List<Certificate> certs,
             Instant now

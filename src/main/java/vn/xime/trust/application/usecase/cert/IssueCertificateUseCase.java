@@ -12,6 +12,8 @@ import vn.xime.trust.application.port.out.KeyEncryptionService;
 import vn.xime.trust.application.port.out.KeyGenerator;
 
 import java.time.Instant;
+import java.util.List;
+import java.util.Optional;
 
 @Component
 public class IssueCertificateUseCase {
@@ -62,22 +64,35 @@ public class IssueCertificateUseCase {
         }
 
         // =========================
-        // DOMAIN: CHECK INITIAL ISSUE
+        // LOAD CERTS
         // =========================
 
-        // load latest cert
-        Certificate latest = selectionService.findLatestCertificate(certs);
+        List<Certificate> certs =
+                certificateRepository.findByServiceId(serviceId);
 
-        if (latest != null && !lifecycleService.shouldIssueNewCert(latest, now)) {
-            return latest.getId();
+        // =========================
+        // FIND LATEST CERT
+        // =========================
+
+        Optional<Certificate> latestOpt =
+                selectionService.findLatestCertificate(certs);
+
+        if (latestOpt.isPresent()) {
+
+            Certificate latest = latestOpt.get();
+
+            // nếu chưa cần rotate → dùng lại cert cũ
+            if (!lifecycleService.shouldIssueNewCert(latest, now)) {
+                return latest.getId().toString();
+            }
         }
 
         // =========================
-        // INFRA: GENERATE KEY PAIR
+        // GENERATE KEY PAIR
         // =========================
 
         var pair = keyGenerator.generate(
-                "RSA",   // MVP: hardcode, sau này policy hóa
+                "RSA",
                 2048
         );
 
@@ -85,13 +100,13 @@ public class IssueCertificateUseCase {
                 encryptionService.encrypt(pair.getPrivateKey());
 
         // =========================
-        // DOMAIN: CALCULATE EXPIRES
+        // CALCULATE EXPIRES
         // =========================
 
         Instant expiresAt = lifecycleService.calculateExpiresAt(now);
 
         // =========================
-        // DOMAIN: BUILD CERT
+        // BUILD CERT
         // =========================
 
         Certificate cert = certificateFactory.create(
