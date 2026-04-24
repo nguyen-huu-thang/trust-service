@@ -6,7 +6,6 @@ public interface CertGenerator {
 
     GeneratedCertificate generate(
             String serviceId,
-            KeyPair keyPair,
             Instant expiresAt
     );
 

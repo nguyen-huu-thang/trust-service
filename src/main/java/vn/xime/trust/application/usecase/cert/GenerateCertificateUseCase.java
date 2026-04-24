@@ -5,102 +5,55 @@ import org.springframework.transaction.annotation.Transactional;
 import vn.xime.trust.domain.factory.CertificateFactory;
 import vn.xime.trust.domain.model.Certificate;
 import vn.xime.trust.domain.repository.CertificateRepository;
-import vn.xime.trust.domain.repository.ServiceRepository;
-import vn.xime.trust.domain.service.CertificateLifecycleService;
-import vn.xime.trust.domain.service.CertificateSelectionService;
-import vn.xime.trust.application.port.out.KeyEncryptionService;
-import vn.xime.trust.application.port.out.KeyGenerator;
+import vn.xime.trust.application.port.out.CertGenerator;
 
 import java.time.Instant;
-import java.util.List;
-import java.util.Optional;
 
 @Component
 public class GenerateCertificateUseCase {
 
     private final CertificateRepository certificateRepository;
-    private final ServiceRepository serviceRepository;
 
-    private final KeyGenerator keyGenerator;
-    private final KeyEncryptionService encryptionService;
+    private final CertGenerator certGenerator;
 
     private final CertificateFactory certificateFactory;
-    private final CertificateLifecycleService lifecycleService;
-    private final CertificateSelectionService selectionService;
 
     public GenerateCertificateUseCase(
             CertificateRepository certificateRepository,
-            ServiceRepository serviceRepository,
-            KeyGenerator keyGenerator,
-            KeyEncryptionService encryptionService,
-            CertificateFactory certificateFactory,
-            CertificateLifecycleService lifecycleService,
-            CertificateSelectionService selectionService
+            CertGenerator certGenerator,
+            CertificateFactory certificateFactory
     ) {
         this.certificateRepository = certificateRepository;
-        this.serviceRepository = serviceRepository;
-        this.keyGenerator = keyGenerator;
-        this.encryptionService = encryptionService;
+        this.certGenerator = certGenerator;
         this.certificateFactory = certificateFactory;
-        this.lifecycleService = lifecycleService;
-        this.selectionService = selectionService;
+    }
+
+    public Certificate serviceBootstrap( String serviceId) {
+        Instant now = Instant.now();
+        // cộng thêm 1 giờ
+        Instant expiresAt = now.plusSeconds(3600);
+        return generate(serviceId, expiresAt);
+
+    }
+
+    public Certificate rotateCert(String serviceId, Instant expiresAt) {
+        return generate(serviceId, expiresAt);
     }
 
     @Transactional
-    public Certificate generate(String serviceId) {
-
-        Instant now = Instant.now();
-
-        // =========================
-        // APPLICATION VALIDATION
-        // =========================
+    private Certificate generate(String serviceId, Instant expiresAt) {
 
         if (serviceId == null || serviceId.isBlank()) {
             throw new IllegalArgumentException("serviceId is required");
         }
 
-        if (!serviceRepository.existsById(serviceId)) {
-            throw new IllegalStateException("Service not found");
-        }
-
+        // đã đảm bảo service tồn tại và đang active ở layer trên, nên không check ở đây nữa.
+        
         // =========================
-        // LOAD CERTS
+        // GENERATE
         // =========================
 
-        List<Certificate> certs = certificateRepository.findByServiceId(serviceId);
-
-        // =========================
-        // FIND LATEST CERT
-        // =========================
-
-        Optional<Certificate> latestOpt = selectionService.findLatestCertificate(certs);
-
-        if (latestOpt.isPresent()) {
-
-            Certificate latest = latestOpt.get();
-
-            // nếu chưa cần rotate → dùng lại cert cũ
-            if (!lifecycleService.shouldIssueNewCert(latest, now)) {
-                return latest;
-            }
-        }
-
-        // =========================
-        // GENERATE KEY PAIR
-        // =========================
-
-        var pair = keyGenerator.generate(
-                "RSA",
-                2048
-        );
-
-        String encryptedPrivateKey = encryptionService.encrypt(pair.getPrivateKey());
-
-        // =========================
-        // CALCULATE EXPIRES
-        // =========================
-
-        Instant expiresAt = lifecycleService.calculateExpiresAt(now);
+        var generatedCert = certGenerator.generate(serviceId, expiresAt);
 
         // =========================
         // BUILD CERT
@@ -108,8 +61,8 @@ public class GenerateCertificateUseCase {
 
         Certificate cert = certificateFactory.create(
                 serviceId,
-                pair.getPublicKey(), // sai nha
-                encryptedPrivateKey,
+                generatedCert.publicCertPem(),
+                generatedCert.privateKeyPem(),
                 expiresAt
         );
 
@@ -120,10 +73,5 @@ public class GenerateCertificateUseCase {
         certificateRepository.save(cert);
 
         return cert;
-    }
-
-    public String createByAdmin( String serviceId) {
-        return generate(serviceId).getId().toString();
-
     }
 }

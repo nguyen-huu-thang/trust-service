@@ -3,7 +3,6 @@ package vn.xime.trust.application.usecase.cert;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import vn.xime.trust.application.port.in.EnsureCertificateLifecycleUseCase;
-import vn.xime.trust.domain.factory.CertificateFactory;
 import vn.xime.trust.domain.model.Certificate;
 import vn.xime.trust.domain.policy.CertificateIssuancePolicy;
 import vn.xime.trust.domain.repository.CertificateRepository;
@@ -26,10 +25,9 @@ public class EnsureCertificateLifecycleUseCaseImpl implements EnsureCertificateL
 
     private final ServiceRepository serviceRepository;
     private final CertificateRepository certificateRepository;
-
+    private final GenerateCertificateUseCase generateCert;
     private final CertificateSelectionService selectionService;
     private final CertificateIssuancePolicy issuancePolicy;
-    private final CertificateFactory certificateFactory;
 
     @Override
     public void execute() {
@@ -78,16 +76,7 @@ public class EnsureCertificateLifecycleUseCaseImpl implements EnsureCertificateL
 
         Instant expiresAt = issuancePolicy.calculateExpiresAt(now);
 
-        // ⚠️ TODO: integrate real certificate generator
-        String publicCert = "TODO_PUBLIC_CERT";
-        String privateKeyEncrypted = "TODO_PRIVATE_KEY";
-
-        Certificate newCert = certificateFactory.create(
-                serviceId,
-                publicCert,
-                privateKeyEncrypted,
-                expiresAt
-        );
+        Certificate newCert = generateCert.rotateCert(serviceId, expiresAt);
 
         try {
             certificateRepository.save(newCert);
