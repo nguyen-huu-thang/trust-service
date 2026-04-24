@@ -4,12 +4,23 @@ import vn.xime.trust.domain.factory.CertRefreshTokenFactory;
 import vn.xime.trust.domain.factory.CertificateFactory;
 import vn.xime.trust.domain.model.CertRefreshToken;
 import vn.xime.trust.domain.model.Certificate;
-import vn.xime.trust.domain.model.Id;
+import vn.xime.trust.domain.model.Service;
+import vn.xime.trust.domain.model.Shard;
+import vn.xime.trust.domain.model.TokenPayload;
 import vn.xime.trust.domain.policy.CertificateIssuancePolicy;
 import vn.xime.trust.domain.repository.CertRefreshTokenRepository;
 import vn.xime.trust.domain.repository.CertificateRepository;
+import vn.xime.trust.domain.repository.ServiceRepository;
+import vn.xime.trust.domain.repository.ShardRepository;
 import vn.xime.trust.domain.service.CertRefreshTokenDomainService;
 import vn.xime.trust.domain.service.CertificateSelectionService;
+import vn.xime.trust.domain.service.IdService;
+import vn.xime.trust.application.dto.response.RotateCertDto;
+import vn.xime.trust.application.port.out.TokenCodec;
+import vn.xime.trust.application.port.out.KeyEncryptionService;
+import vn.xime.trust.application.mapper.RotateCertMapper;
+
+
 
 import java.time.Instant;
 import java.util.List;
@@ -29,6 +40,8 @@ public class RotateCertificateUseCase {
 
     private final CertificateRepository certificateRepository;
     private final CertRefreshTokenRepository tokenRepository;
+    private final ServiceRepository serviceRepository;
+    private final ShardRepository shardRepository;
 
     private final CertificateSelectionService selectionService;
     private final CertRefreshTokenDomainService tokenDomainService;
@@ -38,39 +51,51 @@ public class RotateCertificateUseCase {
 
     private final CertificateIssuancePolicy issuancePolicy;
 
+    private final RotateCertMapper mapper;
+
+    private final TokenCodec tokenCodec;
+    private final KeyEncryptionService encryptionService;
+
     public RotateCertificateUseCase(
-            CertificateRepository certificateRepository,
-            CertRefreshTokenRepository tokenRepository,
-            CertificateSelectionService selectionService,
-            CertRefreshTokenDomainService tokenDomainService,
-            CertificateFactory certificateFactory,
-            CertRefreshTokenFactory tokenFactory,
-            CertificateIssuancePolicy issuancePolicy
+        CertificateRepository certificateRepository,
+        CertRefreshTokenRepository tokenRepository,
+        ServiceRepository serviceRepository,
+        ShardRepository shardRepository,
+        CertificateSelectionService selectionService,
+        CertRefreshTokenDomainService tokenDomainService,
+        CertificateFactory certificateFactory,
+        CertRefreshTokenFactory tokenFactory,
+        CertificateIssuancePolicy issuancePolicy,
+        RotateCertMapper mapper,
+        TokenCodec tokenCodec,
+        KeyEncryptionService encryptionService
     ) {
         this.certificateRepository = certificateRepository;
         this.tokenRepository = tokenRepository;
+        this.serviceRepository = serviceRepository;
+        this.shardRepository = shardRepository;
         this.selectionService = selectionService;
         this.tokenDomainService = tokenDomainService;
         this.certificateFactory = certificateFactory;
         this.tokenFactory = tokenFactory;
         this.issuancePolicy = issuancePolicy;
+        this.mapper = mapper;
+        this.tokenCodec = tokenCodec;
+        this.encryptionService = encryptionService;
     }
 
     // =========================
     // EXECUTE
     // =========================
 
-    public Result execute(
-            String serviceId,
-            String rawToken,
-            String tokenHash,          // hash(rawToken)
-            String shardId             // lấy từ payload token
+    public RotateCertDto execute(
+        String id,
+        String token,
+        String privateKeyCert
     ) {
-
-        Objects.requireNonNull(serviceId);
-        Objects.requireNonNull(rawToken);
-        Objects.requireNonNull(tokenHash);
-        Objects.requireNonNull(shardId);
+        Objects.requireNonNull(id);
+        Objects.requireNonNull(token);
+        Objects.requireNonNull(privateKeyCert);
 
         Instant now = Instant.now();
 
@@ -78,47 +103,71 @@ public class RotateCertificateUseCase {
         // 1. LOAD TOKEN
         // =========================
 
-        CertRefreshToken token = tokenRepository.findByTokenHash(tokenHash)
+        CertRefreshToken tokenRecord = tokenRepository.findById(IdService.fromString(id))
                 .orElseThrow(() ->
-                        new IllegalStateException("Refresh token not found")
+                        new IllegalStateException("No record for token id")
                 );
 
+        
         // =========================
-        // 2. LOAD CERTS
+        // 2. TOKEN -> PAYLOAD
         // =========================
 
-        List<Certificate> certs =
-                certificateRepository.findByServiceId(serviceId);
+        TokenPayload payload = tokenCodec.decode(token);
+        
+        // =========================
+        // 3. VALIDATE TOKEN
+        // =========================
+
+        if (!tokenRecord.isValid(now)) {
+            throw new IllegalStateException("Token is not valid");
+        }
+
+        tokenDomainService.validateToken(tokenCodec.hash(token), tokenRecord.getTokenHash());
+
+        Service service = serviceRepository.findById(payload.getServiceId())
+                .orElseThrow(() ->
+                        new IllegalStateException("No service for token")
+                );
+
+        if (!service.isActive()) {
+            throw new IllegalStateException("Service is not active");
+        }
+
+        Shard shard = shardRepository.findById(payload.getShardId())
+                .orElseThrow(() ->
+                        new IllegalStateException("No shard for token")
+                );
+        
+        if (!shard.isActive()) {
+            throw new IllegalStateException("Shard is not active");
+        }
+
+        if (shard.getServiceId() != service.getId()) {
+            throw new IllegalStateException("Shard does not belong to service");
+        }
+
+        Certificate currentCert = certificateRepository.findById(IdService.fromString(payload.getCertId()))
+                .orElseThrow(() ->
+                        new IllegalStateException("No certificate for token")
+                );
+        
+        issuancePolicy.ensureCanRotate(currentCert, now);
+
+        tokenDomainService.validateCert(currentCert, privateKeyCert);
+
+        // =========================
+        // 4. LOAD CERTS
+        // =========================
+
+        List<Certificate> certs = certificateRepository.findByServiceId(payload.getServiceId());
 
         if (certs.isEmpty()) {
             throw new IllegalStateException("No certificate for service");
         }
 
-        // current cert (đang dùng mTLS)
-        Certificate currentCert =
-                selectionService.getCurrentCertificate(certs, now);
-
         // latest cert (mới nhất)
-        Certificate latestCert =
-                selectionService.findLatestCertificate(certs)
-                        .orElseThrow();
-
-        // =========================
-        // 3. VALIDATE TOKEN
-        // =========================
-
-        tokenDomainService.validateToken(
-                token,
-                serviceId,
-                currentCert.getId(),
-                now
-        );
-
-        // =========================
-        // 4. VALIDATE CURRENT CERT
-        // =========================
-
-        issuancePolicy.ensureCanRotate(currentCert, now);
+        Certificate latestCert = selectionService.findLatestCertificate(certs).orElseThrow();
 
         // =========================
         // 5. DECIDE CERT
@@ -133,15 +182,14 @@ public class RotateCertificateUseCase {
         } else {
             // 🔥 issue cert mới
 
-            Instant expiresAt =
-                    issuancePolicy.calculateExpiresAt(now);
+            Instant expiresAt = issuancePolicy.calculateExpiresAt(now);
 
             // ⚠️ TODO: generate real cert + encrypt key
             String publicCert = "TODO_PUBLIC_CERT";
             String privateKeyEncrypted = "TODO_PRIVATE_KEY";
 
             targetCert = certificateFactory.create(
-                    serviceId,
+                    payload.getServiceId(),
                     publicCert,
                     privateKeyEncrypted,
                     expiresAt
@@ -151,17 +199,10 @@ public class RotateCertificateUseCase {
         }
 
         // =========================
-        // 6. CONSUME TOKEN (ONE-TIME)
+        // 6. MARK USED TOKENS
         // =========================
 
-        CertRefreshToken usedToken =
-                tokenDomainService.validateAndConsume(
-                        token,
-                        serviceId,
-                        currentCert.getId(),
-                        now
-                );
-
+        CertRefreshToken usedToken = tokenRecord.markUsed(now);
         tokenRepository.save(usedToken);
 
         // =========================
@@ -170,22 +211,25 @@ public class RotateCertificateUseCase {
 
         Instant tokenExpiresAt = targetCert.getExpiresAt();
 
-        String newRawToken = generateRawToken(
-                serviceId,
-                shardId,
-                targetCert.getId(),
+        CertRefreshToken newToken = tokenFactory.create(
+                false,
                 tokenExpiresAt
         );
 
-        String newTokenHash = hash(newRawToken);
-
-        CertRefreshToken newToken = tokenFactory.create(
-                serviceId,
-                newTokenHash,
-                targetCert.getId(),
-                tokenExpiresAt,
-                "rotation"
+        TokenPayload newPayload = new TokenPayload(
+                IdService.toString(newToken.getId()),
+                payload.getServiceId(),
+                payload.getShardId(),
+                targetCert.getId().toString(),
+                newToken.getIssuedAt().toEpochMilli(),
+                tokenExpiresAt.toEpochMilli()
         );
+
+        String newRawToken = tokenCodec.encode(newPayload);
+
+        String newTokenHash = tokenCodec.hash(newRawToken);
+
+        newToken = newToken.markTokenHash(newTokenHash);
 
         tokenRepository.save(newToken);
 
@@ -193,40 +237,6 @@ public class RotateCertificateUseCase {
         // RESULT
         // =========================
 
-        return new Result(
-                targetCert,
-                newRawToken,
-                tokenExpiresAt
-        );
-    }
-
-    // =========================
-    // TOKEN UTILS (TEMP)
-    // =========================
-
-    private String generateRawToken(
-            String serviceId,
-            String shardId,
-            Id certId,
-            Instant expiresAt
-    ) {
-        // TODO: replace bằng TokenService (HMAC JWT-like)
-        return serviceId + "." + shardId + "." + certId;
-    }
-
-    private String hash(String token) {
-        // TODO: replace bằng SHA-256
-        return Integer.toHexString(token.hashCode());
-    }
-
-    // =========================
-    // RESULT DTO
-    // =========================
-
-    public record Result(
-            Certificate certificate,
-            String refreshToken,
-            Instant expiresAt
-    ) {
+        return mapper.toDto(targetCert, encryptionService.decrypt(targetCert.getPrivateKeyEncrypted()), IdService.toString(newToken.getId()), newRawToken);
     }
 }

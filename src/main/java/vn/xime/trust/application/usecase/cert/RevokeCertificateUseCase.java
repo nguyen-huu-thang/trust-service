@@ -8,7 +8,6 @@ import vn.xime.trust.domain.model.Id;
 import vn.xime.trust.domain.repository.CertificateRepository;
 import vn.xime.trust.domain.service.CertificateValidationService;
 
-// import java.time.Instant;
 
 @Component
 public class RevokeCertificateUseCase {
@@ -78,12 +77,10 @@ public class RevokeCertificateUseCase {
         certificateRepository.save(revoked);
 
         // =========================
-        // FUTURE (OPTIONAL)
+        // FUTURE
         // =========================
         
-        // refreshTokenRepository.revokeByCertId(cert.getId(), now);
-
-        // - publish event (audit / security)
+        // sau thêm logic gửi tới đồng loạt các service khác để thông báo về việc certificate bị revoked.
 
         return revoked.getId().toString();
     }

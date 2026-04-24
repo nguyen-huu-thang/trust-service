@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * IssueRefreshTokenUseCase
+ * Generate Refresh Token
  *
  * Dùng cho:
  * - bootstrap
@@ -23,7 +23,7 @@ import java.util.Objects;
  * KHÔNG tạo cert mới
  * chỉ bind token với cert hiện tại
  */
-public class IssueRefreshTokenUseCase {
+public class GenerateRefreshTokenUseCase {
 
     private final CertificateRepository certificateRepository;
     private final CertRefreshTokenRepository tokenRepository;
@@ -34,7 +34,7 @@ public class IssueRefreshTokenUseCase {
     private final CertRefreshTokenFactory tokenFactory;
     private final TokenService tokenService;
 
-    public IssueRefreshTokenUseCase(
+    public GenerateRefreshTokenUseCase(
             CertificateRepository certificateRepository,
             CertRefreshTokenRepository tokenRepository,
             CertificateSelectionService selectionService,
@@ -69,8 +69,7 @@ public class IssueRefreshTokenUseCase {
         // 1. LOAD CERTS
         // =========================
 
-        List<Certificate> certs =
-                certificateRepository.findByServiceId(serviceId);
+        List<Certificate> certs = certificateRepository.findByServiceId(serviceId);
 
         if (certs.isEmpty()) {
             throw new IllegalStateException("No certificate for service");
@@ -80,8 +79,7 @@ public class IssueRefreshTokenUseCase {
         // 2. SELECT CURRENT CERT
         // =========================
 
-        Certificate currentCert =
-                selectionService.getCurrentCertificate(certs, now);
+        Certificate currentCert = selectionService.getCurrentCertificate(certs, now);
 
         // validate cert usable
         validationService.validateActive(currentCert, now);
@@ -128,6 +126,7 @@ public class IssueRefreshTokenUseCase {
                 currentCert
         );
     }
+
 
     // =========================
     // RESULT DTO

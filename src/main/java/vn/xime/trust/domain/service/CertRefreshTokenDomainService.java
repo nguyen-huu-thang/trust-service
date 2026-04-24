@@ -1,10 +1,12 @@
 package vn.xime.trust.domain.service;
 
-import vn.xime.trust.domain.model.CertRefreshToken;
-import vn.xime.trust.domain.model.Id;
-
+import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Objects;
+
+import vn.xime.trust.domain.model.CertRefreshToken;
+import vn.xime.trust.domain.model.Id;
+import vn.xime.trust.domain.model.Certificate;
 
 public class CertRefreshTokenDomainService {
 
@@ -15,68 +17,37 @@ public class CertRefreshTokenDomainService {
     /**
      * validate token trước khi rotate cert
      */
-    public void validateToken(
-            CertRefreshToken token,
-            String serviceId,
-            Id currentCertId,
-            Instant now
-    ) {
-        if (token == null) {
-            throw new IllegalStateException("Refresh token not found");
+    public void validateToken(String a, String b) {
+        if (a == null || b == null) {
+            throw new IllegalStateException("Invalid token");
         }
-
-        Objects.requireNonNull(serviceId, "serviceId is required");
-        Objects.requireNonNull(currentCertId, "currentCertId is required");
-        Objects.requireNonNull(now, "now is required");
-
-        // =========================
-        // DOMAIN RULES
-        // =========================
-
-        token.ensureValid(now);
-
-        // 🔥 chống misuse cross-service
-        if (!token.getServiceId().equals(serviceId)) {
-            throw new IllegalStateException("Token does not belong to this service");
+        if (!constantTimeEquals(a, b)) {
+            throw new IllegalStateException("Invalid token");
         }
-
-        token.ensureBoundTo(currentCertId);
     }
 
-    // =========================
-    // CONSUME (STRICT)
-    // =========================
-
-    /**
-     * validate + consume trong 1 bước (khuyến nghị dùng)
-     */
-    public CertRefreshToken validateAndConsume(
-            CertRefreshToken token,
-            String serviceId,
-            Id currentCertId,
-            Instant now
-    ) {
-        validateToken(token, serviceId, currentCertId, now);
-        return token.markUsed(now);
+    public void validateCert(Certificate cert, String privateKeyEncrypted) {
+        if (cert == null || privateKeyEncrypted == null) {
+            throw new IllegalStateException("Invalid certificate or private key");
+        }
+        if (!constantTimeEquals(cert.getPrivateKeyEncrypted(), privateKeyEncrypted)) {
+            throw new IllegalStateException("Invalid certificate or private key");
+        }
     }
 
-    // =========================
-    // CONSUME (LEGACY / OPTIONAL)
-    // =========================
+    private boolean constantTimeEquals(String a, String b) {
+        byte[] aBytes = a.getBytes(StandardCharsets.UTF_8);
+        byte[] bBytes = b.getBytes(StandardCharsets.UTF_8);
 
-    /**
-     * chỉ consume (giữ lại nếu bạn muốn tách flow)
-     */
-    public CertRefreshToken consumeToken(
-            CertRefreshToken token,
-            Instant now
-    ) {
-        if (token == null) {
-            throw new IllegalStateException("Refresh token not found");
+        int max = Math.max(aBytes.length, bBytes.length);
+        int result = aBytes.length ^ bBytes.length;
+
+        for (int i = 0; i < max; i++) {
+            byte x = i < aBytes.length ? aBytes[i] : 0;
+            byte y = i < bBytes.length ? bBytes[i] : 0;
+            result |= x ^ y;
         }
 
-        token.ensureValid(now);
-
-        return token.markUsed(now);
+        return result != 0;
     }
 }

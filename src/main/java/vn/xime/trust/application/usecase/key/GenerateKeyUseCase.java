@@ -55,7 +55,7 @@ public class GenerateKeyUseCase {
     }
 
     @Transactional
-    public String execute(GenerateKeyCommand cmd) {
+    public Key generate(GenerateKeyCommand cmd) {
 
         Instant now = Instant.now();
 
@@ -159,8 +159,7 @@ public class GenerateKeyUseCase {
                 keySize
         );
 
-        String encryptedPrivateKey =
-                encryptionService.encrypt(pair.getPrivateKey());
+        String encryptedPrivateKey = encryptionService.encrypt(pair.getPrivateKey());
 
         // =========================
         // DOMAIN: BUILD KEY
@@ -183,6 +182,11 @@ public class GenerateKeyUseCase {
 
         keyRepository.save(key);
 
+        return key;
+    }
+
+    public String createByAdmin(GenerateKeyCommand cmd){
+        Key key = generate(cmd);
         return IdService.toString(key.getId());
     }
 }

@@ -1,7 +1,7 @@
 package vn.xime.trust.application.mapper;
 
 import org.springframework.stereotype.Component;
-import vn.xime.trust.application.dto.response.KeyResponseDto;
+import vn.xime.trust.application.dto.response.AdminKeyDto;
 import vn.xime.trust.application.dto.response.PrivateKeyDto;
 import vn.xime.trust.application.dto.response.PublicKeyDto;
 import vn.xime.trust.domain.model.Key;
@@ -10,8 +10,8 @@ import vn.xime.trust.domain.service.IdService;
 @Component
 public class KeyMapper {
 
-    public KeyResponseDto toResponseDto(Key key) {
-        return new KeyResponseDto(
+    public AdminKeyDto toResponseDto(Key key) {
+        return new AdminKeyDto(
                 IdService.toString(key.getId()),
                 key.getSignerServiceId(),
                 key.getVerifierServiceId(),

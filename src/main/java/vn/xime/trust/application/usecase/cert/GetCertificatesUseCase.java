@@ -6,7 +6,8 @@ import vn.xime.trust.domain.model.Id;
 import vn.xime.trust.domain.repository.CertificateRepository;
 import vn.xime.trust.domain.service.CertificateSelectionService;
 import vn.xime.trust.domain.service.CertificateValidationService;
-import vn.xime.trust.application.dto.response.CertificateResponseDto;
+import vn.xime.trust.application.dto.response.AdminCertDto;
+import vn.xime.trust.application.dto.response.ServiceCertDto;
 import vn.xime.trust.application.mapper.CertificateMapper;
 import vn.xime.trust.application.port.out.KeyEncryptionService;
 
@@ -17,7 +18,7 @@ import java.util.List;
 public class GetCertificatesUseCase {
 
     private final CertificateRepository certificateRepository;
-    private final CertificateMapper certificateMapper;
+    private final CertificateMapper mapper;
     private final KeyEncryptionService encryptionService;
 
     private final CertificateSelectionService selectionService;
@@ -25,13 +26,13 @@ public class GetCertificatesUseCase {
 
     public GetCertificatesUseCase(
             CertificateRepository certificateRepository,
-            CertificateMapper certificateMapper,
+            CertificateMapper mapper,
             KeyEncryptionService encryptionService,
             CertificateSelectionService selectionService,
             CertificateValidationService validationService
     ) {
         this.certificateRepository = certificateRepository;
-        this.certificateMapper = certificateMapper;
+        this.mapper = mapper;
         this.encryptionService = encryptionService;
         this.selectionService = selectionService;
         this.validationService = validationService;
@@ -41,7 +42,7 @@ public class GetCertificatesUseCase {
     // GET BY ID (ADMIN)
     // ==================================================
 
-    public CertificateResponseDto getById(Id id) {
+    public AdminCertDto getById(Id id) {
         if (id == null) {
             throw new IllegalArgumentException("id is required");
         }
@@ -49,21 +50,21 @@ public class GetCertificatesUseCase {
         Certificate cert = certificateRepository.findById(id)
                 .orElseThrow(() -> new IllegalStateException("Certificate not found"));
 
-        return toDto(cert);
+        return mapper.toAdminDto(cert);
     }
 
     // ==================================================
     // LIST BY SERVICE (ADMIN)
     // ==================================================
 
-    public List<CertificateResponseDto> listByService(String serviceId) {
+    public List<AdminCertDto> listByService(String serviceId) {
         if (serviceId == null || serviceId.isBlank()) {
             throw new IllegalArgumentException("serviceId is required");
         }
 
         return certificateRepository.findByServiceId(serviceId)
                 .stream()
-                .map(this::toDto)
+                .map(mapper::toAdminDto)
                 .toList();
     }
 
@@ -71,7 +72,7 @@ public class GetCertificatesUseCase {
     // GET ACTIVE CERT (RUNTIME - mTLS)
     // ==================================================
 
-    public CertificateResponseDto getActiveCertificate(String serviceId) {
+    public ServiceCertDto getActiveCertificate(String serviceId) {
         if (serviceId == null || serviceId.isBlank()) {
             throw new IllegalArgumentException("serviceId is required");
         }
@@ -82,8 +83,7 @@ public class GetCertificatesUseCase {
         // LOAD
         // =========================
 
-        List<Certificate> certs =
-                certificateRepository.findValidCertificates(serviceId, now);
+        List<Certificate> certs = certificateRepository.findValidCertificates(serviceId, now);
 
         // =========================
         // DOMAIN: SELECT
@@ -98,27 +98,21 @@ public class GetCertificatesUseCase {
         validationService.validateActive(current, now);
 
         // =========================
-        // MAP
+        // DECRYPT PRIVATE KEY
         // =========================
 
-        return toDto(current);
-    }
-
-    // ==================================================
-    // INTERNAL HELPER
-    // ==================================================
-
-    private CertificateResponseDto toDto(Certificate cert) {
-
-        // ⚠️ decrypt private key nếu cần (internal/admin)
         String decryptedPrivateKey = null;
 
-        if (cert.getPrivateKeyEncrypted() != null) {
+        if (current.getPrivateKeyEncrypted() != null) {
             decryptedPrivateKey = encryptionService.decrypt(
-                    cert.getPrivateKeyEncrypted()
+                    current.getPrivateKeyEncrypted()
             );
         }
 
-        return certificateMapper.toResponseDto(cert, decryptedPrivateKey);
+        // =========================
+        // MAP
+        // =========================
+
+        return mapper.toServiceDto(current, decryptedPrivateKey);
     }
 }

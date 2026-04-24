@@ -252,37 +252,16 @@ CERT REFRESH TOKENS
 
 id BYTEA PRIMARY KEY   -- 🔥 KSUID
 
-service_id VARCHAR(20) NOT NULL
+token_encrypted TEXT NOT NULL
 
-token_hash TEXT NOT NULL
-
-bound_cert_id BYTEA NOT NULL   -- 🔥 đổi từ bound_kid
+is_bootstrap BOOLEAN DEFAULT FALSE
 
 issued_at TIMESTAMP NOT NULL
 expires_at TIMESTAMP NOT NULL
-used_at TIMESTAMP
 
-issued_by VARCHAR(100)
-
--- constraints
-FOREIGN KEY (service_id)
-REFERENCES services(id)
-
-FOREIGN KEY (bound_cert_id)
-REFERENCES certificates(id)
+is_deleted BOOLEAN DEFAULT FALSE
 
 UNIQUE(token_hash)
-
--- indexes
-CREATE INDEX idx_refresh_token_hash
-ON cert_refresh_tokens(token_hash);
-
-CREATE INDEX idx_refresh_service_used
-ON cert_refresh_tokens(service_id, used_at);
-
-CREATE INDEX idx_refresh_bound_cert
-ON cert_refresh_tokens(bound_cert_id);
-
 
 ==================================================
 CERT EVENTS (AUDIT - NO FK)

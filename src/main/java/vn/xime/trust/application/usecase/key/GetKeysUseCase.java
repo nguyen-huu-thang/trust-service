@@ -4,7 +4,7 @@ import org.springframework.stereotype.Component;
 import vn.xime.trust.domain.model.Id;
 import vn.xime.trust.domain.model.Key;
 import vn.xime.trust.domain.repository.KeyRepository;
-import vn.xime.trust.application.dto.response.KeyResponseDto;
+import vn.xime.trust.application.dto.response.AdminKeyDto;
 import vn.xime.trust.application.dto.response.PrivateKeyDto;
 import vn.xime.trust.application.dto.response.PublicKeyDto;
 import vn.xime.trust.application.port.out.KeyEncryptionService;
@@ -35,7 +35,7 @@ public class GetKeysUseCase {
     // ADMIN
     // ==================================================
 
-    public KeyResponseDto getById(Id id) {
+    public AdminKeyDto getById(Id id) {
         if (id == null) {
             throw new IllegalArgumentException("id is required");
         }
@@ -46,7 +46,7 @@ public class GetKeysUseCase {
         return keyMapper.toResponseDto(key);
     }
 
-    public List<KeyResponseDto> getBySigner(String signerServiceId) {
+    public List<AdminKeyDto> getBySigner(String signerServiceId) {
         if (signerServiceId == null || signerServiceId.isBlank()) {
             throw new IllegalArgumentException("signerServiceId is required");
         }
@@ -57,7 +57,7 @@ public class GetKeysUseCase {
                 .toList();
     }
 
-    public List<KeyResponseDto> getBySignerAndVerifier(
+    public List<AdminKeyDto> getBySignerAndVerifier(
             String signerServiceId,
             String verifierServiceId
     ) {

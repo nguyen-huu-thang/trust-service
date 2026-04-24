@@ -58,8 +58,7 @@ public class EnsureCertificateLifecycleUseCaseImpl implements EnsureCertificateL
 
     private void processService(String serviceId, Instant now) {
 
-        List<Certificate> certs =
-                certificateRepository.findByServiceId(serviceId);
+        List<Certificate> certs = certificateRepository.findByServiceId(serviceId);
 
         Certificate latest = selectionService
                 .findLatestCertificate(certs)

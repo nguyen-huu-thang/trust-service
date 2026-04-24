@@ -1,59 +1,33 @@
-package vn.xime.trust.application.usecase.cert;
+package vn.xime.trust.infrastructure.security;
 
-import vn.xime.trust.domain.model.Id;
+import vn.xime.trust.application.port.out.TokenCodec;
+import vn.xime.trust.domain.model.TokenPayload;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
-import java.time.Instant;
 import java.util.Base64;
-import java.util.Objects;
 
-/**
- * TokenService
- *
- * JWT-like token:
- * BASE64URL(header).BASE64URL(payload).SIGNATURE
- *
- * - HMAC-SHA256
- * - self-contained
- * - dùng cho refresh cert
- */
-public class TokenService {
+public class HmacTokenCodec implements TokenCodec {
 
     private static final String HMAC_ALGO = "HmacSHA256";
 
     private final byte[] secret;
 
-    public TokenService(String secret) {
+    public HmacTokenCodec(String secret) {
         this.secret = secret.getBytes(StandardCharsets.UTF_8);
     }
 
     // =========================
-    // GENERATE
+    // ENCODE
     // =========================
+    @Override
+    public String encode(TokenPayload payload) {
 
-    public String generate(
-            String tokenId,
-            String serviceId,
-            String shardId,
-            Id certId,
-            Instant expiresAt
-    ) {
-        Objects.requireNonNull(tokenId);
-        Objects.requireNonNull(serviceId);
-        Objects.requireNonNull(shardId);
-        Objects.requireNonNull(certId);
-        Objects.requireNonNull(expiresAt);
-
-        long now = Instant.now().getEpochSecond();
-
-        // header
         String headerJson = """
                 {"alg":"HS256","typ":"RT"}
                 """;
 
-        // payload
         String payloadJson = """
                 {
                   "tid":"%s",
@@ -65,29 +39,28 @@ public class TokenService {
                   "ver":1
                 }
                 """.formatted(
-                tokenId,
-                serviceId,
-                shardId,
-                certId.toString(),
-                now,
-                expiresAt.getEpochSecond()
+                payload.getTokenId(),
+                payload.getServiceId(),
+                payload.getShardId(),
+                payload.getCertId(),
+                payload.getIssuedAt(),
+                payload.getExpiresAt()
         );
 
         String header = base64UrlEncode(headerJson.getBytes(StandardCharsets.UTF_8));
-        String payload = base64UrlEncode(payloadJson.getBytes(StandardCharsets.UTF_8));
+        String body = base64UrlEncode(payloadJson.getBytes(StandardCharsets.UTF_8));
 
-        String unsigned = header + "." + payload;
-
+        String unsigned = header + "." + body;
         String signature = sign(unsigned);
 
         return unsigned + "." + signature;
     }
 
     // =========================
-    // VERIFY + PARSE
+    // DECODE
     // =========================
-
-    public TokenPayload verifyAndParse(String token) {
+    @Override
+    public TokenPayload decode(String token) {
 
         String[] parts = token.split("\\.");
 
@@ -113,9 +86,9 @@ public class TokenService {
     }
 
     // =========================
-    // HASH (FOR DB)
+    // HASH
     // =========================
-
+    @Override
     public String hash(String token) {
         try {
             Mac mac = Mac.getInstance(HMAC_ALGO);
@@ -130,7 +103,6 @@ public class TokenService {
     // =========================
     // SIGN
     // =========================
-
     private String sign(String data) {
         try {
             Mac mac = Mac.getInstance(HMAC_ALGO);
@@ -143,13 +115,9 @@ public class TokenService {
     }
 
     // =========================
-    // PARSE PAYLOAD (simple)
+    // PARSE JSON (MVP)
     // =========================
-
     private TokenPayload parsePayload(String json) {
-        // ⚠️ MVP: parse thủ công (tránh thêm lib)
-        // production có thể dùng Jackson
-
         return new TokenPayload(
                 extract(json, "tid"),
                 extract(json, "sid"),
@@ -170,13 +138,11 @@ public class TokenService {
 
         start += pattern.length();
 
-        // string value
         if (json.charAt(start) == '"') {
             int end = json.indexOf('"', start + 1);
             return json.substring(start + 1, end);
         }
 
-        // number
         int end = start;
         while (end < json.length() && Character.isDigit(json.charAt(end))) {
             end++;
@@ -186,9 +152,8 @@ public class TokenService {
     }
 
     // =========================
-    // BASE64 URL
+    // BASE64
     // =========================
-
     private String base64UrlEncode(byte[] data) {
         return Base64.getUrlEncoder().withoutPadding().encodeToString(data);
     }
@@ -198,9 +163,8 @@ public class TokenService {
     }
 
     // =========================
-    // TIMING SAFE COMPARE
+    // TIMING SAFE
     // =========================
-
     private boolean constantTimeEquals(String a, String b) {
         if (a.length() != b.length()) return false;
 
@@ -209,22 +173,5 @@ public class TokenService {
             result |= a.charAt(i) ^ b.charAt(i);
         }
         return result == 0;
-    }
-
-    // =========================
-    // DTO
-    // =========================
-
-    public record TokenPayload(
-            String tokenId,
-            String serviceId,
-            String shardId,
-            String certId,
-            long issuedAt,
-            long expiresAt
-    ) {
-        public boolean isExpired(Instant now) {
-            return now.getEpochSecond() >= expiresAt;
-        }
     }
 }

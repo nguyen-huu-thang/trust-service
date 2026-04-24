@@ -16,7 +16,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Component
-public class IssueCertificateUseCase {
+public class GenerateCertificateUseCase {
 
     private final CertificateRepository certificateRepository;
     private final ServiceRepository serviceRepository;
@@ -28,7 +28,7 @@ public class IssueCertificateUseCase {
     private final CertificateLifecycleService lifecycleService;
     private final CertificateSelectionService selectionService;
 
-    public IssueCertificateUseCase(
+    public GenerateCertificateUseCase(
             CertificateRepository certificateRepository,
             ServiceRepository serviceRepository,
             KeyGenerator keyGenerator,
@@ -47,7 +47,7 @@ public class IssueCertificateUseCase {
     }
 
     @Transactional
-    public String execute(String serviceId) {
+    public Certificate generate(String serviceId) {
 
         Instant now = Instant.now();
 
@@ -67,15 +67,13 @@ public class IssueCertificateUseCase {
         // LOAD CERTS
         // =========================
 
-        List<Certificate> certs =
-                certificateRepository.findByServiceId(serviceId);
+        List<Certificate> certs = certificateRepository.findByServiceId(serviceId);
 
         // =========================
         // FIND LATEST CERT
         // =========================
 
-        Optional<Certificate> latestOpt =
-                selectionService.findLatestCertificate(certs);
+        Optional<Certificate> latestOpt = selectionService.findLatestCertificate(certs);
 
         if (latestOpt.isPresent()) {
 
@@ -83,7 +81,7 @@ public class IssueCertificateUseCase {
 
             // nếu chưa cần rotate → dùng lại cert cũ
             if (!lifecycleService.shouldIssueNewCert(latest, now)) {
-                return latest.getId().toString();
+                return latest;
             }
         }
 
@@ -96,8 +94,7 @@ public class IssueCertificateUseCase {
                 2048
         );
 
-        String encryptedPrivateKey =
-                encryptionService.encrypt(pair.getPrivateKey());
+        String encryptedPrivateKey = encryptionService.encrypt(pair.getPrivateKey());
 
         // =========================
         // CALCULATE EXPIRES
@@ -111,7 +108,7 @@ public class IssueCertificateUseCase {
 
         Certificate cert = certificateFactory.create(
                 serviceId,
-                pair.getPublicKey(),
+                pair.getPublicKey(), // sai nha
                 encryptedPrivateKey,
                 expiresAt
         );
@@ -122,6 +119,11 @@ public class IssueCertificateUseCase {
 
         certificateRepository.save(cert);
 
-        return cert.getId().toString();
+        return cert;
+    }
+
+    public String createByAdmin( String serviceId) {
+        return generate(serviceId).getId().toString();
+
     }
 }

@@ -8,27 +8,12 @@ import java.time.Instant;
 public class CertRefreshTokenFactory {
 
     public CertRefreshToken create(
-            String serviceId,
-            String tokenHash,
-            Id boundCertId,
-            Instant expiresAt,
-            String issuedBy
+            boolean isBootstrap,
+            Instant expiresAt
     ) {
         // =========================
         // VALIDATE
         // =========================
-
-        if (serviceId == null || serviceId.isBlank()) {
-            throw new IllegalArgumentException("serviceId is required");
-        }
-
-        if (tokenHash == null || tokenHash.isBlank()) {
-            throw new IllegalArgumentException("tokenHash is required");
-        }
-
-        if (boundCertId == null) {
-            throw new IllegalArgumentException("boundCertId is required");
-        }
 
         if (expiresAt == null) {
             throw new IllegalArgumentException("expiresAt is required");
@@ -48,13 +33,12 @@ public class CertRefreshTokenFactory {
 
         return new CertRefreshToken(
                 id,
-                serviceId,
-                tokenHash,
-                boundCertId,
+                null,
+                isBootstrap,
                 now,        // issuedAt
                 expiresAt,
                 null,       // usedAt
-                issuedBy
+                false       // isDeleted
         );
     }
 }

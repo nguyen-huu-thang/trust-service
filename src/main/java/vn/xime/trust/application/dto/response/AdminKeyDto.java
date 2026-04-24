@@ -7,7 +7,7 @@ import lombok.AllArgsConstructor;
 
 @Getter
 @AllArgsConstructor
-public class KeyResponseDto {
+public class AdminKeyDto {
     private final String id;
     private final String signerServiceId;
     private final String verifierServiceId;
