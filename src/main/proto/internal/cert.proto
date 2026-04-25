@@ -1,0 +1,138 @@
+syntax = "proto3";
+
+package trust.internal.cert;
+
+option java_multiple_files = true;
+option java_package = "vn.xime.trust.grpc.internal.cert";
+
+// =====================================================
+// SERVICE (ADMIN ONLY)
+// =====================================================
+
+service CertAdmin {
+
+  // =========================
+  // BOOTSTRAP
+  // =========================
+
+  rpc BootstrapCert (BootstrapCertRequest)
+      returns (BootstrapCertResponse);
+
+  // =========================
+  // CERTIFICATE (ADMIN)
+  // =========================
+
+  rpc GetCertificateById (GetCertificateByIdRequest)
+      returns (CertificateResponse);
+
+  rpc ListCertificatesByService (ListCertificatesByServiceRequest)
+      returns (ListCertificatesResponse);
+
+  rpc RevokeCertificate (RevokeCertificateRequest)
+      returns (RevokeCertificateResponse);
+
+  // =========================
+  // REFRESH TOKEN (ADMIN)
+  // =========================
+
+  rpc GetTokenById (GetTokenByIdRequest)
+      returns (TokenResponse);
+
+  rpc GetTokenByHash (GetTokenByHashRequest)
+      returns (TokenResponse);
+
+  rpc ListTokens (ListTokensRequest)
+      returns (ListTokensResponse);
+}
+
+// =====================================================
+// BOOTSTRAP
+// =====================================================
+
+message BootstrapCertRequest {
+  string service_id = 1;
+  string shard_id   = 2;
+}
+
+message BootstrapCertResponse {
+  CertificateResponse certificate = 1;
+  string private_key              = 2; // decrypted
+  string refresh_token            = 3; // raw token
+}
+
+// =====================================================
+// CERTIFICATE
+// =====================================================
+
+message GetCertificateByIdRequest {
+  string id = 1;
+}
+
+message ListCertificatesByServiceRequest {
+  string service_id = 1;
+}
+
+message CertificateResponse {
+  string id = 1;
+  string service_id = 2;
+
+  string public_cert = 3;
+
+  string status = 4;
+
+  int64 issued_at  = 5;
+  int64 expires_at = 6;
+
+  bool deleted = 7;
+}
+
+message ListCertificatesResponse {
+  repeated CertificateResponse certificates = 1;
+}
+
+// =====================================================
+// REVOKE
+// =====================================================
+
+message RevokeCertificateRequest {
+  string certificate_id = 1;
+  string reason        = 2;
+}
+
+message RevokeCertificateResponse {
+  string certificate_id = 1;
+}
+
+// =====================================================
+// TOKEN
+// =====================================================
+
+message GetTokenByIdRequest {
+  string id = 1;
+}
+
+message GetTokenByHashRequest {
+  string token_hash = 1;
+}
+
+message ListTokensRequest {
+}
+
+message TokenResponse {
+  string id = 1;
+
+  string token_hash = 2;
+
+  bool is_bootstrap = 3;
+
+  int64 issued_at  = 4;
+  int64 expires_at = 5;
+
+  int64 used_at = 6; // 0 nếu null
+
+  bool deleted = 7;
+}
+
+message ListTokensResponse {
+  repeated TokenResponse tokens = 1;
+}

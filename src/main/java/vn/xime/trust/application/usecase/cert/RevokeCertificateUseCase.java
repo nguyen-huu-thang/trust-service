@@ -4,9 +4,10 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import vn.xime.trust.domain.model.Certificate;
 import vn.xime.trust.domain.model.CertificateStatus;
-import vn.xime.trust.domain.model.Id;
 import vn.xime.trust.domain.repository.CertificateRepository;
 import vn.xime.trust.domain.service.CertificateValidationService;
+import vn.xime.trust.domain.service.IdService;
+import vn.xime.trust.application.dto.request.RevokeCertificateCommand;
 
 
 @Component
@@ -24,7 +25,7 @@ public class RevokeCertificateUseCase {
     }
 
     @Transactional
-    public String execute(Id certificateId, String reason) {
+    public String execute(RevokeCertificateCommand cmd) {
 
         // Instant now = Instant.now();
 
@@ -32,12 +33,12 @@ public class RevokeCertificateUseCase {
         // VALIDATION
         // =========================
 
-        if (certificateId == null) {
+        if (cmd.getCertId() == null) {
             throw new IllegalArgumentException("certificateId is required");
         }
 
         // reason optional (admin/audit), nhưng nếu có thì validate nhẹ
-        if (reason != null && reason.length() > 500) {
+        if (cmd.getReason() != null && cmd.getReason().length() > 500) {
             throw new IllegalArgumentException("reason too long");
         }
 
@@ -45,7 +46,7 @@ public class RevokeCertificateUseCase {
         // LOAD
         // =========================
 
-        Certificate cert = certificateRepository.findById(certificateId)
+        Certificate cert = certificateRepository.findById(IdService.fromString(cmd.getCertId()))
                 .orElseThrow(() ->
                         new IllegalStateException("Certificate not found")
                 );

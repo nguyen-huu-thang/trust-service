@@ -6,7 +6,7 @@ import vn.xime.trust.grpc.internal.key.*;
 import vn.xime.trust.domain.service.IdService;
 import vn.xime.trust.application.usecase.key.*;
 import vn.xime.trust.application.dto.request.*;
-import vn.xime.trust.application.dto.response.KeyResponseDto;
+import vn.xime.trust.application.dto.response.AdminKeyDto;
 import vn.xime.trust.api.grpc.mapper.KeyGrpcMapper;
 
 import java.time.Instant;
@@ -50,9 +50,9 @@ public class KeyAdminGrpcService extends KeyAdminGrpc.KeyAdminImplBase {
                 request.getActivateAt() > 0 ? Instant.ofEpochMilli(request.getActivateAt()) : null
             );
 
-            String id = generateKeyUseCase.execute(cmd);
+            String id = generateKeyUseCase.createByAdmin(cmd);
 
-            KeyResponseDto dto = getKeysUseCase.getById(IdService.fromString(id));
+            AdminKeyDto dto = getKeysUseCase.getById(IdService.fromString(id));
 
             responseObserver.onNext(
                     GenerateKeyResponse.newBuilder()
@@ -77,7 +77,7 @@ public class KeyAdminGrpcService extends KeyAdminGrpc.KeyAdminImplBase {
     ) {
         try {
 
-            KeyResponseDto dto =
+            AdminKeyDto dto =
                     getKeysUseCase.getById(IdService.fromString(request.getId()));
 
             responseObserver.onNext(
@@ -103,7 +103,7 @@ public class KeyAdminGrpcService extends KeyAdminGrpc.KeyAdminImplBase {
     ) {
         try {
 
-            List<KeyResponseDto> list =
+            List<AdminKeyDto> list =
                     getKeysUseCase.getBySigner(request.getSignerServiceId());
 
             GetKeysBySignerResponse.Builder builder =
@@ -130,7 +130,7 @@ public class KeyAdminGrpcService extends KeyAdminGrpc.KeyAdminImplBase {
     ) {
         try {
 
-            List<KeyResponseDto> list =
+            List<AdminKeyDto> list =
                     getKeysUseCase.getBySignerAndVerifier(
                             request.getSignerServiceId(),
                             request.getVerifierServiceId()

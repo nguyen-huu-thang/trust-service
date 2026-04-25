@@ -10,6 +10,7 @@ import vn.xime.trust.domain.repository.ServiceRepository;
 import vn.xime.trust.domain.repository.ShardRepository;
 import vn.xime.trust.domain.repository.CertificateRepository;
 import vn.xime.trust.application.mapper.BootstrapMapper;
+import vn.xime.trust.application.dto.request.BootstrapCommand;
 import vn.xime.trust.application.dto.response.BootstrapDto;
 import vn.xime.trust.application.dto.response.TokenDto;
 import vn.xime.trust.application.port.out.KeyEncryptionService;
@@ -32,16 +33,16 @@ public class BootstrapCertUseCase {
     // bước 4: tạo mới 1 cert bootstrap có thời hạn ngắn.
     // bước 5: tạo mới 1 cert refresh token bootstrap
     // bước 6: trả về cert + token cho client
-    public BootstrapDto execute(String serviceId, String shardId) {
+    public BootstrapDto execute(BootstrapCommand cmd) {
 
-        Service service = serviceRepository.findById(serviceId)
+        Service service = serviceRepository.findById(cmd.getServiceId())
                 .orElseThrow(() -> new RuntimeException("Service not found"));
 
         if (!service.isActive()) {
             throw new RuntimeException("Service is not active");
         }
 
-        Shard shard = shardRepository.findById(shardId)
+        Shard shard = shardRepository.findById(cmd.getShardId())
                 .orElseThrow(() ->
                         new IllegalStateException("No shard for token")
                 );
@@ -54,7 +55,7 @@ public class BootstrapCertUseCase {
             throw new IllegalStateException("Shard does not belong to service");
         }
 
-        List<Certificate> certs = certificateRepository.findByServiceId(serviceId);
+        List<Certificate> certs = certificateRepository.findByServiceId(cmd.getServiceId());
 
         if (certs != null && !certs.isEmpty()) {
             for (Certificate cert : certs) {
@@ -63,11 +64,11 @@ public class BootstrapCertUseCase {
             }
         }
 
-        Certificate newCert = generateCert.serviceBootstrap(serviceId);
+        Certificate newCert = generateCert.serviceBootstrap(cmd.getServiceId());
 
         TokenDto newToken = generateRefreshToken.execute(
-                serviceId,
-                shardId,
+                cmd.getServiceId(),
+                cmd.getShardId(),
                 newCert
         );
 

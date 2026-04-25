@@ -6,6 +6,7 @@ import vn.xime.trust.domain.model.Id;
 import vn.xime.trust.domain.repository.CertificateRepository;
 import vn.xime.trust.domain.service.CertificateSelectionService;
 import vn.xime.trust.domain.service.CertificateValidationService;
+import vn.xime.trust.domain.service.IdService;
 import vn.xime.trust.application.dto.response.AdminCertDto;
 import vn.xime.trust.application.dto.response.ServiceCertDto;
 import vn.xime.trust.application.mapper.CertificateMapper;
@@ -42,7 +43,10 @@ public class GetCertificatesUseCase {
     // GET BY ID (ADMIN)
     // ==================================================
 
-    public AdminCertDto getById(Id id) {
+    public AdminCertDto getById(String certId) {
+
+        Id id = IdService.fromString(certId);
+
         if (id == null) {
             throw new IllegalArgumentException("id is required");
         }
