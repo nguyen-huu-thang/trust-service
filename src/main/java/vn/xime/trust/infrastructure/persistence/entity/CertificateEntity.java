@@ -56,10 +56,17 @@ public class CertificateEntity {
     private Instant expiresAt;
 
     /**
-     * ACTIVE / EXPIRED / REVOKED (future)
+     * ACTIVE / EXPIRED / REVOKED
      */
     @Column(name = "status", nullable = false, length = 20)
     private String status;
+
+    // =========================
+    // Soft delete
+    // =========================
+
+    @Column(name = "is_deleted", nullable = false)
+    private boolean deleted;
 
     // =========================
     // Getter / Setter
@@ -119,5 +126,13 @@ public class CertificateEntity {
 
     public void setStatus(String status) {
         this.status = status;
+    }
+
+    public boolean isDeleted() {
+        return deleted;
+    }
+
+    public void setDeleted(boolean deleted) {
+        this.deleted = deleted;
     }
 }

@@ -15,14 +15,14 @@ import java.util.List;
 public class CleanupExpiredKeysUseCaseImpl implements CleanupExpiredKeysUseCase {
 
     private final KeyRepository keyRepository;
-    private final KeyLifecycleDomainService keyLifecycleDomainService;
+    private final KeyLifecycleDomainService lifecycle;
 
     public CleanupExpiredKeysUseCaseImpl(
             KeyRepository keyRepository,
-            KeyLifecycleDomainService keyLifecycleDomainService
+            KeyLifecycleDomainService lifecycle
     ) {
         this.keyRepository = keyRepository;
-        this.keyLifecycleDomainService = keyLifecycleDomainService;
+        this.lifecycle = lifecycle;
     }
 
     @Override
@@ -32,45 +32,36 @@ public class CleanupExpiredKeysUseCaseImpl implements CleanupExpiredKeysUseCase 
         Instant now = Instant.now();
 
         // =========================
-        // LOAD ALL NON-DELETED
+        // 1. SOFT DELETE PHASE
         // =========================
 
-        List<Key> keys = keyRepository.findAllNotDeleted();
+        List<Key> activeKeys = keyRepository.findAllNotDeleted();
 
         List<Key> toSoftDelete = new ArrayList<>();
-        List<Key> toHardDelete = new ArrayList<>();
 
-        for (Key key : keys) {
-
-            // =========================
-            // HARD DELETE (ưu tiên)
-            // =========================
-
-            if (keyLifecycleDomainService.shouldBeHardDeleted(key, now)) {
-                toHardDelete.add(key);
-                continue;
-            }
-
-            // =========================
-            // SOFT DELETE
-            // =========================
-
-            if (keyLifecycleDomainService.shouldBeDeleted(key, now)) {
-                toSoftDelete.add(key);
+        for (Key key : activeKeys) {
+            if (lifecycle.shouldBeDeleted(key, now)) {
+                toSoftDelete.add(key.markDeleted());
             }
         }
-
-        // =========================
-        // APPLY SOFT DELETE
-        // =========================
 
         for (Key key : toSoftDelete) {
-            keyRepository.save(key.markDeleted());
+            keyRepository.save(key);
         }
 
         // =========================
-        // APPLY HARD DELETE
+        // 2. HARD DELETE PHASE
         // =========================
+
+        List<Key> deletedKeys = keyRepository.findAllDeleted();
+
+        List<Key> toHardDelete = new ArrayList<>();
+
+        for (Key key : deletedKeys) {
+            if (lifecycle.shouldBeHardDeleted(key, now)) {
+                toHardDelete.add(key);
+            }
+        }
 
         if (!toHardDelete.isEmpty()) {
             keyRepository.deleteAllByIds(

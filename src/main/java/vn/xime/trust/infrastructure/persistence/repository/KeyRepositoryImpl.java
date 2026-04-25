@@ -31,6 +31,10 @@ public class KeyRepositoryImpl implements KeyRepository {
                 .map(KeyMapper::toDomain);
     }
 
+    // =========================
+    // SIGNING
+    // =========================
+
     @Override
     public List<Key> findBySignerServiceId(String signerServiceId) {
         return repo.findBySignerServiceId(signerServiceId)
@@ -55,6 +59,10 @@ public class KeyRepositoryImpl implements KeyRepository {
                 .toList();
     }
 
+    // =========================
+    // TRUST PAIR
+    // =========================
+
     @Override
     public List<Key> findBySignerAndVerifier(String signerServiceId, String verifierServiceId) {
         return repo.findBySignerServiceIdAndVerifierServiceId(
@@ -66,11 +74,52 @@ public class KeyRepositoryImpl implements KeyRepository {
                 .toList();
     }
 
+    // =========================
+    // CLEANUP
+    // =========================
+
     @Override
     public List<Key> findAllNotDeleted() {
         return repo.findByIsDeletedFalse()
                 .stream()
                 .map(KeyMapper::toDomain)
                 .toList();
+    }
+
+    @Override
+    public List<Key> findAllDeleted() {
+        return repo.findByIsDeletedTrue()
+                .stream()
+                .map(KeyMapper::toDomain)
+                .toList();
+    }
+
+    // =========================
+    // DELETE
+    // =========================
+
+    @Override
+    public boolean deleteById(Id id) {
+        byte[] rawId = id.toBytes();
+
+        if (!repo.existsById(rawId)) {
+            return false;
+        }
+
+        repo.deleteById(rawId);
+        return true;
+    }
+
+    @Override
+    public void deleteAllByIds(List<Id> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return;
+        }
+
+        List<byte[]> rawIds = ids.stream()
+                .map(Id::toBytes)
+                .toList();
+
+        repo.deleteByIdIn(rawIds); // 🔥 batch delete
     }
 }

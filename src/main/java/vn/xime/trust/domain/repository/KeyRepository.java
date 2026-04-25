@@ -27,6 +27,8 @@ public interface KeyRepository {
     // Cleanup Expired Keys
     List<Key> findAllNotDeleted();
 
+    List<Key> findAllDeleted();
+
     boolean deleteById(Id id);
 
     void deleteAllByIds(List<Id> ids);

@@ -32,9 +32,13 @@ public class CertificateRepositoryImpl implements CertificateRepository {
                 .map(CertificateMapper::toDomain);
     }
 
+    // =========================
+    // SERVICE
+    // =========================
+
     @Override
     public List<Certificate> findByServiceId(String serviceId) {
-        return repo.findByServiceIdOrderByIssuedAtDesc(serviceId)
+        return repo.findByServiceIdAndDeletedFalseOrderByIssuedAtDesc(serviceId)
                 .stream()
                 .map(CertificateMapper::toDomain)
                 .toList();
@@ -42,7 +46,7 @@ public class CertificateRepositoryImpl implements CertificateRepository {
 
     @Override
     public List<Certificate> findValidCertificates(String serviceId, Instant now) {
-        return repo.findByServiceIdAndStatusAndExpiresAtAfter(
+        return repo.findByServiceIdAndDeletedFalseAndStatusAndExpiresAtAfter(
                         serviceId,
                         "ACTIVE",
                         now
@@ -50,5 +54,54 @@ public class CertificateRepositoryImpl implements CertificateRepository {
                 .stream()
                 .map(CertificateMapper::toDomain)
                 .toList();
+    }
+
+    // =========================
+    // CLEANUP
+    // =========================
+
+    @Override
+    public List<Certificate> findAllNotDeleted() {
+        return repo.findByDeletedFalse()
+                .stream()
+                .map(CertificateMapper::toDomain)
+                .toList();
+    }
+
+    @Override
+    public List<Certificate> findAllDeleted() {
+        return repo.findByDeletedTrue()
+                .stream()
+                .map(CertificateMapper::toDomain)
+                .toList();
+    }
+
+    // =========================
+    // HARD DELETE
+    // =========================
+
+    @Override
+    public boolean deleteById(Id id) {
+        byte[] rawId = id.toBytes();
+
+        if (!repo.existsById(rawId)) {
+            return false;
+        }
+
+        repo.deleteById(rawId);
+        return true;
+    }
+
+    @Override
+    public void deleteAllByIds(List<Id> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return;
+        }
+
+        List<byte[]> rawIds = ids.stream()
+                .map(Id::toBytes)
+                .toList();
+
+        repo.deleteByIdIn(rawIds); // 🔥 batch hard delete
     }
 }

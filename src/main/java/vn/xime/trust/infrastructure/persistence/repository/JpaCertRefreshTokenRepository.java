@@ -6,27 +6,45 @@ import org.springframework.data.repository.query.Param;
 import vn.xime.trust.infrastructure.persistence.entity.CertRefreshTokenEntity;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 
 public interface JpaCertRefreshTokenRepository extends JpaRepository<CertRefreshTokenEntity, byte[]> {
 
-    Optional<CertRefreshTokenEntity> findByTokenHash(String tokenHash);
+    // =========================
+    // ID (KHÔNG filter deleted)
+    // =========================
+
+    @Query("SELECT t FROM CertRefreshTokenEntity t WHERE t.id = :id")
+    Optional<CertRefreshTokenEntity> findByIdBytes(@Param("id") byte[] id);
+
+    // =========================
+    // SECURITY
+    // =========================
+
+    Optional<CertRefreshTokenEntity> findByTokenHashAndDeletedFalse(String tokenHash);
 
     boolean existsByTokenHash(String tokenHash);
 
-    void deleteByExpiresAtBefore(Instant now);
-
-    // 🔥 CORE SECURITY QUERY
     @Query("""
         SELECT t FROM CertRefreshTokenEntity t
         WHERE t.tokenHash = :tokenHash
+          AND t.deleted = false
           AND t.usedAt IS NULL
           AND t.expiresAt > :now
-          AND t.boundCertId = :boundCertId
     """)
-    Optional<CertRefreshTokenEntity> findValidToken(
+    Optional<CertRefreshTokenEntity> findUsableToken(
             @Param("tokenHash") String tokenHash,
-            @Param("boundCertId") byte[] boundCertId,
             @Param("now") Instant now
     );
+
+    // =========================
+    // CLEANUP
+    // =========================
+
+    List<CertRefreshTokenEntity> findByDeletedFalse();
+
+    List<CertRefreshTokenEntity> findByDeletedTrue();
+
+    void deleteByIdIn(List<byte[]> ids);
 }

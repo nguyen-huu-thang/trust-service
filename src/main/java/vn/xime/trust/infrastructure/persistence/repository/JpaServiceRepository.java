@@ -21,4 +21,6 @@ public interface JpaServiceRepository extends JpaRepository<ServiceEntity, Strin
     Page<ServiceEntity> findByTenant(String tenant, Pageable pageable);
 
     Page<ServiceEntity> findByTenantIsNull(Pageable pageable);
+
+    List<ServiceEntity> findByStatus(String status);
 }

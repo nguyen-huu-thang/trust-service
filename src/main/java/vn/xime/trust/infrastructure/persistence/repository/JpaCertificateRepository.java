@@ -11,17 +11,33 @@ import java.util.Optional;
 
 public interface JpaCertificateRepository extends JpaRepository<CertificateEntity, byte[]> {
 
-    // ❗ byte[] cần custom query
     @Query("SELECT c FROM CertificateEntity c WHERE c.id = :id")
     Optional<CertificateEntity> findByIdBytes(@Param("id") byte[] id);
 
-    List<CertificateEntity> findByServiceIdOrderByIssuedAtDesc(String serviceId);
+    // =========================
+    // Service queries
+    // =========================
 
-    List<CertificateEntity> findByServiceIdAndExpiresAtAfter(String serviceId, Instant now);
+    List<CertificateEntity> findByServiceIdAndDeletedFalseOrderByIssuedAtDesc(String serviceId);
 
-    List<CertificateEntity> findByServiceIdAndStatusAndExpiresAtAfter(
+    List<CertificateEntity> findByServiceIdAndDeletedFalseAndExpiresAtAfter(
+            String serviceId,
+            Instant now
+    );
+
+    List<CertificateEntity> findByServiceIdAndDeletedFalseAndStatusAndExpiresAtAfter(
             String serviceId,
             String status,
             Instant now
     );
+
+    // =========================
+    // Cleanup
+    // =========================
+
+    List<CertificateEntity> findByDeletedFalse();
+
+    List<CertificateEntity> findByDeletedTrue();
+
+    void deleteByIdIn(List<byte[]> ids); // 🔥 batch hard delete
 }

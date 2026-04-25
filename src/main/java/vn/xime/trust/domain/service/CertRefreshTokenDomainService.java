@@ -1,22 +1,25 @@
 package vn.xime.trust.domain.service;
 
-import java.nio.charset.StandardCharsets;
-import java.time.Instant;
-import java.util.Objects;
-
 import vn.xime.trust.domain.model.CertRefreshToken;
-import vn.xime.trust.domain.model.Id;
 import vn.xime.trust.domain.model.Certificate;
 
+import java.nio.charset.StandardCharsets;
+import java.time.Instant;
+
 public class CertRefreshTokenDomainService {
+
+    // =========================
+    // CONFIG
+    // =========================
+
+    // 🔥 7 YEARS retention
+    private static final long HARD_DELETE_RETENTION_SECONDS =
+            60L * 60 * 24 * 365 * 7;
 
     // =========================
     // VALIDATE
     // =========================
 
-    /**
-     * validate token trước khi rotate cert
-     */
     public void validateToken(String a, String b) {
         if (a == null || b == null) {
             throw new IllegalStateException("Invalid token");
@@ -48,6 +51,38 @@ public class CertRefreshTokenDomainService {
             result |= x ^ y;
         }
 
-        return result != 0;
+        return result == 0;
+    }
+
+    // =========================
+    // SOFT DELETE
+    // =========================
+
+    public boolean shouldBeDeleted(CertRefreshToken token, Instant now) {
+        return token.isExpired(now);
+    }
+
+    // =========================
+    // HARD DELETE
+    // =========================
+
+    public boolean shouldBeHardDeleted(CertRefreshToken token, Instant now) {
+
+        // chỉ xét token đã expired
+        if (!token.isExpired(now)) {
+            return false;
+        }
+
+        return token.getExpiresAt()
+                .plusSeconds(HARD_DELETE_RETENTION_SECONDS)
+                .isBefore(now);
+    }
+
+    // =========================
+    // VALID STATE
+    // =========================
+
+    public boolean isUsable(CertRefreshToken token, Instant now) {
+        return token.isValid(now) && token.getUsedAt() == null;
     }
 }

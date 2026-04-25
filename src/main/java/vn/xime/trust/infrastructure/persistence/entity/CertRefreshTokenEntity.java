@@ -15,8 +15,8 @@ import java.time.Instant;
         },
         indexes = {
                 @Index(name = "idx_refresh_token_hash", columnList = "token_hash"),
-                @Index(name = "idx_refresh_service_used", columnList = "service_id,used_at"),
-                @Index(name = "idx_refresh_bound_cert", columnList = "bound_cert_id")
+                @Index(name = "idx_refresh_expires", columnList = "expires_at"),
+                @Index(name = "idx_refresh_deleted", columnList = "is_deleted")
         }
 )
 public class CertRefreshTokenEntity {
@@ -30,22 +30,21 @@ public class CertRefreshTokenEntity {
     private byte[] id;
 
     // =========================
-    // Ownership
-    // =========================
-
-    @Column(name = "service_id", nullable = false, length = 20)
-    private String serviceId;
-
-    // =========================
-    // Token (CRITICAL)
+    // Token
     // =========================
 
     @Column(name = "token_hash", nullable = false, columnDefinition = "TEXT")
     private String tokenHash;
 
-    // 🔥 bind trực tiếp với certificate.id
-    @Column(name = "bound_cert_id", nullable = false, columnDefinition = "BYTEA")
-    private byte[] boundCertId;
+    // =========================
+    // Flags
+    // =========================
+
+    @Column(name = "is_bootstrap", nullable = false)
+    private boolean isBootstrap;
+
+    @Column(name = "is_deleted", nullable = false)
+    private boolean isDeleted;
 
     // =========================
     // Lifecycle
@@ -58,14 +57,7 @@ public class CertRefreshTokenEntity {
     private Instant expiresAt;
 
     @Column(name = "used_at")
-    private Instant usedAt;
-
-    // =========================
-    // Metadata
-    // =========================
-
-    @Column(name = "issued_by", length = 100)
-    private String issuedBy;
+    private Instant usedAt; // nullable
 
     // =========================
     // Getter / Setter
@@ -79,14 +71,6 @@ public class CertRefreshTokenEntity {
         this.id = id;
     }
 
-    public String getServiceId() {
-        return serviceId;
-    }
-
-    public void setServiceId(String serviceId) {
-        this.serviceId = serviceId;
-    }
-
     public String getTokenHash() {
         return tokenHash;
     }
@@ -95,12 +79,20 @@ public class CertRefreshTokenEntity {
         this.tokenHash = tokenHash;
     }
 
-    public byte[] getBoundCertId() {
-        return boundCertId;
+    public boolean isBootstrap() {
+        return isBootstrap;
     }
 
-    public void setBoundCertId(byte[] boundCertId) {
-        this.boundCertId = boundCertId;
+    public void setBootstrap(boolean bootstrap) {
+        isBootstrap = bootstrap;
+    }
+
+    public boolean isDeleted() {
+        return isDeleted;
+    }
+
+    public void setDeleted(boolean deleted) {
+        isDeleted = deleted;
     }
 
     public Instant getIssuedAt() {
@@ -125,13 +117,5 @@ public class CertRefreshTokenEntity {
 
     public void setUsedAt(Instant usedAt) {
         this.usedAt = usedAt;
-    }
-
-    public String getIssuedBy() {
-        return issuedBy;
-    }
-
-    public void setIssuedBy(String issuedBy) {
-        this.issuedBy = issuedBy;
     }
 }

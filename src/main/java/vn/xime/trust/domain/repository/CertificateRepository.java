@@ -19,6 +19,8 @@ public interface CertificateRepository {
 
     List<Certificate> findAllNotDeleted();
 
+    List<Certificate> findAllDeleted();
+
     boolean deleteById(Id id);
 
     void deleteAllByIds(List<Id> ids);

@@ -34,7 +34,7 @@ public class CertRefreshToken {
         this.isBootstrap = isBootstrap;
         this.issuedAt = Objects.requireNonNull(issuedAt);
         this.expiresAt = Objects.requireNonNull(expiresAt);
-        this.usedAt = Objects.requireNonNull(usedAt);
+        this.usedAt = usedAt;
         this.isDeleted = isDeleted;
     }
 
@@ -89,9 +89,25 @@ public class CertRefreshToken {
                 issuedAt,
                 expiresAt,
                 now,
-                isDeleted
+                true
         );
     }
+
+    public CertRefreshToken markDeleted() {
+    if (this.isDeleted) {
+        return this;
+    }
+
+    return new CertRefreshToken(
+            this.id,
+            tokenHash,
+            isBootstrap,
+            issuedAt,
+            expiresAt,
+            usedAt,
+            true
+    );
+}
 
     // =========================
     // GETTERS

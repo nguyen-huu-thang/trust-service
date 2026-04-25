@@ -19,21 +19,20 @@ public class CertRefreshTokenMapper {
         }
 
         requireNonNull(e.getId(), "id");
-        requireNonNull(e.getServiceId(), "serviceId");
         requireNonNull(e.getTokenHash(), "tokenHash");
-        requireNonNull(e.getBoundCertId(), "boundCertId");
         requireNonNull(e.getIssuedAt(), "issuedAt");
         requireNonNull(e.getExpiresAt(), "expiresAt");
+        // usedAt có thể null → không check
+        // isDeleted luôn có default → không cần check
 
         return new CertRefreshToken(
                 toId(e.getId()),
-                e.getServiceId(),
                 e.getTokenHash(),
-                toId(e.getBoundCertId()),
+                e.isBootstrap(),
                 e.getIssuedAt(),
                 e.getExpiresAt(),
-                e.getUsedAt(),
-                e.getIssuedBy()
+                e.getUsedAt(),   // nullable OK
+                e.isDeleted()
         );
     }
 
@@ -50,13 +49,12 @@ public class CertRefreshTokenMapper {
         CertRefreshTokenEntity e = new CertRefreshTokenEntity();
 
         e.setId(toBytes(d.getId()));
-        e.setServiceId(d.getServiceId());
         e.setTokenHash(d.getTokenHash());
-        e.setBoundCertId(toBytes(d.getBoundCertId()));
+        e.setBootstrap(d.isBootstrap());
         e.setIssuedAt(d.getIssuedAt());
         e.setExpiresAt(d.getExpiresAt());
-        e.setUsedAt(d.getUsedAt());
-        e.setIssuedBy(d.getIssuedBy());
+        e.setUsedAt(d.getUsedAt()); // nullable
+        e.setDeleted(d.isDeleted());
 
         return e;
     }

@@ -227,6 +227,10 @@ issued_at TIMESTAMP NOT NULL
 expires_at TIMESTAMP NOT NULL
 
 status VARCHAR(20) NOT NULL
+used_at TIMESTAMP NOT NULL
+
+is_deleted BOOLEAN DEFAULT FALSE
+
 
 -- constraints
 FOREIGN KEY (service_id)
@@ -252,7 +256,7 @@ CERT REFRESH TOKENS
 
 id BYTEA PRIMARY KEY   -- 🔥 KSUID
 
-token_encrypted TEXT NOT NULL
+token_hash TEXT NOT NULL
 
 is_bootstrap BOOLEAN DEFAULT FALSE
 

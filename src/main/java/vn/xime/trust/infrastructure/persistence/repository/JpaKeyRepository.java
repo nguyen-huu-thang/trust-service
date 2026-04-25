@@ -10,22 +10,36 @@ import java.util.Optional;
 
 public interface JpaKeyRepository extends JpaRepository<KeyEntity, byte[]> {
 
-    // ❗ byte[] không dùng derived query được ổn định → dùng query
     @Query("SELECT k FROM KeyEntity k WHERE k.id = :id")
     Optional<KeyEntity> findByIdBytes(@Param("id") byte[] id);
 
-    // 🔥 signing
+    // =========================
+    // SIGNING
+    // =========================
+
     List<KeyEntity> findBySignerServiceId(String signerServiceId);
 
     List<KeyEntity> findBySignerServiceIdAndIsDeletedFalse(String signerServiceId);
 
     List<KeyEntity> findByVerifierServiceIdAndIsDeletedFalse(String verifierServiceId);
 
-    // 🔥 trust pair
+    // =========================
+    // TRUST PAIR
+    // =========================
+
     List<KeyEntity> findBySignerServiceIdAndVerifierServiceId(
             String signerServiceId,
             String verifierServiceId
     );
 
+    // =========================
+    // CLEANUP
+    // =========================
+
     List<KeyEntity> findByIsDeletedFalse();
+
+    List<KeyEntity> findByIsDeletedTrue();
+
+    // 🔥 batch delete
+    void deleteByIdIn(List<byte[]> ids);
 }

@@ -71,4 +71,16 @@ public class ServiceRepositoryImpl implements ServiceRepository {
                 .map(ServiceMapper::toDomain)
                 .getContent();
     }
+
+    // =========================
+    // ACTIVE
+    // =========================
+
+    @Override
+    public List<Service> findAllActiveServices() {
+        return repo.findByStatus("ACTIVE")
+                .stream()
+                .map(ServiceMapper::toDomain)
+                .toList();
+    }
 }

@@ -2,14 +2,14 @@ package vn.xime.trust.api.grpc.mapper;
 
 import org.springframework.stereotype.Component;
 import io.grpc.Status;
-import vn.xime.trust.application.dto.response.KeyResponseDto;
+import vn.xime.trust.application.dto.response.AdminKeyDto;
 import vn.xime.trust.grpc.internal.key.KeyDto;
 
 
 @Component
 public class KeyGrpcMapper {
 
-    public KeyDto toProto(KeyResponseDto dto) {
+    public KeyDto toProto(AdminKeyDto dto) {
         return KeyDto.newBuilder()
                 .setId(dto.getId())
                 .setSignerServiceId(dto.getSignerServiceId())

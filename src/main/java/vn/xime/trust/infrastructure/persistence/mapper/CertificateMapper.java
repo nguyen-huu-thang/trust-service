@@ -34,7 +34,8 @@ public class CertificateMapper {
                 e.getPrivateKeyEncrypted(),
                 e.getIssuedAt(),
                 e.getExpiresAt(),
-                mapStatus(e.getStatus())
+                mapStatus(e.getStatus()),
+                e.isDeleted() // ✅ NEW
         );
     }
 
@@ -57,6 +58,7 @@ public class CertificateMapper {
         e.setIssuedAt(d.getIssuedAt());
         e.setExpiresAt(d.getExpiresAt());
         e.setStatus(d.getStatus().name());
+        e.setDeleted(d.isDeleted()); // ✅ NEW
 
         return e;
     }

@@ -7,6 +7,7 @@ import vn.xime.trust.domain.repository.CertRefreshTokenRepository;
 import vn.xime.trust.infrastructure.persistence.mapper.CertRefreshTokenMapper;
 
 import java.time.Instant;
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -26,22 +27,57 @@ public class CertRefreshTokenRepositoryImpl implements CertRefreshTokenRepositor
     }
 
     @Override
-    public Optional<CertRefreshToken> findByTokenHash(String tokenHash) {
-        return repo.findByTokenHash(tokenHash)
+    public Optional<CertRefreshToken> findById(Id id) {
+        return repo.findByIdBytes(id.toBytes())
                 .map(CertRefreshTokenMapper::toDomain);
     }
 
     @Override
-    public Optional<CertRefreshToken> findValidToken(
-            String tokenHash,
-            Id boundCertId,
-            Instant now
-    ) {
-        return repo.findValidToken(
-                        tokenHash,
-                        boundCertId.toBytes(),
-                        now
-                )
+    public Optional<CertRefreshToken> findByTokenHash(String tokenHash) {
+        return repo.findByTokenHashAndDeletedFalse(tokenHash)
                 .map(CertRefreshTokenMapper::toDomain);
+    }
+
+    @Override
+    public Optional<CertRefreshToken> findUsableToken(String tokenHash, Instant now) {
+        return repo.findUsableToken(tokenHash, now)
+                .map(CertRefreshTokenMapper::toDomain);
+    }
+
+    // =========================
+    // CLEANUP
+    // =========================
+
+    @Override
+    public List<CertRefreshToken> findAllNotDeleted() {
+        return repo.findByDeletedFalse()
+                .stream()
+                .map(CertRefreshTokenMapper::toDomain)
+                .toList();
+    }
+
+    @Override
+    public List<CertRefreshToken> findAllDeleted() {
+        return repo.findByDeletedTrue()
+                .stream()
+                .map(CertRefreshTokenMapper::toDomain)
+                .toList();
+    }
+
+    // =========================
+    // HARD DELETE
+    // =========================
+
+    @Override
+    public void deleteAllByIds(List<Id> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return;
+        }
+
+        List<byte[]> rawIds = ids.stream()
+                .map(Id::toBytes)
+                .toList();
+
+        repo.deleteByIdIn(rawIds);
     }
 }
