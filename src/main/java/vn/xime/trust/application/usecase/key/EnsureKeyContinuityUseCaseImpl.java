@@ -153,6 +153,6 @@ public class EnsureKeyContinuityUseCaseImpl implements EnsureKeyContinuityUseCas
                 activateAt
         );
 
-        generateKeyUseCase.execute(cmd);
+        generateKeyUseCase.generate(cmd);
     }
 }

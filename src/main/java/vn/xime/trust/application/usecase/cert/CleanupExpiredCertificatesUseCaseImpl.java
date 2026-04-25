@@ -90,3 +90,5 @@ public class CleanupExpiredCertificatesUseCaseImpl implements CleanupExpiredCert
         }
     }
 }
+
+// sau thêm logic xóa cho bảng cert_refresh_tokens tương tự như vậy. giờ đang lười.

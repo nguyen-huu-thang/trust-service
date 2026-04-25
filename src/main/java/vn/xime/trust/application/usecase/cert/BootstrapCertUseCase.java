@@ -4,8 +4,10 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 
 import vn.xime.trust.domain.model.Service;
+import vn.xime.trust.domain.model.Shard;
 import vn.xime.trust.domain.model.Certificate;
 import vn.xime.trust.domain.repository.ServiceRepository;
+import vn.xime.trust.domain.repository.ShardRepository;
 import vn.xime.trust.domain.repository.CertificateRepository;
 import vn.xime.trust.application.mapper.BootstrapMapper;
 import vn.xime.trust.application.dto.response.BootstrapDto;
@@ -17,6 +19,7 @@ import vn.xime.trust.application.port.out.KeyEncryptionService;
 public class BootstrapCertUseCase {
 
     private final ServiceRepository serviceRepository;
+    private final ShardRepository shardRepository;
     private final CertificateRepository certificateRepository;
     private final GenerateCertificateUseCase generateCert;
     private final GenerateRefreshTokenUseCase generateRefreshToken;
@@ -36,6 +39,19 @@ public class BootstrapCertUseCase {
 
         if (!service.isActive()) {
             throw new RuntimeException("Service is not active");
+        }
+
+        Shard shard = shardRepository.findById(shardId)
+                .orElseThrow(() ->
+                        new IllegalStateException("No shard for token")
+                );
+        
+        if (!shard.isActive()) {
+            throw new IllegalStateException("Shard is not active");
+        }
+
+        if (shard.getServiceId() != service.getId()) {
+            throw new IllegalStateException("Shard does not belong to service");
         }
 
         List<Certificate> certs = certificateRepository.findByServiceId(serviceId);
