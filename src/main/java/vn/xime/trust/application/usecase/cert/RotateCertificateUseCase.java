@@ -3,6 +3,8 @@ package vn.xime.trust.application.usecase.cert;
 import java.time.Instant;
 import java.util.List;
 import java.util.Objects;
+import org.springframework.stereotype.Component;
+
 
 import vn.xime.trust.domain.model.CertRefreshToken;
 import vn.xime.trust.domain.model.Certificate;
@@ -25,6 +27,7 @@ import vn.xime.trust.application.mapper.RotateCertMapper;
 
 
 
+@Component
 public class RotateCertificateUseCase {
 
     private final CertificateRepository certificateRepository;

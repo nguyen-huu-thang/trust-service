@@ -1,5 +1,7 @@
 package vn.xime.trust.application.mapper;
 
+import org.springframework.stereotype.Component;
+
 import vn.xime.trust.domain.model.Certificate;
 import vn.xime.trust.domain.model.CertRefreshToken;
 import vn.xime.trust.domain.service.IdService;
@@ -7,6 +9,8 @@ import vn.xime.trust.application.dto.response.AdminCertDto;
 import vn.xime.trust.application.dto.response.ServiceCertDto;
 import vn.xime.trust.application.dto.response.CertRefreshTokenDto;
 
+
+@Component
 public class CertificateMapper {
     
     public AdminCertDto toAdminDto(Certificate cert) {

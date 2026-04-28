@@ -34,7 +34,7 @@ public class CertRefreshTokenRepositoryImpl implements CertRefreshTokenRepositor
 
     @Override
     public Optional<CertRefreshToken> findByTokenHash(String tokenHash) {
-        return repo.findByTokenHashAndDeletedFalse(tokenHash)
+        return repo.findByTokenHashAndIsDeletedFalse(tokenHash)
                 .map(CertRefreshTokenMapper::toDomain);
     }
 
@@ -50,7 +50,7 @@ public class CertRefreshTokenRepositoryImpl implements CertRefreshTokenRepositor
 
     @Override
     public List<CertRefreshToken> findAllNotDeleted() {
-        return repo.findByDeletedFalse()
+        return repo.findByIsDeletedFalse()
                 .stream()
                 .map(CertRefreshTokenMapper::toDomain)
                 .toList();
@@ -58,7 +58,7 @@ public class CertRefreshTokenRepositoryImpl implements CertRefreshTokenRepositor
 
     @Override
     public List<CertRefreshToken> findAllDeleted() {
-        return repo.findByDeletedTrue()
+        return repo.findByIsDeletedTrue()
                 .stream()
                 .map(CertRefreshTokenMapper::toDomain)
                 .toList();

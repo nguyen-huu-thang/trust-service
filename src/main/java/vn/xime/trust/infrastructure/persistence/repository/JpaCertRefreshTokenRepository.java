@@ -22,14 +22,14 @@ public interface JpaCertRefreshTokenRepository extends JpaRepository<CertRefresh
     // SECURITY
     // =========================
 
-    Optional<CertRefreshTokenEntity> findByTokenHashAndDeletedFalse(String tokenHash);
+    Optional<CertRefreshTokenEntity> findByTokenHashAndIsDeletedFalse(String tokenHash);
 
     boolean existsByTokenHash(String tokenHash);
 
     @Query("""
         SELECT t FROM CertRefreshTokenEntity t
         WHERE t.tokenHash = :tokenHash
-          AND t.deleted = false
+          AND t.isDeleted = false
           AND t.usedAt IS NULL
           AND t.expiresAt > :now
     """)
@@ -42,9 +42,9 @@ public interface JpaCertRefreshTokenRepository extends JpaRepository<CertRefresh
     // CLEANUP
     // =========================
 
-    List<CertRefreshTokenEntity> findByDeletedFalse();
+    List<CertRefreshTokenEntity> findByIsDeletedFalse();
 
-    List<CertRefreshTokenEntity> findByDeletedTrue();
+    List<CertRefreshTokenEntity> findByIsDeletedTrue();
 
     void deleteByIdIn(List<byte[]> ids);
 }

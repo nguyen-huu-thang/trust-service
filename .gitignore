@@ -32,10 +32,15 @@ build/
 ### VS Code ###
 .vscode/
 
+### dev-only env
+dev-keys
+lib
 
 ### linh tinh
 test.py
 x.txt
 x
-GenKey.java
+# GenKey.java
+GenKey.class
+
 application.yml

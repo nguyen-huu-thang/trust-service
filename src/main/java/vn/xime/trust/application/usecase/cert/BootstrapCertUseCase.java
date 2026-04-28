@@ -1,6 +1,7 @@
 package vn.xime.trust.application.usecase.cert;
 
 import java.util.List;
+import org.springframework.stereotype.Component;
 import lombok.RequiredArgsConstructor;
 
 import vn.xime.trust.domain.model.Service;
@@ -16,6 +17,7 @@ import vn.xime.trust.application.dto.response.TokenDto;
 import vn.xime.trust.application.port.out.KeyEncryptionService;
 
 
+@Component
 @RequiredArgsConstructor
 public class BootstrapCertUseCase {
 

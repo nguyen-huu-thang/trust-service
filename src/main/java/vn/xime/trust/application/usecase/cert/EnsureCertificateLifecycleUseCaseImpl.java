@@ -1,7 +1,9 @@
 package vn.xime.trust.application.usecase.cert;
 
+import org.springframework.stereotype.Component;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
 import vn.xime.trust.application.port.in.EnsureCertificateLifecycleUseCase;
 import vn.xime.trust.domain.model.Certificate;
 import vn.xime.trust.domain.policy.CertificateIssuancePolicy;
@@ -20,6 +22,7 @@ import java.util.List;
  * - tự động rotate theo policy của cert
  */
 @Slf4j
+@Component
 @RequiredArgsConstructor
 public class EnsureCertificateLifecycleUseCaseImpl implements EnsureCertificateLifecycleUseCase {
 

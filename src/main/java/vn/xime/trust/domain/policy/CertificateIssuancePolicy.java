@@ -21,32 +21,10 @@ public class CertificateIssuancePolicy {
     // =========================
 
     // rotation interval (ví dụ: 90 ngày)
-    private final long rotationIntervalSeconds;
+    private final long rotationIntervalSeconds = 60L * 60 * 24 * 100;
 
     // lifetime (ví dụ: 365 ngày)
-    private final long certificateLifetimeSeconds;
-
-    public CertificateIssuancePolicy(
-            long rotationIntervalSeconds,
-            long certificateLifetimeSeconds
-    ) {
-        if (rotationIntervalSeconds <= 0) {
-            throw new IllegalArgumentException("rotationIntervalSeconds must be > 0");
-        }
-
-        if (certificateLifetimeSeconds <= 0) {
-            throw new IllegalArgumentException("certificateLifetimeSeconds must be > 0");
-        }
-
-        if (certificateLifetimeSeconds < rotationIntervalSeconds) {
-            throw new IllegalArgumentException(
-                    "certificateLifetime must be >= rotationInterval"
-            );
-        }
-
-        this.rotationIntervalSeconds = rotationIntervalSeconds;
-        this.certificateLifetimeSeconds = certificateLifetimeSeconds;
-    }
+    private final long certificateLifetimeSeconds = 60L * 60 * 24 * 365;
 
     // =========================
     // CORE LOGIC

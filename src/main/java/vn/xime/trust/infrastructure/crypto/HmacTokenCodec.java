@@ -1,4 +1,4 @@
-package vn.xime.trust.infrastructure.security;
+package vn.xime.trust.infrastructure.crypto;
 
 import vn.xime.trust.application.port.out.TokenCodec;
 import vn.xime.trust.domain.model.TokenPayload;

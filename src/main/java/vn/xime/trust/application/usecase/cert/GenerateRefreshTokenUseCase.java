@@ -1,6 +1,8 @@
 package vn.xime.trust.application.usecase.cert;
 
+import org.springframework.stereotype.Component;
 import lombok.RequiredArgsConstructor;
+
 import vn.xime.trust.domain.model.TokenPayload;
 import vn.xime.trust.domain.model.CertRefreshToken;
 import vn.xime.trust.domain.model.Certificate;
@@ -11,6 +13,7 @@ import vn.xime.trust.application.port.out.TokenCodec;
 import vn.xime.trust.application.dto.response.TokenDto;
 
 
+@Component
 @RequiredArgsConstructor
 public class GenerateRefreshTokenUseCase {
 
