@@ -26,6 +26,7 @@ public class KeyMapper {
         return new PrivateKeyDto(
                 IdService.toString(key.getId()),
                 key.getSignerServiceId(),
+                key.getVerifierServiceId(),
                 key.getAlgorithm().name(),
                 key.getKeySize(),
                 decryptedPrivateKey,

@@ -45,8 +45,6 @@ public class KeyAdminGrpcService extends KeyAdminGrpc.KeyAdminImplBase {
             GenerateKeyCommand cmd = new GenerateKeyCommand(
                 request.getSignerServiceId(),
                 request.getVerifierServiceId(),
-                request.getAlgorithm(),
-                request.getKeySize(),
                 request.getActivateAt() > 0 ? Instant.ofEpochMilli(request.getActivateAt()) : null
             );
 

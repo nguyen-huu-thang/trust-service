@@ -76,6 +76,9 @@ public class GetCertificatesUseCase {
     // GET ACTIVE CERT (RUNTIME - mTLS)
     // ==================================================
 
+    // hàm này hiện tại không cần lắm.
+    // vì logic bây giờ chỉ trả token quan bootstrap hoặc rotate để đảm bảo vấn đề bảo mật.
+    
     public ServiceCertDto getActiveCertificate(String serviceId) {
         if (serviceId == null || serviceId.isBlank()) {
             throw new IllegalArgumentException("serviceId is required");

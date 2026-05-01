@@ -10,7 +10,5 @@ import lombok.AllArgsConstructor;
 public class GenerateKeyCommand {
     private final String signerServiceId;
     private final String verifierServiceId;
-    private final String algorithm;
-    private final int keySize;
     private final Instant activateAt;
 }

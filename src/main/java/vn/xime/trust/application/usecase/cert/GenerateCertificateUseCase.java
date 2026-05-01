@@ -11,6 +11,8 @@ import vn.xime.trust.domain.repository.CertificateRepository;
 
 import vn.xime.trust.application.port.out.KeyGenerator;
 import vn.xime.trust.application.port.out.CertificateIssuer;
+import vn.xime.trust.application.port.out.KeyEncryptionService;
+
 
 
 @Component
@@ -19,17 +21,20 @@ public class GenerateCertificateUseCase {
     private final CertificateRepository certificateRepository;
     private final KeyGenerator keyGenerator;
     private final CertificateIssuer certificateIssuer;
+    private final KeyEncryptionService encryptionService;
     private final CertificateFactory certificateFactory;
 
     public GenerateCertificateUseCase(
             CertificateRepository certificateRepository,
             KeyGenerator keyGenerator,
             CertificateIssuer certificateIssuer,
+            KeyEncryptionService encryptionService,
             CertificateFactory certificateFactory
     ) {
         this.certificateRepository = certificateRepository;
         this.keyGenerator = keyGenerator;
         this.certificateIssuer = certificateIssuer;
+        this.encryptionService = encryptionService;
         this.certificateFactory = certificateFactory;
     }
 
@@ -78,7 +83,7 @@ public class GenerateCertificateUseCase {
         Certificate cert = certificateFactory.create(
                 serviceId,
                 issued.certificate(),   // đã là Base64/PEM
-                pair.getPrivateKey(),  // TODO: hash/encrypt sau
+                encryptionService.encrypt(pair.getPrivateKey()),
                 expiresAt
         );
 

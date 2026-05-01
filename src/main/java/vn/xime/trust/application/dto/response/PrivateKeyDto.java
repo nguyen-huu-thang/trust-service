@@ -10,6 +10,7 @@ import lombok.AllArgsConstructor;
 public class PrivateKeyDto {
     private final String kid;
     private final String signerServiceId;
+    private final String verifierServiceId;
     private final String algorithm;
     private final int keySize;
     private final String privateKey;

@@ -54,8 +54,7 @@ service KeyDistributionService {
 
 
 message GetPublicKeysRequest {
-  string signer_service_id = 1;
-  string verifier_service_id = 2;
+  string verifier_service_id = 1;
 }
 
 message GetPublicKeysResponse {
@@ -66,33 +65,31 @@ message GetPublicKeysResponse {
 
 message GetSigningKeyRequest {
   string signer_service_id = 1;
-  string verifier_service_id = 2;
 }
 
 message GetSigningKeyResponse {
-  SigningKeyDto key = 1;
+  repeated SigningKeyDto keys = 1;
 }
 
 
 message PublicKeyDto {
 
-  bytes id = 1; // KSUID (kid)
-
-  string public_key = 2;
-
-  int64 activate_at = 3;
-  int64 expires_at = 4;
+  string id = 1; // KSUID (kid)
+  string verifier_service_id = 2;
+  string algorithm = 3;
+  int32 key_size = 4;
+  string public_key = 5;
+  int64 activate_at = 6;
+  int64 expires_at = 7;
 }
 
 message SigningKeyDto {
-
-  bytes id = 1;
-
-  string public_key = 2;
-
-  // ⚠️ chỉ Identity Service được nhận
-  string private_key_encrypted = 3;
-
-  int64 activate_at = 4;
-  int64 expires_at = 5;
+  string id = 1;
+  string signer_service_id = 2;
+  string verifier_service_id = 3;
+  string algorithm = 4;
+  int32 key_size = 5;
+  string private_key = 6;
+  int64 activate_at = 7;
+  int64 expires_at = 8;
 }

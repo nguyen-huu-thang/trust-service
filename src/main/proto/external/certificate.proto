@@ -1,6 +1,6 @@
 syntax = "proto3";
 
-package trust.external.certificate;
+package trust.external.cert;
 
 option java_package = "vn.xime.trust.grpc.external.certificate";
 option java_multiple_files = true;
@@ -56,58 +56,46 @@ service CertificateService {
 
 
 message BootstrapCertificateRequest {
-
   string service_id = 1;
-
-  // ⚠️ optional:
-  // để phân biệt môi trường / deployment
-  string instance_id = 2;
+  string shard_id = 2;
 }
 
 
 message BootstrapCertificateResponse {
 
   CertificateDto certificate = 1;
-
-  // 🔥 token dùng cho lần rotate tiếp theo
-  string refresh_token = 2;
-
-  int64 expires_at = 3;
+  string refresh_token = 2; // 🔥 token dùng cho lần rotate tiếp theo
+  string service_id = 3;
+  int64 issued_at = 4;
+  int64 expires_at = 5;
 }
 
 
 message RotateCertificateRequest {
-
   string service_id = 1;
-
-  // 🔥 one-time token
   string refresh_token = 2;
+  string private_key = 3;
 }
 
 
 message RotateCertificateResponse {
-
   CertificateDto certificate = 1;
-
-  // 🔥 token mới (chain rotation)
-  string next_refresh_token = 2;
-
-  int64 expires_at = 3;
+  string next_refresh_token = 2;  // 🔥 token mới (chain rotation)
+  string refresh_token_id = 3;
+  int64 issued_at = 4;
+  int64 expires_at = 5;
 }
 
 
 message CertificateDto {
 
-  bytes id = 1;
+  string id = 1;
 
   // PEM format
   string public_cert = 2;
 
-  // ⚠️ chỉ trả cho chính service đó
-  string private_key_encrypted = 3;
+  string private_key = 3;
 
-  int64 issued_at = 4;
-  int64 expires_at = 5;
 }
 
 

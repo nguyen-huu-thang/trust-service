@@ -2,8 +2,9 @@ package vn.xime.trust.application.usecase.key;
 
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+import lombok.extern.slf4j.Slf4j;
+
 import vn.xime.trust.application.port.in.EnsureKeyContinuityUseCase;
-import vn.xime.trust.application.dto.request.GenerateKeyCommand;
 import vn.xime.trust.domain.model.Key;
 import vn.xime.trust.domain.model.KeyPolicy;
 import vn.xime.trust.domain.repository.KeyPolicyRepository;
@@ -14,6 +15,7 @@ import java.time.Instant;
 import java.util.Comparator;
 import java.util.List;
 
+@Slf4j
 @Component
 public class EnsureKeyContinuityUseCaseImpl implements EnsureKeyContinuityUseCase {
 
@@ -24,10 +26,10 @@ public class EnsureKeyContinuityUseCaseImpl implements EnsureKeyContinuityUseCas
     private final KeyLifecycleDomainService keyLifecycleDomainService;
 
     public EnsureKeyContinuityUseCaseImpl(
-            KeyPolicyRepository keyPolicyRepository,
-            KeyRepository keyRepository,
-            GenerateKeyUseCase generateKeyUseCase,
-            KeyLifecycleDomainService keyLifecycleDomainService
+        KeyPolicyRepository keyPolicyRepository,
+        KeyRepository keyRepository,
+        GenerateKeyUseCase generateKeyUseCase,
+        KeyLifecycleDomainService keyLifecycleDomainService
     ) {
         this.keyPolicyRepository = keyPolicyRepository;
         this.keyRepository = keyRepository;
@@ -64,8 +66,8 @@ public class EnsureKeyContinuityUseCaseImpl implements EnsureKeyContinuityUseCas
         // =========================
 
         List<Key> keys = keyRepository.findBySignerAndVerifier(
-                policy.getSignerServiceId(),
-                policy.getVerifierServiceId()
+            policy.getSignerServiceId(),
+            policy.getVerifierServiceId()
         );
 
         // =========================
@@ -73,9 +75,9 @@ public class EnsureKeyContinuityUseCaseImpl implements EnsureKeyContinuityUseCas
         // =========================
 
         List<Key> activeKeys = keyLifecycleDomainService.getAllActive(keys)
-                .stream()
-                .sorted(Comparator.comparing(Key::getActivateAt))
-                .toList();
+            .stream()
+            .sorted(Comparator.comparing(Key::getActivateAt))
+            .toList();
 
         if (activeKeys.isEmpty()) {
             // chưa có key nào → bỏ qua (admin phải tạo key đầu tiên)
@@ -89,8 +91,8 @@ public class EnsureKeyContinuityUseCaseImpl implements EnsureKeyContinuityUseCas
         // =========================
 
         List<Key> futureKeys = activeKeys.stream()
-                .filter(k -> k.getActivateAt().isAfter(now))
-                .toList();
+            .filter(k -> k.getActivateAt().isAfter(now))
+            .toList();
 
         int futureCount = futureKeys.size();
 
@@ -101,7 +103,7 @@ public class EnsureKeyContinuityUseCaseImpl implements EnsureKeyContinuityUseCas
         if (futureCount == 0) {
 
             Instant newActivateAt = lastKey.getActivateAt()
-                    .plusSeconds(policy.getRotationIntervalSeconds());
+                .plusSeconds(policy.getRotationIntervalSeconds());
 
             generate(policy, newActivateAt);
             return;
@@ -133,7 +135,7 @@ public class EnsureKeyContinuityUseCaseImpl implements EnsureKeyContinuityUseCas
         if (futureCount < 2) {
 
             Instant newActivateAt = lastKey.getActivateAt()
-                    .plusSeconds(policy.getRotationIntervalSeconds());
+                .plusSeconds(policy.getRotationIntervalSeconds());
 
             generate(policy, newActivateAt);
         }
@@ -144,15 +146,10 @@ public class EnsureKeyContinuityUseCaseImpl implements EnsureKeyContinuityUseCas
     // =========================================================
 
     private void generate(KeyPolicy policy, Instant activateAt) {
-
-        GenerateKeyCommand cmd = new GenerateKeyCommand(
-                policy.getSignerServiceId(),
-                policy.getVerifierServiceId(),
-                policy.getAlgorithm().name(),
-                policy.getKeySize(),
-                activateAt
-        );
-
-        generateKeyUseCase.generate(cmd);
+        try {
+            generateKeyUseCase.generate(policy, activateAt);
+        } catch (IllegalStateException e) {
+            log.error("có lẽ một dịch vụ đã bị xóa:", e);
+        }
     }
 }

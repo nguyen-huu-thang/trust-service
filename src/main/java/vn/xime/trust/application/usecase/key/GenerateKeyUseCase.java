@@ -54,7 +54,6 @@ public class GenerateKeyUseCase {
         this.policyDomainService = policyDomainService;
     }
 
-    @Transactional
     public Key generate(GenerateKeyCommand cmd) {
 
         Instant now = Instant.now();
@@ -89,13 +88,7 @@ public class GenerateKeyUseCase {
                         cmd.getVerifierServiceId()
                 )
                 .orElseThrow(() -> new IllegalStateException("KeyPolicy not found"));
-
-        // =========================
-        // DOMAIN: VALIDATE POLICY
-        // =========================
-
-        policyDomainService.validatePolicy(policy);
-
+        
         // =========================
         // RESOLVE ACTIVATE TIME
         // =========================
@@ -106,6 +99,54 @@ public class GenerateKeyUseCase {
         } else {
             activateAt = cmd.getActivateAt();
         }
+
+        return execute(
+        cmd.getSignerServiceId(),
+        cmd.getVerifierServiceId(),
+        policy,
+        activateAt,
+        now
+        );
+    }
+    
+    public Key generate(KeyPolicy policy, Instant activateAt) {
+        
+        Instant now = Instant.now();
+
+        String signerServiceId = policy.getSignerServiceId();
+        String verifierServiceId = policy.getVerifierServiceId();
+
+        if (!serviceRepository.existsById(signerServiceId)) {
+            throw new IllegalStateException("Signer service not found");
+        }
+
+        if (!serviceRepository.existsById(verifierServiceId)) {
+            throw new IllegalStateException("Verifier service not found");
+        }
+
+        return execute(
+        signerServiceId,
+        verifierServiceId,
+        policy,
+        activateAt,
+        now
+        );
+    }
+
+    @Transactional
+    private Key execute(
+        String signerServiceId,
+        String verifierServiceId,
+        KeyPolicy policy,
+        Instant activateAt,
+        Instant now
+    ) {
+
+        // =========================
+        // DOMAIN: VALIDATE POLICY
+        // =========================
+
+        policyDomainService.validatePolicy(policy);
 
         // =========================
         // DOMAIN: VALIDATE ACTIVATE TIME 🔥 (NEW)
@@ -131,8 +172,8 @@ public class GenerateKeyUseCase {
 
         List<Key> existingKeys =
                 keyRepository.findBySignerAndVerifier(
-                        cmd.getSignerServiceId(),
-                        cmd.getVerifierServiceId()
+                        signerServiceId,
+                        verifierServiceId
                 );
 
         // =========================
@@ -166,8 +207,8 @@ public class GenerateKeyUseCase {
         // =========================
 
         Key key = keyFactory.create(
-                cmd.getSignerServiceId(),
-                cmd.getVerifierServiceId(),
+                signerServiceId,
+                verifierServiceId,
                 pair.getPublicKey(),
                 encryptedPrivateKey,
                 algorithm,

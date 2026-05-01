@@ -44,10 +44,7 @@ message GenerateKeyRequest {
   string signer_service_id = 1;
   string verifier_service_id = 2;
 
-  string algorithm = 3;
-  int32 key_size = 4;
-
-  int64 activate_at = 5;
+  int64 activate_at = 3;
 }
 
 message GenerateKeyResponse {
