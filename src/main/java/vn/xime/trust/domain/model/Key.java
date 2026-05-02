@@ -69,6 +69,10 @@ public class Key {
         return !now.isBefore(expiresAt);
     }
 
+    public boolean isActive(Instant now) {
+        return !isExpiredAt(now) && !isDeleted();
+    }
+
     // =========================
     // GETTERS
     // =========================

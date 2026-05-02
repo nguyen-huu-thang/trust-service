@@ -13,8 +13,8 @@ option java_multiple_files = true;
 service KeyAdmin {
 
   // Generate new key
-  rpc GenerateKey (GenerateKeyRequest)
-      returns (GenerateKeyResponse);
+  rpc InitKey (InitKeyRequest)
+      returns (InitKeyResponse);
 
   // =========================
   // GET (ADMIN ONLY)
@@ -39,15 +39,12 @@ service KeyAdmin {
 // GENERATE
 // ==================================================
 
-message GenerateKeyRequest {
-
+message InitKeyRequest {
   string signer_service_id = 1;
   string verifier_service_id = 2;
-
-  int64 activate_at = 3;
 }
 
-message GenerateKeyResponse {
+message InitKeyResponse {
   KeyDto key = 1;
 }
 
@@ -56,7 +53,7 @@ message GenerateKeyResponse {
 // ==================================================
 
 message GetKeyByIdRequest {
-  string id = 1; // 🔥 đổi từ bytes → string (Base62)
+  string id = 1;
 }
 
 message GetKeyByIdResponse {
@@ -86,11 +83,11 @@ message GetKeysBySignerAndVerifierResponse {
 
 
 // ==================================================
-// DELETE (GIỮ NGUYÊN nhưng fix id)
+// DELETE
 // ==================================================
 
 message DeleteKeyRequest {
-  string id = 1; // 🔥 đổi từ bytes → string
+  string id = 1;
 }
 
 message DeleteKeyResponse {
@@ -104,21 +101,16 @@ message DeleteKeyResponse {
 
 message KeyDto {
 
-  string id = 1; // 🔥 đổi từ bytes → string
-
+  string id = 1;
   string signer_service_id = 2;
   string verifier_service_id = 3;
 
   string algorithm = 4;
   int32 key_size = 5;
 
-  string public_key = 6;
+  int64 created_at = 6;
+  int64 activate_at = 7;
+  int64 expires_at = 8;
 
-  string private_key_encrypted = 7;
-
-  int64 created_at = 8;
-  int64 activate_at = 9;
-  int64 expires_at = 10;
-
-  bool is_deleted = 11;
+  bool is_deleted = 9;
 }

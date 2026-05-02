@@ -74,7 +74,7 @@ public class EnsureKeyContinuityUseCaseImpl implements EnsureKeyContinuityUseCas
         // FILTER + SORT
         // =========================
 
-        List<Key> activeKeys = keyLifecycleDomainService.getAllActive(keys)
+        List<Key> activeKeys = keyLifecycleDomainService.getAllActive(keys, now)
             .stream()
             .sorted(Comparator.comparing(Key::getActivateAt))
             .toList();

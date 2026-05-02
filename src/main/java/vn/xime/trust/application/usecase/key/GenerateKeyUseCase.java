@@ -1,23 +1,27 @@
 package vn.xime.trust.application.usecase.key;
 
+import java.time.Instant;
+import java.util.List;
+
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
-import vn.xime.trust.application.dto.request.GenerateKeyCommand;
-import vn.xime.trust.application.port.out.KeyEncryptionService;
-import vn.xime.trust.application.port.out.KeyGenerator;
-import vn.xime.trust.domain.factory.KeyFactory;
+
+
 import vn.xime.trust.domain.model.Key;
 import vn.xime.trust.domain.model.KeyAlgorithm;
 import vn.xime.trust.domain.model.KeyPolicy;
+import vn.xime.trust.domain.model.Service;
+import vn.xime.trust.domain.factory.KeyFactory;
 import vn.xime.trust.domain.repository.KeyPolicyRepository;
 import vn.xime.trust.domain.repository.KeyRepository;
 import vn.xime.trust.domain.repository.ServiceRepository;
-import vn.xime.trust.domain.service.IdService;
 import vn.xime.trust.domain.service.KeyPolicyDomainService;
 import vn.xime.trust.domain.service.KeyValidationDomainService;
 
-import java.time.Instant;
-import java.util.List;
+import vn.xime.trust.application.port.out.KeyEncryptionService;
+import vn.xime.trust.application.port.out.KeyGenerator;
+
+
 
 @Component
 public class GenerateKeyUseCase {
@@ -35,14 +39,14 @@ public class GenerateKeyUseCase {
     private final KeyPolicyDomainService policyDomainService;
 
     public GenerateKeyUseCase(
-            KeyRepository keyRepository,
-            ServiceRepository serviceRepository,
-            KeyPolicyRepository keyPolicyRepository,
-            KeyGenerator keyGenerator,
-            KeyEncryptionService encryptionService,
-            KeyFactory keyFactory,
-            KeyValidationDomainService validationService,
-            KeyPolicyDomainService policyDomainService
+        KeyRepository keyRepository,
+        ServiceRepository serviceRepository,
+        KeyPolicyRepository keyPolicyRepository,
+        KeyGenerator keyGenerator,
+        KeyEncryptionService encryptionService,
+        KeyFactory keyFactory,
+        KeyValidationDomainService validationService,
+        KeyPolicyDomainService policyDomainService
     ) {
         this.keyRepository = keyRepository;
         this.serviceRepository = serviceRepository;
@@ -54,28 +58,20 @@ public class GenerateKeyUseCase {
         this.policyDomainService = policyDomainService;
     }
 
-    public Key generate(GenerateKeyCommand cmd) {
+    public Key generate(Service signer, Service verifier) {
 
         Instant now = Instant.now();
 
         // =========================
-        // VALIDATE SERVICE (application-level)
+        // VALIDATE SERVICE
         // =========================
 
-        if (cmd.getSignerServiceId() == null || cmd.getSignerServiceId().isBlank()) {
+        if (signer == null) {
             throw new IllegalArgumentException("signerServiceId is required");
         }
 
-        if (cmd.getVerifierServiceId() == null || cmd.getVerifierServiceId().isBlank()) {
+        if (verifier == null) {
             throw new IllegalArgumentException("verifierServiceId is required");
-        }
-
-        if (!serviceRepository.existsById(cmd.getSignerServiceId())) {
-            throw new IllegalStateException("Signer service not found");
-        }
-
-        if (!serviceRepository.existsById(cmd.getVerifierServiceId())) {
-            throw new IllegalStateException("Verifier service not found");
         }
 
         // =========================
@@ -83,26 +79,23 @@ public class GenerateKeyUseCase {
         // =========================
 
         KeyPolicy policy = keyPolicyRepository
-                .findByPair(
-                        cmd.getSignerServiceId(),
-                        cmd.getVerifierServiceId()
-                )
-                .orElseThrow(() -> new IllegalStateException("KeyPolicy not found"));
+            .findByPair(
+                signer.getId(),
+                verifier.getId()
+            )
+            .orElseThrow(() -> new IllegalStateException("KeyPolicy not found"));
         
         // =========================
         // RESOLVE ACTIVATE TIME
         // =========================
 
         Instant activateAt;
-        if (cmd.getActivateAt() == null) {
-            activateAt = now;
-        } else {
-            activateAt = cmd.getActivateAt();
-        }
+
+        activateAt = now;
 
         return execute(
-        cmd.getSignerServiceId(),
-        cmd.getVerifierServiceId(),
+        signer.getId(),
+        verifier.getId(),
         policy,
         activateAt,
         now
@@ -153,8 +146,8 @@ public class GenerateKeyUseCase {
         // =========================
 
         policyDomainService.validateActivateAt(
-                activateAt,
-                now
+            activateAt,
+            now
         );
 
         // =========================
@@ -162,8 +155,8 @@ public class GenerateKeyUseCase {
         // =========================
 
         Instant expiresAt = policyDomainService.calculateExpiresAt(
-                activateAt,
-                policy
+            activateAt,
+            policy
         );
 
         // =========================
@@ -171,21 +164,21 @@ public class GenerateKeyUseCase {
         // =========================
 
         List<Key> existingKeys =
-                keyRepository.findBySignerAndVerifier(
-                        signerServiceId,
-                        verifierServiceId
-                );
+            keyRepository.findBySignerAndVerifier(
+                signerServiceId,
+                verifierServiceId
+            );
 
         // =========================
         // DOMAIN: VALIDATE KEY CHAIN
         // =========================
 
         validationService.validateNewKey(
-                existingKeys,
-                activateAt,
-                expiresAt,
-                policy,
-                now
+            existingKeys,
+            activateAt,
+            expiresAt,
+            policy,
+            now
         );
 
         // =========================
@@ -196,8 +189,8 @@ public class GenerateKeyUseCase {
         int keySize = policy.getKeySize();
 
         var pair = keyGenerator.generate(
-                algorithm.name(),
-                keySize
+            algorithm.name(),
+            keySize
         );
 
         String encryptedPrivateKey = encryptionService.encrypt(pair.getPrivateKey());
@@ -207,14 +200,14 @@ public class GenerateKeyUseCase {
         // =========================
 
         Key key = keyFactory.create(
-                signerServiceId,
-                verifierServiceId,
-                pair.getPublicKey(),
-                encryptedPrivateKey,
-                algorithm,
-                keySize,
-                activateAt,
-                expiresAt
+            signerServiceId,
+            verifierServiceId,
+            pair.getPublicKey(),
+            encryptedPrivateKey,
+            algorithm,
+            keySize,
+            activateAt,
+            expiresAt
         );
 
         // =========================
@@ -224,10 +217,5 @@ public class GenerateKeyUseCase {
         keyRepository.save(key);
 
         return key;
-    }
-
-    public String createByAdmin(GenerateKeyCommand cmd){
-        Key key = generate(cmd);
-        return IdService.toString(key.getId());
     }
 }

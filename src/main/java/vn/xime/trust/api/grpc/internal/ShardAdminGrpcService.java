@@ -1,5 +1,6 @@
 package vn.xime.trust.api.grpc.internal;
 
+import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 import org.springframework.stereotype.Component;
 import vn.xime.trust.api.grpc.mapper.ShardGrpcMapper;
@@ -61,7 +62,7 @@ public class ShardAdminGrpcService extends ShardAdminGrpc.ShardAdminImplBase {
             responseObserver.onCompleted();
 
         } catch (Exception e) {
-            responseObserver.onError(e);
+            responseObserver.onError(toStatus(e));
         }
     }
 
@@ -199,5 +200,15 @@ public class ShardAdminGrpcService extends ShardAdminGrpc.ShardAdminImplBase {
         } catch (Exception e) {
             responseObserver.onError(e);
         }
+    }
+
+    // ==================================================
+    // ERROR MAPPER
+    // ==================================================
+
+    private RuntimeException toStatus(Exception e) {
+        return Status.INVALID_ARGUMENT
+                .withDescription(e.getMessage())
+                .asRuntimeException();
     }
 }

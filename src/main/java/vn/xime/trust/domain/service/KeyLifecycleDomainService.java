@@ -17,9 +17,9 @@ public class KeyLifecycleDomainService {
     // COMMON FILTER
     // =========================
 
-    private List<Key> filterActive(List<Key> keys) {
+    private List<Key> filterActive(List<Key> keys, Instant now) {
         return keys.stream()
-                .filter(k -> !k.isDeleted())
+                .filter(k -> k.isActive(now))
                 .toList();
     }
 
@@ -28,7 +28,7 @@ public class KeyLifecycleDomainService {
     // =========================
 
     public Key getKeyForSign(List<Key> keys, Instant now) {
-        return filterActive(keys).stream()
+        return filterActive(keys, now).stream()
                 .filter(k -> k.canSign(now))
                 .max(Comparator.comparing(Key::getActivateAt))
                 .orElseThrow(() ->
@@ -41,7 +41,7 @@ public class KeyLifecycleDomainService {
     // =========================
 
     public Optional<Key> findKeyForSign(List<Key> keys, Instant now) {
-        return filterActive(keys).stream()
+        return filterActive(keys, now).stream()
                 .filter(k -> k.canSign(now))
                 .max(Comparator.comparing(Key::getActivateAt));
     }
@@ -51,7 +51,7 @@ public class KeyLifecycleDomainService {
     // =========================
 
     public List<Key> getKeysForVerify(List<Key> keys, Instant now) {
-        return filterActive(keys).stream()
+        return filterActive(keys, now).stream()
                 .filter(k -> k.canVerify(now))
                 .toList();
     }
@@ -61,7 +61,7 @@ public class KeyLifecycleDomainService {
     // =========================
 
     public Optional<Key> getNextKey(List<Key> keys, Instant now) {
-        return filterActive(keys).stream()
+        return filterActive(keys, now).stream()
                 .filter(k -> k.getActivateAt().isAfter(now))
                 .min(Comparator.comparing(Key::getActivateAt));
     }
@@ -95,7 +95,7 @@ public class KeyLifecycleDomainService {
     // OPTIONAL HELPERS
     // =========================
 
-    public List<Key> getAllActive(List<Key> keys) {
-        return filterActive(keys);
+    public List<Key> getAllActive(List<Key> keys, Instant now) {
+        return filterActive(keys, now);
     }
 }

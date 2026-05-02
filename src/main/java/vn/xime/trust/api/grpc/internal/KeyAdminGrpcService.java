@@ -9,24 +9,23 @@ import vn.xime.trust.application.dto.request.*;
 import vn.xime.trust.application.dto.response.AdminKeyDto;
 import vn.xime.trust.api.grpc.mapper.KeyGrpcMapper;
 
-import java.time.Instant;
 import java.util.List;
 
 @Component
 public class KeyAdminGrpcService extends KeyAdminGrpc.KeyAdminImplBase {
 
-    private final GenerateKeyUseCase generateKeyUseCase;
+    private final InitKeyUseCase initKeyUseCase;
     private final GetKeysUseCase getKeysUseCase;
     private final DeleteKeyUseCase deleteKeyUseCase;
     private final KeyGrpcMapper mapper;
 
     public KeyAdminGrpcService(
-            GenerateKeyUseCase generateKeyUseCase,
+            InitKeyUseCase initKeyUseCase,
             GetKeysUseCase getKeysUseCase,
             DeleteKeyUseCase deleteKeyUseCase,
             KeyGrpcMapper mapper
     ) {
-        this.generateKeyUseCase = generateKeyUseCase;
+        this.initKeyUseCase = initKeyUseCase;
         this.getKeysUseCase = getKeysUseCase;
         this.deleteKeyUseCase = deleteKeyUseCase;
         this.mapper = mapper;
@@ -37,23 +36,20 @@ public class KeyAdminGrpcService extends KeyAdminGrpc.KeyAdminImplBase {
     // ==================================================
 
     @Override
-    public void generateKey(
-            GenerateKeyRequest request,
-            StreamObserver<GenerateKeyResponse> responseObserver
+    public void initKey(
+            InitKeyRequest request,
+            StreamObserver<InitKeyResponse> responseObserver
     ) {
         try {
-            GenerateKeyCommand cmd = new GenerateKeyCommand(
+            InitKeyCommand cmd = new InitKeyCommand(
                 request.getSignerServiceId(),
-                request.getVerifierServiceId(),
-                request.getActivateAt() > 0 ? Instant.ofEpochMilli(request.getActivateAt()) : null
+                request.getVerifierServiceId()
             );
 
-            String id = generateKeyUseCase.createByAdmin(cmd);
-
-            AdminKeyDto dto = getKeysUseCase.getById(IdService.fromString(id));
+            AdminKeyDto dto = initKeyUseCase.initKey(cmd);
 
             responseObserver.onNext(
-                    GenerateKeyResponse.newBuilder()
+                    InitKeyResponse.newBuilder()
                             .setKey(mapper.toProto(dto))
                             .build()
             );

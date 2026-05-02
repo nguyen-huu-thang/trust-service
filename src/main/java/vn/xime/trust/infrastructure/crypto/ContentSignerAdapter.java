@@ -56,7 +56,7 @@ public class ContentSignerAdapter implements ContentSigner {
 
         return switch (keyAlgo) {
             case "RSA" -> "SHA256withRSA";
-            case "EC"  -> "SHA256withECDSA";
+            case "EC", "ECDSA"  -> "SHA256withECDSA";
             default -> throw new IllegalStateException(
                     "Unsupported CA key algorithm: " + keyAlgo
             );

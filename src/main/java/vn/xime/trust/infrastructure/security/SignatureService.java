@@ -2,6 +2,7 @@ package vn.xime.trust.infrastructure.security;
 
 import java.security.PrivateKey;
 import java.security.Signature;
+import java.util.Locale;
 import java.util.Objects;
 
 /**
@@ -54,9 +55,15 @@ public class SignatureService {
     private String resolveAlgorithm(PrivateKey privateKey) {
         String keyAlgorithm = privateKey.getAlgorithm();
 
-        return switch (keyAlgorithm) {
+        if (keyAlgorithm == null) {
+            throw new IllegalStateException("PrivateKey algorithm is null");
+        }
+
+        String normalized = keyAlgorithm.toUpperCase(Locale.ROOT);
+        
+        return switch (normalized) {
             case "RSA" -> "SHA256withRSA";
-            case "EC"  -> "SHA256withECDSA";
+            case "EC", "ECDSA" -> "SHA256withECDSA";
             default -> throw new IllegalStateException(
                     "Unsupported key algorithm: " + keyAlgorithm
             );

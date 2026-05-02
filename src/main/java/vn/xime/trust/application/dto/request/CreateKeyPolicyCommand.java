@@ -11,7 +11,7 @@ public class CreateKeyPolicyCommand {
     private final String verifierServiceId;
     private final String algorithm;
     private final int keySize;
-    private final long keyLifetimeSec;
-    private final long rotationIntervalSeconds;
-    private final long preloadSec;
+    private final Long keyLifetimeSec;
+    private final Long rotationIntervalSeconds;
+    private final Long preloadSec;
 }
