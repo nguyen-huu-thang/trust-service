@@ -7,7 +7,6 @@ import vn.xime.trust.domain.model.Key;
 import vn.xime.trust.domain.repository.KeyRepository;
 import vn.xime.trust.domain.service.IdService;
 
-import java.time.Instant;
 
 @Component
 public class DeleteKeyUseCase {
@@ -20,8 +19,6 @@ public class DeleteKeyUseCase {
 
     @Transactional
     public void execute(DeleteKeyCommand cmd) {
-
-        Instant now = Instant.now();
 
         // =========================
         // LOAD KEY
@@ -36,17 +33,6 @@ public class DeleteKeyUseCase {
 
         if (key.isDeleted()) {
             return; // idempotent
-        }
-
-        // =========================
-        // VALIDATE DELETE RULE
-        // =========================
-
-        // ❌ không cho delete khi còn verify
-        if (key.getExpiresAt().isAfter(now)) {
-            throw new IllegalStateException(
-                    "Cannot delete key before expiresAt (still used for verification)"
-            );
         }
 
         // =========================

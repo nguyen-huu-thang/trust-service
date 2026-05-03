@@ -18,6 +18,7 @@ public class KeyGrpcMapper {
                 .setKeySize(dto.getKeySize())
                 .setActivateAt(dto.getActivateAt().toEpochMilli())
                 .setExpiresAt(dto.getExpiresAt().toEpochMilli())
+                .setIsDeleted(dto.isDeleted())
                 .build();
     }
 

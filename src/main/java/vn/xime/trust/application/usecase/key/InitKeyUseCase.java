@@ -62,11 +62,7 @@ public class InitKeyUseCase {
                         cmd.getVerifierServiceId()
                 );
         
-        System.out.println(keys.size());
-        
         keys = keyLife.getAllActive(keys, Instant.now());
-
-        System.out.println(keys.size());
         
         if (!keys.isEmpty()){
             throw new IllegalArgumentException("This key has been initialized.");

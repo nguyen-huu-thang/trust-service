@@ -18,7 +18,8 @@ public class KeyMapper {
                 key.getAlgorithm().name(),
                 key.getKeySize(),
                 key.getActivateAt(),
-                key.getExpiresAt()
+                key.getExpiresAt(),
+                key.isDeleted()
         );
     }
 

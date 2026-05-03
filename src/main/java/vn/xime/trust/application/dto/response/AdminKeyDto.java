@@ -15,4 +15,5 @@ public class AdminKeyDto {
     private final int keySize;
     private final Instant activateAt;
     private final Instant expiresAt;
+    private final boolean isDeleted;
 }
