@@ -1,15 +1,20 @@
 package vn.xime.trust.application.usecase.cert;
 
+import java.time.Instant;
 import java.util.List;
+import java.util.Objects;
 import org.springframework.stereotype.Component;
 import lombok.RequiredArgsConstructor;
 
 import vn.xime.trust.domain.model.Service;
 import vn.xime.trust.domain.model.Shard;
 import vn.xime.trust.domain.model.Certificate;
+import vn.xime.trust.domain.model.CertRefreshToken;
+import vn.xime.trust.domain.service.CertificateSelectionService;
 import vn.xime.trust.domain.repository.ServiceRepository;
 import vn.xime.trust.domain.repository.ShardRepository;
 import vn.xime.trust.domain.repository.CertificateRepository;
+import vn.xime.trust.domain.repository.CertRefreshTokenRepository;
 import vn.xime.trust.application.mapper.BootstrapMapper;
 import vn.xime.trust.application.dto.request.BootstrapCommand;
 import vn.xime.trust.application.dto.response.BootstrapDto;
@@ -21,20 +26,17 @@ import vn.xime.trust.application.port.out.KeyEncryptionService;
 @RequiredArgsConstructor
 public class BootstrapCertUseCase {
 
+    private final CertificateSelectionService certificateSelectionService;
     private final ServiceRepository serviceRepository;
     private final ShardRepository shardRepository;
     private final CertificateRepository certificateRepository;
+    private final CertRefreshTokenRepository certRefreshTokenRepository;
     private final GenerateCertificateUseCase generateCert;
     private final GenerateRefreshTokenUseCase generateRefreshToken;
     private final BootstrapMapper mapper;
     private final KeyEncryptionService encryptionService;
 
-    // bước 1: kiểm tra service có tồn tại hay không
-    // bước 2: lấy tất cả các cert của service (nếu có)
-    // bước 3: vô hiệu hóa tất cả các cert trên (nếu có)
-    // bước 4: tạo mới 1 cert bootstrap có thời hạn ngắn.
-    // bước 5: tạo mới 1 cert refresh token bootstrap
-    // bước 6: trả về cert + token cho client
+
     public BootstrapDto execute(BootstrapCommand cmd) {
 
         Service service = serviceRepository.findById(cmd.getServiceId())
@@ -53,27 +55,42 @@ public class BootstrapCertUseCase {
             throw new IllegalStateException("Shard is not active");
         }
 
-        if (shard.getServiceId() != service.getId()) {
+        if (!Objects.equals(shard.getServiceId(), service.getId())) {
             throw new IllegalStateException("Shard does not belong to service");
         }
 
         List<Certificate> certs = certificateRepository.findByServiceId(cmd.getServiceId());
 
-        if (certs != null && !certs.isEmpty()) {
-            for (Certificate cert : certs) {
-                cert.markDeleted();
-                certificateRepository.save(cert);
+        Certificate cert;
+
+        try {
+            cert = certificateSelectionService.getCurrentCertificate(certs, Instant.now());
+        }
+        catch (IllegalStateException e) {
+            for (Certificate c : certs) {
+                c = c.markDeleted();
+                certificateRepository.save(c);
             }
+            List <CertRefreshToken> certRefresh = certRefreshTokenRepository.findByServiceId(cmd.getServiceId());
+            for (CertRefreshToken c : certRefresh) {
+                c = c.markDeleted();
+                certRefreshTokenRepository.save(c);
+            }
+            cert = generateCert.serviceBootstrap(cmd.getServiceId());
         }
 
-        Certificate newCert = generateCert.serviceBootstrap(cmd.getServiceId());
+        List <CertRefreshToken> certRefresh = certRefreshTokenRepository.findByShardId(cmd.getShardId());
+        for (CertRefreshToken c : certRefresh) {
+            c = c.markDeleted();
+            certRefreshTokenRepository.save(c);
+        }
 
         TokenDto newToken = generateRefreshToken.execute(
                 cmd.getServiceId(),
                 cmd.getShardId(),
-                newCert
+                cert
         );
 
-        return mapper.toDto(newCert, encryptionService.decrypt(newCert.getPrivateKeyEncrypted()), newToken.getRawToken());
+        return mapper.toDto(cert, encryptionService.decrypt(cert.getPrivateKeyEncrypted()), newToken);
     }
 }

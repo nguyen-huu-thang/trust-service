@@ -8,6 +8,7 @@ import vn.xime.trust.api.grpc.internal.ShardAdminGrpcService;
 import vn.xime.trust.api.grpc.internal.KeyAdminGrpcService;
 import vn.xime.trust.api.grpc.internal.ServiceAdminGrpcService;
 import vn.xime.trust.api.grpc.internal.KeyPolicyGrpcService;
+import vn.xime.trust.api.grpc.internal.CertAdminGrpcService;
 
 import java.net.InetSocketAddress;
 
@@ -19,7 +20,8 @@ public class InternalGrpcServerConfig {
             ShardAdminGrpcService shardService,
             ServiceAdminGrpcService serviceService,
             KeyAdminGrpcService keyService,
-            KeyPolicyGrpcService keyPolicyService
+            KeyPolicyGrpcService keyPolicyService,
+            CertAdminGrpcService certAdminGrpcService
     ) {
 
         return NettyServerBuilder
@@ -28,6 +30,7 @@ public class InternalGrpcServerConfig {
                 .addService(serviceService)
                 .addService(keyService)
                 .addService(keyPolicyService)
+                .addService(certAdminGrpcService)
                 .build();
     }
 }

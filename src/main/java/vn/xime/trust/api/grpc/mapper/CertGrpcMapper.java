@@ -38,13 +38,14 @@ public class CertGrpcMapper {
                                 .setId(dto.getIdCert())
                                 .setServiceId(dto.getServiceId())
                                 .setPublicCert(dto.getPublicCert())
+                                .setPrivateKey(dto.getPrivateKey())
                                 .setIssuedAt(dto.getIssuedAt().toEpochMilli())
                                 .setExpiresAt(dto.getExpiresAt().toEpochMilli())
                                 .setStatus("ACTIVE") // bootstrap luôn active
                                 .setDeleted(false)
                                 .build()
                 )
-                .setPrivateKey(dto.getPrivateKey())
+                .setTokenId(dto.getIdToken())
                 .setRefreshToken(dto.getToken())
                 .build();
     }

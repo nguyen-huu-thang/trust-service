@@ -28,6 +28,8 @@ public class CertRefreshTokenMapper {
         return new CertRefreshToken(
                 toId(e.getId()),
                 e.getTokenHash(),
+                e.getServiceId(),
+                e.getShardId(),
                 e.isBootstrap(),
                 e.getIssuedAt(),
                 e.getExpiresAt(),
@@ -50,6 +52,8 @@ public class CertRefreshTokenMapper {
 
         e.setId(toBytes(d.getId()));
         e.setTokenHash(d.getTokenHash());
+        e.setServiceId(d.getServiceId());
+        e.setShardId(d.getShardId());
         e.setBootstrap(d.isBootstrap());
         e.setIssuedAt(d.getIssuedAt());
         e.setExpiresAt(d.getExpiresAt());

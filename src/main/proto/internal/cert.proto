@@ -56,7 +56,7 @@ message BootstrapCertRequest {
 
 message BootstrapCertResponse {
   CertificateResponse certificate = 1;
-  string private_key              = 2; // decrypted
+  string token_id                 = 2;
   string refresh_token            = 3; // raw token
 }
 
@@ -77,13 +77,14 @@ message CertificateResponse {
   string service_id = 2;
 
   string public_cert = 3;
+  string private_key = 4;
 
-  string status = 4;
+  string status = 5;
 
-  int64 issued_at  = 5;
-  int64 expires_at = 6;
+  int64 issued_at  = 6;
+  int64 expires_at = 7;
 
-  bool deleted = 7;
+  bool deleted = 8;
 }
 
 message ListCertificatesResponse {
@@ -121,16 +122,14 @@ message ListTokensRequest {
 message TokenResponse {
   string id = 1;
 
-  string token_hash = 2;
+  bool is_bootstrap = 2;
 
-  bool is_bootstrap = 3;
+  int64 issued_at  = 3;
+  int64 expires_at = 4;
 
-  int64 issued_at  = 4;
-  int64 expires_at = 5;
+  int64 used_at = 5; // 0 nếu null
 
-  int64 used_at = 6; // 0 nếu null
-
-  bool deleted = 7;
+  bool deleted = 6;
 }
 
 message ListTokensResponse {

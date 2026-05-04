@@ -15,6 +15,8 @@ import java.time.Instant;
         },
         indexes = {
                 @Index(name = "idx_refresh_token_hash", columnList = "token_hash"),
+                @Index(name = "idx_refresh_service_id", columnList = "service_id"),
+                @Index(name = "idx_refresh_shard_id", columnList = "shard_id"),
                 @Index(name = "idx_refresh_expires", columnList = "expires_at"),
                 @Index(name = "idx_refresh_deleted", columnList = "is_deleted")
         }
@@ -35,6 +37,16 @@ public class CertRefreshTokenEntity {
 
     @Column(name = "token_hash", nullable = false, columnDefinition = "TEXT")
     private String tokenHash;
+
+    // =========================
+    // service, shard
+    // =========================
+
+    @Column(name = "service_id", nullable = false, length = 20)
+    private String serviceId;
+
+    @Column(name = "shard_id", nullable = false, length = 20)
+    private String shardId;
 
     // =========================
     // Flags
@@ -77,6 +89,22 @@ public class CertRefreshTokenEntity {
 
     public void setTokenHash(String tokenHash) {
         this.tokenHash = tokenHash;
+    }
+
+    public String getServiceId() {
+        return serviceId;
+    }
+
+    public void setServiceId(String serviceId) {
+        this.serviceId = serviceId;
+    }
+
+    public String getShardId() {
+        return shardId;
+    }
+
+    public void setShardId(String shardId) {
+        this.shardId = shardId;
     }
 
     public boolean isBootstrap() {

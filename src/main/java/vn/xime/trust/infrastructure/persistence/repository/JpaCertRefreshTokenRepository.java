@@ -24,6 +24,11 @@ public interface JpaCertRefreshTokenRepository extends JpaRepository<CertRefresh
 
     Optional<CertRefreshTokenEntity> findByTokenHashAndIsDeletedFalse(String tokenHash);
 
+    List<CertRefreshTokenEntity> findByServiceIdAndIsDeletedFalse(String serviceId);
+
+    List<CertRefreshTokenEntity> findByShardIdAndIsDeletedFalse(String shardId);
+
+
     boolean existsByTokenHash(String tokenHash);
 
     @Query("""

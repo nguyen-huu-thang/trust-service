@@ -16,6 +16,10 @@ public interface CertRefreshTokenRepository {
 
     Optional<CertRefreshToken> findByTokenHash(String tokenHash);
 
+    List<CertRefreshToken> findByServiceId(String serviceId);
+    
+    List<CertRefreshToken> findByShardId(String shardId);
+    
     Optional<CertRefreshToken> findUsableToken(String tokenHash, Instant now);
 
     List<CertRefreshToken> findAllNotDeleted();

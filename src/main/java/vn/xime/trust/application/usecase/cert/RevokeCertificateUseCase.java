@@ -62,7 +62,7 @@ public class RevokeCertificateUseCase {
         // =========================
 
         if (cert.getStatus() == CertificateStatus.REVOKED) {
-            return cert.getId().toString();
+            return IdService.toString(cert.getId());
         }
 
         // =========================
@@ -83,6 +83,6 @@ public class RevokeCertificateUseCase {
         
         // sau thêm logic gửi tới đồng loạt các service khác để thông báo về việc certificate bị revoked.
 
-        return revoked.getId().toString();
+        return IdService.toString(revoked.getId());
     }
 }

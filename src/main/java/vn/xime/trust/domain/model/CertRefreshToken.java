@@ -9,6 +9,9 @@ public class CertRefreshToken {
 
     private final String tokenHash;
 
+    private final String serviceId;
+    private final String shardId;
+
     private final boolean isBootstrap;
 
     private final Instant issuedAt;
@@ -20,6 +23,8 @@ public class CertRefreshToken {
     public CertRefreshToken(
         Id id,
         String tokenHash,
+        String serviceId,
+        String shardId,
         boolean isBootstrap,
         Instant issuedAt,
         Instant expiresAt,
@@ -31,6 +36,8 @@ public class CertRefreshToken {
         }
         this.id = Objects.requireNonNull(id);
         this.tokenHash = tokenHash;
+        this.serviceId = serviceId;
+        this.shardId = shardId;
         this.isBootstrap = isBootstrap;
         this.issuedAt = Objects.requireNonNull(issuedAt);
         this.expiresAt = Objects.requireNonNull(expiresAt);
@@ -66,6 +73,8 @@ public class CertRefreshToken {
         return new CertRefreshToken(
                 this.id,
                 tokenHash,
+                serviceId,
+                shardId,
                 isBootstrap,
                 issuedAt,
                 expiresAt,
@@ -85,6 +94,8 @@ public class CertRefreshToken {
         return new CertRefreshToken(
                 this.id,
                 tokenHash,
+                serviceId,
+                shardId,
                 isBootstrap,
                 issuedAt,
                 expiresAt,
@@ -101,6 +112,8 @@ public class CertRefreshToken {
     return new CertRefreshToken(
             this.id,
             tokenHash,
+            serviceId,
+            shardId,
             isBootstrap,
             issuedAt,
             expiresAt,
@@ -119,6 +132,14 @@ public class CertRefreshToken {
 
     public String getTokenHash() {
         return tokenHash;
+    }
+
+    public String getServiceId() {
+        return serviceId;
+    }
+    
+    public String getShardId() {
+        return shardId;
     }
 
     public boolean isBootstrap() {

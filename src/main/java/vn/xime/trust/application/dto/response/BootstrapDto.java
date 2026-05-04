@@ -12,6 +12,7 @@ public class BootstrapDto {
     private final String serviceId;
     private final String publicCert;
     private final String privateKey;
+    private final String idToken;
     private final String token;
     private final Instant issuedAt;
     private final Instant expiresAt;

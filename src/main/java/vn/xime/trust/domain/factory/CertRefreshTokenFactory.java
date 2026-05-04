@@ -8,8 +8,10 @@ import java.time.Instant;
 public class CertRefreshTokenFactory {
 
     public CertRefreshToken create(
-            boolean isBootstrap,
-            Instant expiresAt
+        String serviceId,
+        String shardId,
+        boolean isBootstrap,
+        Instant expiresAt
     ) {
         // =========================
         // VALIDATE
@@ -34,6 +36,8 @@ public class CertRefreshTokenFactory {
         return new CertRefreshToken(
                 id,
                 null,
+                serviceId,
+                shardId,
                 isBootstrap,
                 now,        // issuedAt
                 expiresAt,

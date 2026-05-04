@@ -39,6 +39,23 @@ public class CertRefreshTokenRepositoryImpl implements CertRefreshTokenRepositor
     }
 
     @Override
+    public List<CertRefreshToken> findByServiceId(String serviceId) {
+        return repo.findByServiceIdAndIsDeletedFalse(serviceId)
+                .stream()
+                .map(CertRefreshTokenMapper::toDomain)
+                .toList();
+    }
+    
+    @Override
+    public List<CertRefreshToken> findByShardId(String shardId) {
+        return repo.findByShardIdAndIsDeletedFalse(shardId)
+                .stream()
+                .map(CertRefreshTokenMapper::toDomain)
+                .toList();
+    }
+    
+
+    @Override
     public Optional<CertRefreshToken> findUsableToken(String tokenHash, Instant now) {
         return repo.findUsableToken(tokenHash, now)
                 .map(CertRefreshTokenMapper::toDomain);

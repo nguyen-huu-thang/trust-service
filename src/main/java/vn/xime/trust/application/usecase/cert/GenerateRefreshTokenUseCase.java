@@ -28,8 +28,10 @@ public class GenerateRefreshTokenUseCase {
     ) {
 
         CertRefreshToken newToken = tokenFactory.create(
-                true,
-                cert.getExpiresAt()
+            serviceId,
+            shardId,
+            true,
+            cert.getExpiresAt()
         );
 
         TokenPayload newPayload = new TokenPayload(
