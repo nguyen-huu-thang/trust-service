@@ -24,13 +24,14 @@ public class GenerateRefreshTokenUseCase {
     public TokenDto execute(
             String serviceId,
             String shardId,
-            Certificate cert
+            Certificate cert,
+            boolean isBootstrap
     ) {
 
         CertRefreshToken newToken = tokenFactory.create(
             serviceId,
             shardId,
-            true,
+            isBootstrap,
             cert.getExpiresAt()
         );
 

@@ -81,11 +81,11 @@ public class RotateCertificateUseCase {
     // =========================
 
     public RotateCertDto execute(
-        String id,
+        String tokenId,
         String token,
         String privateKeyCert
     ) {
-        Objects.requireNonNull(id);
+        Objects.requireNonNull(tokenId);
         Objects.requireNonNull(token);
         Objects.requireNonNull(privateKeyCert);
 
@@ -95,7 +95,7 @@ public class RotateCertificateUseCase {
         // 1. LOAD TOKEN
         // =========================
 
-        CertRefreshToken tokenRecord = tokenRepository.findById(IdService.fromString(id))
+        CertRefreshToken tokenRecord = tokenRepository.findById(IdService.fromString(tokenId))
                 .orElseThrow(() ->
                         new IllegalStateException("No record for token id")
                 );
@@ -135,7 +135,7 @@ public class RotateCertificateUseCase {
             throw new IllegalStateException("Shard is not active");
         }
 
-        if (shard.getServiceId() != service.getId()) {
+        if (!Objects.equals(shard.getServiceId(), service.getId())) {
             throw new IllegalStateException("Shard does not belong to service");
         }
 
@@ -146,7 +146,7 @@ public class RotateCertificateUseCase {
         
         issuancePolicy.ensureCanRotate(currentCert, now);
 
-        tokenDomainService.validateCert(currentCert, privateKeyCert);
+        tokenDomainService.validateCert(encryptionService.decrypt(currentCert.getPrivateKeyEncrypted()), privateKeyCert);
 
         // =========================
         // 4. LOAD CERTS
@@ -195,7 +195,8 @@ public class RotateCertificateUseCase {
         TokenDto newToken = generateRefreshToken.execute(
                 payload.getServiceId(),
                 payload.getShardId(),
-                targetCert
+                targetCert,
+                false
         );
 
         // =========================

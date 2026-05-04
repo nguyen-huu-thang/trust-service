@@ -1,10 +1,10 @@
 package vn.xime.trust.domain.service;
 
-import vn.xime.trust.domain.model.CertRefreshToken;
-import vn.xime.trust.domain.model.Certificate;
-
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
+
+import vn.xime.trust.domain.model.CertRefreshToken;
+
 
 public class CertRefreshTokenDomainService {
 
@@ -29,11 +29,11 @@ public class CertRefreshTokenDomainService {
         }
     }
 
-    public void validateCert(Certificate cert, String privateKeyEncrypted) {
-        if (cert == null || privateKeyEncrypted == null) {
+    public void validateCert(String privateKey1, String privateKey2) {
+        if (privateKey1 == null || privateKey2 == null) {
             throw new IllegalStateException("Invalid certificate or private key");
         }
-        if (!constantTimeEquals(cert.getPrivateKeyEncrypted(), privateKeyEncrypted)) {
+        if (!constantTimeEquals(privateKey1, privateKey2)) {
             throw new IllegalStateException("Invalid certificate or private key");
         }
     }

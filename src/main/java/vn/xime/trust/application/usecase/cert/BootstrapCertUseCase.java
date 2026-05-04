@@ -88,7 +88,8 @@ public class BootstrapCertUseCase {
         TokenDto newToken = generateRefreshToken.execute(
                 cmd.getServiceId(),
                 cmd.getShardId(),
-                cert
+                cert,
+                true
         );
 
         return mapper.toDto(cert, encryptionService.decrypt(cert.getPrivateKeyEncrypted()), newToken);
