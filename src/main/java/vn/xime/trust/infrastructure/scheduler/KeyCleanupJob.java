@@ -2,15 +2,15 @@ package vn.xime.trust.infrastructure.scheduler;
 
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-import vn.xime.trust.application.port.in.CleanupExpiredKeysUseCase;
+import vn.xime.trust.application.port.in.CleanupExpiredKeys;
 
 @Component
 public class KeyCleanupJob {
 
-    private final CleanupExpiredKeysUseCase cleanupExpiredKeysUseCase;
+    private final CleanupExpiredKeys cleanupExpiredKeys;
 
-    public KeyCleanupJob(CleanupExpiredKeysUseCase cleanupExpiredKeysUseCase) {
-        this.cleanupExpiredKeysUseCase = cleanupExpiredKeysUseCase;
+    public KeyCleanupJob(CleanupExpiredKeys cleanupExpiredKeys) {
+        this.cleanupExpiredKeys = cleanupExpiredKeys;
     }
 
     /**
@@ -25,6 +25,6 @@ public class KeyCleanupJob {
      */
     @Scheduled(fixedDelayString = "${trust.key.cleanup.interval-ms:21600000}")
     public void run() {
-        cleanupExpiredKeysUseCase.execute();
+        cleanupExpiredKeys.execute();
     }
 }

@@ -1,4 +1,4 @@
-package vn.xime.trust.application.usecase.key;
+package vn.xime.trust.application.service.key;
 
 import java.time.Instant;
 import java.util.List;
@@ -24,7 +24,7 @@ import vn.xime.trust.application.port.out.KeyGenerator;
 
 
 @Component
-public class GenerateKeyUseCase {
+public class GenerateKey {
 
     private final KeyRepository keyRepository;
     private final ServiceRepository serviceRepository;
@@ -38,7 +38,7 @@ public class GenerateKeyUseCase {
     private final KeyValidationDomainService validationService;
     private final KeyPolicyDomainService policyDomainService;
 
-    public GenerateKeyUseCase(
+    public GenerateKey(
         KeyRepository keyRepository,
         ServiceRepository serviceRepository,
         KeyPolicyRepository keyPolicyRepository,

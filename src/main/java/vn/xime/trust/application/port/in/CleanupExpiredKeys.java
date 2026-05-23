@@ -1,10 +1,10 @@
 package vn.xime.trust.application.port.in;
 
-public interface EnsureKeyContinuityUseCase {
+public interface CleanupExpiredKeys {
 
     /**
      * Được gọi bởi scheduler
-     * Đảm bảo timeline key không bị thiếu
+     * Xóa (mark deleted) các key đã hết hạn
      */
     void execute();
 }

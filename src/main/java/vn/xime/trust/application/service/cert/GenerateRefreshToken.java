@@ -1,4 +1,4 @@
-package vn.xime.trust.application.usecase.cert;
+package vn.xime.trust.application.service.cert;
 
 import org.springframework.stereotype.Component;
 import lombok.RequiredArgsConstructor;
@@ -15,7 +15,7 @@ import vn.xime.trust.application.dto.response.TokenDto;
 
 @Component
 @RequiredArgsConstructor
-public class GenerateRefreshTokenUseCase {
+public class GenerateRefreshToken {
 
     private final CertRefreshTokenRepository tokenRepository;
     private final CertRefreshTokenFactory tokenFactory;

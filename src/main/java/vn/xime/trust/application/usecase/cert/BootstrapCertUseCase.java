@@ -15,6 +15,8 @@ import vn.xime.trust.domain.repository.ServiceRepository;
 import vn.xime.trust.domain.repository.ShardRepository;
 import vn.xime.trust.domain.repository.CertificateRepository;
 import vn.xime.trust.domain.repository.CertRefreshTokenRepository;
+import vn.xime.trust.application.service.cert.GenerateCertificate;
+import vn.xime.trust.application.service.cert.GenerateRefreshToken;
 import vn.xime.trust.application.mapper.BootstrapMapper;
 import vn.xime.trust.application.dto.request.BootstrapCommand;
 import vn.xime.trust.application.dto.response.BootstrapDto;
@@ -31,8 +33,8 @@ public class BootstrapCertUseCase {
     private final ShardRepository shardRepository;
     private final CertificateRepository certificateRepository;
     private final CertRefreshTokenRepository certRefreshTokenRepository;
-    private final GenerateCertificateUseCase generateCert;
-    private final GenerateRefreshTokenUseCase generateRefreshToken;
+    private final GenerateCertificate generateCert;
+    private final GenerateRefreshToken generateRefreshToken;
     private final BootstrapMapper mapper;
     private final KeyEncryptionService encryptionService;
 

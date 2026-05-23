@@ -201,7 +201,7 @@ public class KeyPolicyDomainService {
             throw new IllegalArgumentException("activateAt is required");
         }
 
-        if (!activateAt.isAfter(now.minusSeconds(5))) {
+        if (activateAt.isBefore(now)) {
             throw new IllegalArgumentException("activateAt must be in the future");
         }
     }

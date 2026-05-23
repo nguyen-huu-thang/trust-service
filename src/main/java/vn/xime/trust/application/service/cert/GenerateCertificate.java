@@ -1,4 +1,4 @@
-package vn.xime.trust.application.usecase.cert;
+package vn.xime.trust.application.service.cert;
 
 import java.time.Instant;
 
@@ -16,7 +16,7 @@ import vn.xime.trust.application.port.out.KeyEncryptionService;
 
 
 @Component
-public class GenerateCertificateUseCase {
+public class GenerateCertificate {
 
     private final CertificateRepository certificateRepository;
     private final KeyGenerator keyGenerator;
@@ -24,7 +24,7 @@ public class GenerateCertificateUseCase {
     private final KeyEncryptionService encryptionService;
     private final CertificateFactory certificateFactory;
 
-    public GenerateCertificateUseCase(
+    public GenerateCertificate(
             CertificateRepository certificateRepository,
             KeyGenerator keyGenerator,
             CertificateIssuer certificateIssuer,

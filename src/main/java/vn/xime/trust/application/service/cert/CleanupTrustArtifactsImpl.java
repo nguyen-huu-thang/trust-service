@@ -1,10 +1,10 @@
-package vn.xime.trust.application.usecase.cert;
+package vn.xime.trust.application.service.cert;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
-import vn.xime.trust.application.port.in.CleanupExpiredCertificatesUseCase;
+import vn.xime.trust.application.port.in.CleanupExpiredCertificates;
 import vn.xime.trust.domain.model.Certificate;
 import vn.xime.trust.domain.model.CertRefreshToken;
 import vn.xime.trust.domain.repository.CertificateRepository;
@@ -19,7 +19,7 @@ import java.util.List;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class CleanupTrustArtifactsUseCaseImpl implements CleanupExpiredCertificatesUseCase {
+public class CleanupTrustArtifactsImpl implements CleanupExpiredCertificates {
 
     private final CertificateRepository certificateRepository;
     private final CertRefreshTokenRepository tokenRepository;

@@ -1,10 +1,10 @@
-package vn.xime.trust.application.usecase.key;
+package vn.xime.trust.application.service.key;
 
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.extern.slf4j.Slf4j;
 
-import vn.xime.trust.application.port.in.EnsureKeyContinuityUseCase;
+import vn.xime.trust.application.port.in.EnsureKeyContinuity;
 import vn.xime.trust.domain.model.Key;
 import vn.xime.trust.domain.model.KeyPolicy;
 import vn.xime.trust.domain.repository.KeyPolicyRepository;
@@ -17,23 +17,23 @@ import java.util.List;
 
 @Slf4j
 @Component
-public class EnsureKeyContinuityUseCaseImpl implements EnsureKeyContinuityUseCase {
+public class EnsureKeyContinuityImpl implements EnsureKeyContinuity {
 
     private final KeyPolicyRepository keyPolicyRepository;
     private final KeyRepository keyRepository;
 
-    private final GenerateKeyUseCase generateKeyUseCase;
+    private final GenerateKey generateKey;
     private final KeyLifecycleDomainService keyLifecycleDomainService;
 
-    public EnsureKeyContinuityUseCaseImpl(
+    public EnsureKeyContinuityImpl(
         KeyPolicyRepository keyPolicyRepository,
         KeyRepository keyRepository,
-        GenerateKeyUseCase generateKeyUseCase,
+        GenerateKey generateKey,
         KeyLifecycleDomainService keyLifecycleDomainService
     ) {
         this.keyPolicyRepository = keyPolicyRepository;
         this.keyRepository = keyRepository;
-        this.generateKeyUseCase = generateKeyUseCase;
+        this.generateKey = generateKey;
         this.keyLifecycleDomainService = keyLifecycleDomainService;
     }
 
@@ -104,6 +104,10 @@ public class EnsureKeyContinuityUseCaseImpl implements EnsureKeyContinuityUseCas
 
             Instant newActivateAt = lastKey.getActivateAt()
                 .plusSeconds(policy.getRotationIntervalSeconds());
+            
+            if (newActivateAt.isBefore(now)) {
+                newActivateAt = now.plusSeconds(5);
+            }
 
             generate(policy, newActivateAt);
             return;
@@ -147,7 +151,7 @@ public class EnsureKeyContinuityUseCaseImpl implements EnsureKeyContinuityUseCas
 
     private void generate(KeyPolicy policy, Instant activateAt) {
         try {
-            generateKeyUseCase.generate(policy, activateAt);
+            generateKey.generate(policy, activateAt);
         } catch (IllegalStateException e) {
             log.error("có lẽ một dịch vụ đã bị xóa:", e);
         }

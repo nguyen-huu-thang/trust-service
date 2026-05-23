@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-import vn.xime.trust.application.port.in.CleanupExpiredCertificatesUseCase;
+import vn.xime.trust.application.port.in.CleanupExpiredCertificates;
 
 /**
  * Scheduler dọn dẹp cert hết hạn
@@ -14,7 +14,7 @@ import vn.xime.trust.application.port.in.CleanupExpiredCertificatesUseCase;
 @RequiredArgsConstructor
 public class CertificateCleanupJob {
 
-    private final CleanupExpiredCertificatesUseCase useCase;
+    private final CleanupExpiredCertificates cleanup;
 
     /**
      * ví dụ chạy mỗi 6 giờ
@@ -25,7 +25,7 @@ public class CertificateCleanupJob {
         try {
             log.info("[CertificateCleanupJob] start");
 
-            useCase.execute();
+            cleanup.execute();
 
             log.info("[CertificateCleanupJob] done");
 

@@ -22,6 +22,8 @@ import vn.xime.trust.domain.service.IdService;
 import vn.xime.trust.application.dto.response.RotateCertDto;
 import vn.xime.trust.application.dto.response.TokenDto;
 import vn.xime.trust.application.port.out.TokenCodec;
+import vn.xime.trust.application.service.cert.GenerateRefreshToken;
+import vn.xime.trust.application.service.cert.GenerateCertificate;
 import vn.xime.trust.application.port.out.KeyEncryptionService;
 import vn.xime.trust.application.mapper.RotateCertMapper;
 
@@ -38,13 +40,13 @@ public class RotateCertificateUseCase {
     private final CertificateSelectionService selectionService;
     private final CertRefreshTokenDomainService tokenDomainService;
 
-    private final GenerateCertificateUseCase generateCert;
+    private final GenerateCertificate generateCert;
 
     private final CertificateIssuancePolicy issuancePolicy;
 
     private final RotateCertMapper mapper;
 
-    private final GenerateRefreshTokenUseCase generateRefreshToken;
+    private final GenerateRefreshToken generateRefreshToken;
     private final TokenCodec tokenCodec;
     private final KeyEncryptionService encryptionService;
 
@@ -55,10 +57,10 @@ public class RotateCertificateUseCase {
         ShardRepository shardRepository,
         CertificateSelectionService selectionService,
         CertRefreshTokenDomainService tokenDomainService,
-        GenerateCertificateUseCase generateCert,
+        GenerateCertificate generateCert,
         CertificateIssuancePolicy issuancePolicy,
         RotateCertMapper mapper,
-        GenerateRefreshTokenUseCase generateRefreshToken,
+        GenerateRefreshToken generateRefreshToken,
         TokenCodec tokenCodec,
         KeyEncryptionService encryptionService
     ) {

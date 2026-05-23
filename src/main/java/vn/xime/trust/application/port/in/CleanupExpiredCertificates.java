@@ -6,7 +6,7 @@ package vn.xime.trust.application.port.in;
  * - mark deleted hoặc revoke
  * - tránh phình DB
  */
-public interface CleanupExpiredCertificatesUseCase {
+public interface CleanupExpiredCertificates {
 
     void execute();
 }

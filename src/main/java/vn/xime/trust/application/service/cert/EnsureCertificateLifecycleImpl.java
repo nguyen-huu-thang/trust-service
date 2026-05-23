@@ -1,10 +1,10 @@
-package vn.xime.trust.application.usecase.cert;
+package vn.xime.trust.application.service.cert;
 
 import org.springframework.stereotype.Component;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
-import vn.xime.trust.application.port.in.EnsureCertificateLifecycleUseCase;
+import vn.xime.trust.application.port.in.EnsureCertificateLifecycle;
 import vn.xime.trust.domain.model.Certificate;
 import vn.xime.trust.domain.policy.CertificateIssuancePolicy;
 import vn.xime.trust.domain.repository.CertificateRepository;
@@ -24,11 +24,11 @@ import java.util.List;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class EnsureCertificateLifecycleUseCaseImpl implements EnsureCertificateLifecycleUseCase {
+public class EnsureCertificateLifecycleImpl implements EnsureCertificateLifecycle {
 
     private final ServiceRepository serviceRepository;
     private final CertificateRepository certificateRepository;
-    private final GenerateCertificateUseCase generateCert;
+    private final GenerateCertificate generateCert;
     private final CertificateSelectionService selectionService;
     private final CertificateIssuancePolicy issuancePolicy;
 

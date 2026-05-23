@@ -1,8 +1,8 @@
-package vn.xime.trust.application.usecase.key;
+package vn.xime.trust.application.service.key;
 
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
-import vn.xime.trust.application.port.in.CleanupExpiredKeysUseCase;
+import vn.xime.trust.application.port.in.CleanupExpiredKeys;
 import vn.xime.trust.domain.model.Key;
 import vn.xime.trust.domain.repository.KeyRepository;
 import vn.xime.trust.domain.service.KeyLifecycleDomainService;
@@ -12,12 +12,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Component
-public class CleanupExpiredKeysUseCaseImpl implements CleanupExpiredKeysUseCase {
+public class CleanupExpiredKeysImpl implements CleanupExpiredKeys {
 
     private final KeyRepository keyRepository;
     private final KeyLifecycleDomainService lifecycle;
 
-    public CleanupExpiredKeysUseCaseImpl(
+    public CleanupExpiredKeysImpl(
             KeyRepository keyRepository,
             KeyLifecycleDomainService lifecycle
     ) {

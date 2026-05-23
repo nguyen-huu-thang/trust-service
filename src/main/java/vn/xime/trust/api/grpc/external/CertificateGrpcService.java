@@ -8,7 +8,6 @@ import vn.xime.trust.grpc.external.certificate.*;
 
 import vn.xime.trust.application.usecase.cert.RotateCertificateUseCase;
 
-
 import vn.xime.trust.application.dto.response.RotateCertDto;
 
 @Component

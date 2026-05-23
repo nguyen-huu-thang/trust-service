@@ -9,6 +9,8 @@ import vn.xime.trust.domain.model.Service;
 import vn.xime.trust.domain.repository.KeyRepository;
 import vn.xime.trust.domain.repository.ServiceRepository;
 import vn.xime.trust.domain.service.KeyLifecycleDomainService;
+
+import vn.xime.trust.application.service.key.GenerateKey;
 import vn.xime.trust.application.dto.request.InitKeyCommand;
 import vn.xime.trust.application.dto.response.AdminKeyDto;
 import vn.xime.trust.application.mapper.KeyMapper;
@@ -17,20 +19,20 @@ import vn.xime.trust.application.mapper.KeyMapper;
 @Component
 public class InitKeyUseCase {
 
-    private final GenerateKeyUseCase generateKeyUseCase;
+    private final GenerateKey generateKey;
     private final KeyRepository keyRepository;
     private final ServiceRepository serviceRepository;
     private final KeyLifecycleDomainService keyLife;
     private final KeyMapper mapper;
     
     public InitKeyUseCase(
-        GenerateKeyUseCase generateKeyUseCase,
+        GenerateKey generateKey,
         KeyRepository keyRepository,
         ServiceRepository serviceRepository,
         KeyLifecycleDomainService keyLife,
         KeyMapper mapper
     ) {
-        this.generateKeyUseCase = generateKeyUseCase;
+        this.generateKey = generateKey;
         this.keyRepository = keyRepository;
         this.serviceRepository = serviceRepository;
         this.keyLife = keyLife;
@@ -68,6 +70,6 @@ public class InitKeyUseCase {
             throw new IllegalArgumentException("This key has been initialized.");
         }
 
-        return mapper.toResponseDto(generateKeyUseCase.generate(signer, verifier));
+        return mapper.toResponseDto(generateKey.generate(signer, verifier));
     }
 }

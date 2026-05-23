@@ -9,7 +9,7 @@ package vn.xime.trust.application.port.in;
  *
  * ⚠️ implement sau
  */
-public interface EnsureCertificateLifecycleUseCase {
+public interface EnsureCertificateLifecycle {
 
     void execute();
 }

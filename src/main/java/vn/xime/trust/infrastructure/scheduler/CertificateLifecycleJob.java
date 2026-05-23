@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
-import vn.xime.trust.application.port.in.EnsureCertificateLifecycleUseCase;
+import vn.xime.trust.application.port.in.EnsureCertificateLifecycle;
 
 /**
  * Scheduler đảm bảo lifecycle của certificate
@@ -18,7 +18,7 @@ import vn.xime.trust.application.port.in.EnsureCertificateLifecycleUseCase;
 @RequiredArgsConstructor
 public class CertificateLifecycleJob {
 
-    private final EnsureCertificateLifecycleUseCase useCase;
+    private final EnsureCertificateLifecycle ensure;
 
     /**
      * ví dụ chạy mỗi 1 giờ
@@ -31,7 +31,7 @@ public class CertificateLifecycleJob {
         try {
             log.info("[CertificateLifecycleJob] start");
 
-            useCase.execute();
+            ensure.execute();
 
             log.info("[CertificateLifecycleJob] done");
 
