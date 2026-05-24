@@ -59,9 +59,10 @@ public class KeyPolicyDomainService {
         // BASIC DOMAIN VALIDATION
         // =========================
 
-        if (signerServiceId.equals(verifierServiceId)) {
-            throw new IllegalStateException("signer and verifier must be different");
-        }
+        // loại bỏ cái này. identity cần public key để verify refresh token.
+        // if (signerServiceId.equals(verifierServiceId)) {
+        //     throw new IllegalStateException("signer and verifier must be different");
+        // }
 
         if (keySize <= 0) {
             throw new IllegalStateException("keySize must be > 0");

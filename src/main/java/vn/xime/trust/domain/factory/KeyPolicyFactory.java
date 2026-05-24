@@ -30,10 +30,6 @@ public class KeyPolicyFactory {
             throw new IllegalArgumentException("verifierServiceId is required");
         }
 
-        if (signerServiceId.equals(verifierServiceId)) {
-            throw new IllegalArgumentException("signer and verifier must be different");
-        }
-
         if (algorithm == null) {
             throw new IllegalArgumentException("algorithm is required");
         }

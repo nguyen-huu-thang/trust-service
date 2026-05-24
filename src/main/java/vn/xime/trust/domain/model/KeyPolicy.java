@@ -32,10 +32,6 @@ public class KeyPolicy {
             Instant createdAt,
             Instant updatedAt
     ) {
-        if (signerServiceId.equals(verifierServiceId)) {
-            throw new IllegalArgumentException("signer and verifier must be different");
-        }
-
         this.id = Objects.requireNonNull(id);
         this.signerServiceId = Objects.requireNonNull(signerServiceId);
         this.verifierServiceId = Objects.requireNonNull(verifierServiceId);
