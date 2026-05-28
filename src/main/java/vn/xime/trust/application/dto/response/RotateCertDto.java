@@ -9,6 +9,7 @@ import lombok.AllArgsConstructor;
 @AllArgsConstructor
 public class RotateCertDto {
     private final String idCert;
+    private final String ServiceId;
     private final String publicCert;
     private final String privateKey;
     private final String idRefreshToken;

@@ -52,6 +52,7 @@ public class CertificateGrpcService extends CertificateServiceGrpc.CertificateSe
             RotateCertificateResponse response =
                 RotateCertificateResponse.newBuilder()
                     .setCertificate(cert)
+                    .setServiceId(dto.getServiceId())
                     .setNextRefreshToken(dto.getRefreshToken())
                     .setRefreshTokenId(dto.getIdRefreshToken())
                     .setIssuedAt(dto.getIssuedAt().toEpochMilli())

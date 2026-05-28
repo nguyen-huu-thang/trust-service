@@ -49,10 +49,11 @@ message RotateCertificateRequest {
 
 message RotateCertificateResponse {
   CertificateDto certificate = 1;
-  string next_refresh_token = 2;  // 🔥 token mới (chain rotation)
-  string refresh_token_id = 3;
-  int64 issued_at = 4;
-  int64 expires_at = 5;
+  string service_id = 2;
+  string next_refresh_token = 3;  // 🔥 token mới (chain rotation)
+  string refresh_token_id = 4;
+  int64 issued_at = 5;
+  int64 expires_at = 6;
 }
 
 

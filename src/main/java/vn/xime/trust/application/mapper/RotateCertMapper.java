@@ -14,6 +14,7 @@ public class RotateCertMapper {
     public RotateCertDto toDto(Certificate targetCert, String privateKey, String idPlayload, String token) {
         return new RotateCertDto(
             IdService.toString(targetCert.getId()),
+            targetCert.getServiceId(),
             targetCert.getPublicCert(),
             privateKey,
             idPlayload,
