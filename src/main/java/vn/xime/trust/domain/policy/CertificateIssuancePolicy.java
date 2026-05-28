@@ -20,11 +20,15 @@ public class CertificateIssuancePolicy {
     // DEFAULT CONFIG (MVP)
     // =========================
 
-    // rotation interval (ví dụ: 90 ngày)
+    // rotation interval (ví dụ: 100 ngày)
     private final long rotationIntervalSeconds = 60L * 60 * 24 * 100;
 
     // lifetime (ví dụ: 365 ngày)
     private final long certificateLifetimeSeconds = 60L * 60 * 24 * 365;
+
+    // rotate sớm trước khi cert hết hạn
+    // ví dụ: còn dưới 1 ngày thì rotate
+    private final long expirationSafetyWindowSeconds = 60L * 60 * 24;
 
     // =========================
     // CORE LOGIC
@@ -35,7 +39,9 @@ public class CertificateIssuancePolicy {
      *
      * Rule:
      * - nếu chưa có cert → true
-     * - nếu đã quá rotation window → true
+     * - nếu quá rotation interval → true
+     * - nếu cert sắp hết hạn → true
+     * - nếu cert đã expired → true
      * - ngược lại → false
      */
     public boolean shouldIssueNewCertificate(
@@ -48,10 +54,29 @@ public class CertificateIssuancePolicy {
             return true;
         }
 
+        // =========================
+        // RULE 1:
+        // rotate theo rotation interval
+        // =========================
+
         Instant nextRotationTime = latest.getIssuedAt()
                 .plusSeconds(rotationIntervalSeconds);
 
-        return !now.isBefore(nextRotationTime);
+        boolean rotationDue =
+                !now.isBefore(nextRotationTime);
+
+        // =========================
+        // RULE 2:
+        // rotate nếu cert sắp hết hạn
+        // =========================
+
+        Instant expirationSafetyTime = latest.getExpiresAt()
+                .minusSeconds(expirationSafetyWindowSeconds);
+
+        boolean nearExpiration =
+                !now.isBefore(expirationSafetyTime);
+
+        return rotationDue || nearExpiration;
     }
 
     /**
@@ -119,5 +144,9 @@ public class CertificateIssuancePolicy {
 
     public long getCertificateLifetimeSeconds() {
         return certificateLifetimeSeconds;
+    }
+
+    public long getExpirationSafetyWindowSeconds() {
+        return expirationSafetyWindowSeconds;
     }
 }
