@@ -1,0 +1,584 @@
+=========================================================
+GRPC mTLS TROUBLESHOOTING GUIDE
+SPRING GRPC 1.0.2
+=================
+
+Ngày tạo:
+2026-06-05
+
+Mục đích:
+
+Tài liệu điều tra và xử lý lỗi khi chuyển
+gRPC từ plaintext sang TLS/mTLS.
+
+Áp dụng cho:
+
+* Trust Service
+* Identity Service
+* Data Service
+* Notification Service
+* Storage Service
+* Các dịch vụ khác trong hệ thống
+
+=========================================================
+
+1. TRIỆU CHỨNG THƯỜNG GẶP
+   =========================================================
+
+Client được sửa từ:
+
+```
+.usePlaintext()
+```
+
+sang:
+
+```
+.sslContext(...)
+```
+
+hoặc:
+
+```
+TlsChannelCredentials
+```
+
+Sau đó xuất hiện lỗi:
+
+---
+
+Server:
+
+```
+HTTP/2 client preface string missing or corrupt
+```
+
+Hex dump:
+
+```
+16 03 01 ...
+```
+
+---
+
+Client:
+
+```
+NotSslRecordException
+```
+
+Hex dump:
+
+```
+00 00 12 04 ...
+```
+
+=========================================================
+2. Ý NGHĨA CỦA CÁC BYTE QUAN TRỌNG
+==================================
+
+TLS ClientHello:
+
+```
+16 03 01
+16 03 03
+```
+
+HTTP/2 SETTINGS Frame:
+
+```
+00 00 12 04
+```
+
+HTTP/2 Preface:
+
+```
+PRI * HTTP/2.0
+```
+
+=========================================================
+3. CÁCH ĐỌC LỖI
+===============
+
+Nếu server báo:
+
+```
+HTTP/2 client preface missing
+```
+
+và nhận:
+
+```
+16 03 01 ...
+```
+
+=> Client đang gửi TLS
+
+=> Server đang mong plaintext
+
+---
+
+Nếu client báo:
+
+```
+NotSslRecordException
+```
+
+và nhận:
+
+```
+00 00 12 04 ...
+```
+
+=> Client đang mong TLS
+
+=> Server đang trả plaintext
+
+---
+
+Kết luận:
+
+Hai phía đang dùng protocol khác nhau.
+
+=========================================================
+4. KHÔNG ĐƯỢC VỘI NGHI CERTIFICATE
+==================================
+
+Khi gặp lỗi trên:
+
+KHÔNG được vội debug:
+
+* Root CA
+* Intermediate CA
+* SAN
+* Hostname Verification
+* Certificate Expired
+* Client Certificate
+* Server Certificate
+
+Lý do:
+
+TLS handshake còn chưa bắt đầu.
+
+Hai phía chưa giao tiếp cùng protocol.
+
+=========================================================
+5. THỰC NGHIỆM QUAN TRỌNG NHẤT
+==============================
+
+Bên client:
+
+Tạm thời bỏ TLS.
+
+Đổi:
+
+```
+.sslContext(...)
+```
+
+thành:
+
+```
+.usePlaintext()
+```
+
+Restart hệ thống.
+
+---
+
+Nếu request thành công:
+
+=> Server chắc chắn đang chạy plaintext.
+
+---
+
+Nếu request thất bại:
+
+=> Server nhiều khả năng đang TLS.
+
+=========================================================
+6. ĐỪNG TIN CHỈ VÌ THẤY TlsServerCredentials
+============================================
+
+Ví dụ:
+
+```
+@Bean
+ServerCredentials
+```
+
+trả về:
+
+```
+TlsServerCredentials
+```
+
+và log:
+
+```
+BUILDING TLS SERVER CREDENTIALS
+```
+
+KHÔNG chứng minh:
+
+```
+Runtime server đang TLS.
+```
+
+Nó chỉ chứng minh:
+
+```
+Bean đã được tạo.
+```
+
+=========================================================
+7. KIỂM TRA RUNTIME THỰC TẾ
+===========================
+
+Inspect:
+
+```
+ShadedNettyGrpcServerFactory
+```
+
+hoặc:
+
+```
+NettyGrpcServerFactory
+```
+
+Dump các field:
+
+```
+keyManager
+trustManager
+clientAuth
+```
+
+=========================================================
+8. CÁCH DUMP FACTORY
+====================
+
+Inject:
+
+```
+ApplicationContext
+```
+
+Lấy bean:
+
+```
+shadedNettyGrpcServerFactory
+```
+
+Dump:
+
+```
+keyManager
+trustManager
+clientAuth
+```
+
+Ví dụ kết quả:
+
+```
+keyManager = null
+trustManager = null
+clientAuth = NONE
+```
+
+=========================================================
+9. Ý NGHĨA CỦA KẾT QUẢ
+======================
+
+Nếu:
+
+```
+keyManager = null
+```
+
+=> Runtime không có TLS.
+
+---
+
+Nếu:
+
+```
+keyManager != null
+trustManager = null
+```
+
+=> Server TLS một chiều.
+
+---
+
+Nếu:
+
+```
+keyManager != null
+trustManager != null
+clientAuth = REQUIRE
+```
+
+=> mTLS đang được bật.
+
+=========================================================
+10. KẾT QUẢ ĐIỀU TRA TRUST SERVICE
+==================================
+
+Runtime dump:
+
+```
+keyManager = null
+trustManager = null
+clientAuth = NONE
+```
+
+Kết luận:
+
+Trust Service đang chạy plaintext.
+
+=========================================================
+11. PHÁT HIỆN QUAN TRỌNG
+========================
+
+Trust Service có:
+
+```
+grpcServerCredentials
+```
+
+Kiểu:
+
+```
+io.grpc.TlsServerCredentials
+```
+
+Bean được tạo thành công.
+
+Nhưng:
+
+```
+ShadedNettyGrpcServerFactory
+```
+
+không sử dụng bean này.
+
+=========================================================
+12. NGUYÊN NHÂN GỐC
+===================
+
+Spring gRPC 1.0.2 không lấy TLS từ:
+
+```
+@Bean ServerCredentials
+```
+
+Runtime TLS được tạo từ:
+
+```
+KeyManagerFactory
+TrustManagerFactory
+ClientAuth
+```
+
+=========================================================
+13. SPRING GRPC 1.0.2 TLS PIPELINE
+==================================
+
+spring.grpc.server.ssl
+↓
+
+SslBundle
+↓
+
+KeyManagerFactory
+↓
+
+DefaultGrpcServerFactory
+↓
+
+TlsServerCredentials
+↓
+
+Netty Server
+
+=========================================================
+14. SAI LẦM PHỔ BIẾN
+====================
+
+Sai:
+
+```
+trust.self.mtls.enabled=true
+```
+
+và nghĩ rằng:
+
+```
+Spring gRPC sẽ bật TLS.
+```
+
+---
+
+Thực tế:
+
+Spring gRPC không đọc property này.
+
+Nó chỉ đọc:
+
+```
+spring.grpc.server.ssl
+```
+
+=========================================================
+15. KHI NÀO MỚI ĐƯỢC DEBUG CERTIFICATE
+======================================
+
+Chỉ debug certificate khi:
+
+```
+keyManager != null
+```
+
+và:
+
+```
+trustManager != null
+```
+
+---
+
+Lúc đó mới xử lý:
+
+```
+unknown_ca
+bad_certificate
+certificate_expired
+hostname verification
+SAN mismatch
+```
+
+=========================================================
+16. QUY TRÌNH CHUẨN CHO MỌI DỊCH VỤ
+===================================
+
+Bước 1
+
+Client bật TLS.
+
+---
+
+Bước 2
+
+Nếu lỗi:
+
+```
+HTTP/2 client preface missing
+```
+
+=> nghi server plaintext.
+
+---
+
+Bước 3
+
+Đổi client:
+
+```
+.usePlaintext()
+```
+
+---
+
+Bước 4
+
+Nếu request thành công:
+
+=> Server plaintext.
+
+---
+
+Bước 5
+
+Inspect:
+
+```
+GrpcServerFactory
+```
+
+---
+
+Bước 6
+
+Kiểm tra:
+
+```
+keyManager
+trustManager
+clientAuth
+```
+
+---
+
+Bước 7
+
+Nếu keyManager=null
+
+=> Dừng debug certificate.
+
+=> Điều tra cấu hình TLS runtime.
+
+=========================================================
+17. BÀI HỌC RÚT RA
+==================
+
+Không tin tưởng:
+
+```
+- comment
+- assumption
+- bean tồn tại
+- TlsServerCredentials được build
+```
+
+Phải xác minh runtime thực tế.
+
+Chỉ tin:
+
+```
+keyManager
+trustManager
+clientAuth
+```
+
+bên trong GrpcServerFactory runtime.
+
+=========================================================
+KẾT LUẬN CUỐI
+=============
+
+Nếu:
+
+```
+keyManager = null
+```
+
+thì service đang chạy plaintext.
+
+Dù:
+
+```
+TlsServerCredentials tồn tại
+```
+
+hay:
+
+```
+BUILDING TLS SERVER CREDENTIALS
+```
+
+được ghi trong log.
+
+Đây là cách xác định nhanh nhất và đáng tin cậy nhất
+để debug TLS/mTLS trên Spring gRPC 1.0.2.

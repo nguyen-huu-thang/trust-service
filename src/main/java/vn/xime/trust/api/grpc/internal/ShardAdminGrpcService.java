@@ -2,7 +2,6 @@ package vn.xime.trust.api.grpc.internal;
 
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
-import org.springframework.stereotype.Component;
 import vn.xime.trust.api.grpc.mapper.ShardGrpcMapper;
 import vn.xime.trust.application.dto.request.RegisterShardCommand;
 import vn.xime.trust.application.dto.request.UpdateShardStatusCommand;
@@ -14,7 +13,6 @@ import vn.xime.trust.grpc.internal.shard.*;
 
 import java.util.List;
 
-@Component
 public class ShardAdminGrpcService extends ShardAdminGrpc.ShardAdminImplBase {
 
     private final RegisterShardUseCase registerUseCase;

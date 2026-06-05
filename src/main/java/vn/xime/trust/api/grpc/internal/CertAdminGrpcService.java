@@ -1,7 +1,6 @@
 package vn.xime.trust.api.grpc.internal;
 
 import io.grpc.stub.StreamObserver;
-import org.springframework.stereotype.Component;
 
 import vn.xime.trust.grpc.internal.cert.*;
 
@@ -13,7 +12,6 @@ import vn.xime.trust.api.grpc.mapper.CertGrpcMapper;
 
 import java.util.List;
 
-@Component
 public class CertAdminGrpcService extends CertAdminGrpc.CertAdminImplBase {
 
     private final BootstrapCertUseCase bootstrapUseCase;

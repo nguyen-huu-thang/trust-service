@@ -1,0 +1,469 @@
+=========================================================
+TRUST SERVICE
+gRPC TLS ARCHITECTURE DECISION
+SPRING SSL BUNDLE vs CUSTOM NETTY SERVER
+========================================
+
+Ngày:
+2026-06-05
+
+Trạng thái:
+DECIDED
+
+=========================================================
+
+1. BỐI CẢNH
+   =========================================================
+
+Trust Service sử dụng:
+
+* Spring Boot
+* Spring gRPC 1.0.2
+* gRPC Java
+* Certificate lưu trong database
+* Certificate cache trong RAM
+* Certificate rotation runtime
+* mTLS giữa các microservice
+
+Kiến trúc certificate hiện tại:
+
+```
+Database
+    ↓
+TrustSelfCertificateLoader
+    ↓
+TrustSelfCertificateResolver
+    ↓
+Runtime Certificate Cache
+```
+
+Trust Service KHÔNG sử dụng:
+
+```
+certificate.pem
+private-key.pem
+```
+
+làm nguồn dữ liệu chính.
+
+=========================================================
+2. VẤN ĐỀ PHÁT HIỆN
+===================
+
+Đã tạo bean:
+
+```
+ServerCredentials
+```
+
+với kiểu:
+
+```
+TlsServerCredentials
+```
+
+Ví dụ:
+
+```
+@Bean
+ServerCredentials grpcServerCredentials(...)
+```
+
+và log:
+
+```
+BUILDING TLS SERVER CREDENTIALS
+```
+
+xuất hiện thành công.
+
+---
+
+Tuy nhiên runtime dump cho thấy:
+
+```
+keyManager = null
+trustManager = null
+clientAuth = NONE
+```
+
+Kết quả:
+
+```
+Trust Service chạy plaintext
+```
+
+mặc dù bean TlsServerCredentials tồn tại.
+
+=========================================================
+3. PHÂN TÍCH SOURCE SPRING gRPC
+===============================
+
+Spring gRPC sử dụng:
+
+```
+DefaultGrpcServerFactory
+```
+
+Method:
+
+```
+credentials()
+```
+
+Logic:
+
+```
+if (keyManager == null)
+    return InsecureServerCredentials
+```
+
+---
+
+Điều này chứng minh:
+
+Runtime server KHÔNG sử dụng:
+
+```
+@Bean ServerCredentials
+```
+
+được khai báo bởi ứng dụng.
+
+=========================================================
+4. SPRING gRPC TLS PIPELINE
+===========================
+
+Spring gRPC tạo TLS theo pipeline:
+
+```
+spring.grpc.server.ssl
+        ↓
+SslBundle
+        ↓
+KeyManagerFactory
+        ↓
+TrustManagerFactory
+        ↓
+DefaultGrpcServerFactory
+        ↓
+TlsServerCredentials
+        ↓
+NettyServerBuilder
+```
+
+=========================================================
+5. Ý NGHĨA
+==========
+
+Spring gRPC không quan tâm tới:
+
+```
+@Bean ServerCredentials
+```
+
+Spring gRPC chỉ quan tâm tới:
+
+```
+KeyManagerFactory
+TrustManagerFactory
+ClientAuth
+```
+
+=========================================================
+6. GIẢI PHÁP 1
+SPRING SSL BUNDLE
+=================
+
+Ví dụ:
+
+spring:
+
+ssl:
+
+```
+bundle:
+
+  pem:
+
+    trust-service:
+
+      keystore:
+        certificate: ...
+
+        private-key: ...
+
+      truststore:
+        certificate: ...
+```
+
+grpc:
+
+```
+server:
+
+  ssl:
+
+    enabled: true
+
+    bundle: trust-service
+
+    client-auth: REQUIRE
+```
+
+=========================================================
+ƯU ĐIỂM
+=======
+
+* theo chuẩn Spring
+* ít code
+* dễ tích hợp
+* phù hợp service thông thường
+
+Ví dụ:
+
+* Identity
+* Notification
+* Storage
+* Data Service
+
+=========================================================
+NHƯỢC ĐIỂM
+==========
+
+Thiết kế dựa trên:
+
+```
+file
+    ↓
+SslBundle
+```
+
+trong khi Trust sử dụng:
+
+```
+database
+    ↓
+runtime cache
+```
+
+---
+
+Khó xử lý:
+
+* certificate rotation
+* runtime reload
+* dynamic certificate
+* bootstrap certificate
+
+=========================================================
+7. GIẢI PHÁP 2
+CUSTOM SSL BUNDLE
+=================
+
+Có thể tự implement:
+
+```
+SslBundle
+```
+
+hoặc:
+
+```
+SslBundles
+```
+
+để đọc certificate từ database.
+
+=========================================================
+ƯU ĐIỂM
+=======
+
+* giữ nguyên Spring gRPC
+* giữ autoconfiguration
+
+=========================================================
+NHƯỢC ĐIỂM
+==========
+
+* phức tạp
+* phải hiểu sâu SSL Bundle
+* phải tự xử lý reload
+* khó maintain
+
+=========================================================
+8. GIẢI PHÁP 3
+CUSTOM EXTERNAL gRPC SERVER
+===========================
+
+Tự tạo external server giống internal server.
+
+Ví dụ:
+
+```
+NettyServerBuilder
+
+    .forPort(
+        9090,
+        tlsCredentials
+    )
+
+    .addService(...)
+
+    .build();
+```
+
+=========================================================
+PIPELINE
+========
+
+Database
+↓
+TrustSelfCertificateLoader
+↓
+TrustSelfCertificateResolver
+↓
+GrpcExternalServerCredentialsProvider
+↓
+TlsServerCredentials
+↓
+NettyServerBuilder
+
+=========================================================
+ƯU ĐIỂM
+=======
+
+* phù hợp kiến trúc Trust
+* không phụ thuộc SSL Bundle
+* certificate từ database
+* dễ rotate
+* dễ reload
+* kiểm soát hoàn toàn runtime
+
+=========================================================
+NHƯỢC ĐIỂM
+==========
+
+* mất autoconfiguration Spring gRPC
+* phải tự quản lý server lifecycle
+* phải tự đăng ký service
+
+=========================================================
+9. SO SÁNH
+==========
+
+Identity Service
+
+```
+SSL Bundle
+    ✔ phù hợp
+```
+
+---
+
+Notification Service
+
+```
+SSL Bundle
+    ✔ phù hợp
+```
+
+---
+
+Storage Service
+
+```
+SSL Bundle
+    ✔ phù hợp
+```
+
+---
+
+Data Service
+
+```
+SSL Bundle
+    ✔ phù hợp
+```
+
+---
+
+Trust Service
+
+```
+SSL Bundle
+    ✘ không phù hợp
+
+Custom External Server
+    ✔ phù hợp
+```
+
+=========================================================
+10. QUYẾT ĐỊNH KIẾN TRÚC
+========================
+
+Trust Service sẽ:
+
+```
+KHÔNG sử dụng
+
+    spring.grpc.server.ssl
+
+KHÔNG phụ thuộc
+
+    SslBundle
+
+KHÔNG phụ thuộc
+
+    DefaultGrpcServerFactory
+```
+
+---
+
+Trust Service sẽ:
+
+```
+Tự khởi tạo external gRPC server
+
+bằng:
+
+    NettyServerBuilder
+```
+
+---
+
+External server và Internal server
+sẽ sử dụng cùng mô hình khởi tạo.
+
+=========================================================
+11. LÝ DO RA QUYẾT ĐỊNH
+=======================
+
+Trust Service là CA của hệ thống.
+
+Trust Service quản lý:
+
+* Root CA
+* Intermediate CA
+* Certificate lifecycle
+* Certificate rotation
+* Runtime certificate cache
+
+Đây là kiến trúc đặc biệt.
+
+Việc ép kiến trúc này vào:
+
+```
+Spring SSL Bundle
+```
+
+làm hệ thống phức tạp hơn thay vì đơn giản hơn.
+
+Tự quản lý external gRPC server cho phép:
+
+* kiểm soát hoàn toàn TLS
+* kiểm soát hoàn toàn certificate lifecycle
+* tích hợp trực tiếp với database
+* hỗ trợ certificate rotation dễ dàng
+
+Đây là giải pháp phù hợp nhất với Trust Service.

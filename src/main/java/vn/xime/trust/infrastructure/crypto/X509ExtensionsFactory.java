@@ -1,8 +1,8 @@
 package vn.xime.trust.infrastructure.crypto;
 
 
+import org.bouncycastle.asn1.DEROctetString;
 import org.bouncycastle.asn1.x509.*;
-
 
 import java.security.PublicKey;
 
@@ -29,12 +29,14 @@ public class X509ExtensionsFactory {
             // =========================
             // 1. Subject Alternative Name (SAN)
             // =========================
-            GeneralName san = new GeneralName(
-                    GeneralName.uniformResourceIdentifier,
-                    spiffeId
-            );
-
-            GeneralNames subjectAltNames = new GeneralNames(san);
+            GeneralNames subjectAltNames = new GeneralNames(new GeneralName[]{
+                    // SPIFFE identity URI
+                    new GeneralName(GeneralName.uniformResourceIdentifier, spiffeId),
+                    // DNS name for hostname verification (TLS clients connecting via hostname)
+                    new GeneralName(GeneralName.dNSName, "localhost"),
+                    // IP address for hostname verification (TLS clients connecting via IP)
+                    new GeneralName(GeneralName.iPAddress, new DEROctetString(new byte[]{127, 0, 0, 1})),
+            });
 
             generator.addExtension(
                     Extension.subjectAlternativeName,

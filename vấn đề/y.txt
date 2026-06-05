@@ -1,0 +1,525 @@
+# TRUST SERVICE mTLS INVESTIGATION REPORT
+
+Ngày điều tra:
+2026-06-05
+
+Mục tiêu:
+
+* Chuyển Trust Service từ plaintext gRPC sang mTLS
+* Identity Service kết nối tới Trust Service bằng TLS
+* Xác định nguyên nhân lỗi:
+
+  HTTP/2 client preface string missing or corrupt
+
+=========================================================
+
+1. TRIỆU CHỨNG BAN ĐẦU
+   =========================================================
+
+Identity Service được sửa để sử dụng TLS:
+
+```
+NettyChannelBuilder
+    .forAddress(...)
+    .sslContext(...)
+```
+
+Khi khởi động:
+
+```
+Identity
+    ---> Trust
+```
+
+xuất hiện lỗi phía Trust:
+
+```
+HTTP/2 client preface string missing or corrupt
+```
+
+Hex dump:
+
+```
+16030100de010000...
+```
+
+Đây là dấu hiệu rất đặc trưng.
+
+Byte đầu tiên:
+
+```
+16 03 01
+```
+
+là TLS ClientHello.
+
+Trong khi đó server đang mong đợi:
+
+```
+PRI * HTTP/2.0
+```
+
+là HTTP/2 plaintext preface.
+
+Kết luận:
+
+```
+Client đang gửi TLS.
+Server đang nghe plaintext.
+```
+
+Hai phía không cùng protocol.
+
+=========================================================
+2. GIẢ THUYẾT BAN ĐẦU
+=====================
+
+Ban đầu giả định rằng:
+
+```
+Identity đã cấu hình TLS đúng.
+Trust chưa bật TLS.
+```
+
+Nguyên nhân có thể:
+
+* cấu hình SSL sai
+* chứng chỉ lỗi
+* bean TLS không được sử dụng
+* Spring gRPC không nhận cấu hình
+
+=========================================================
+3. PHÂN TÍCH SOURCE SPRING gRPC
+===============================
+
+Phiên bản:
+
+```
+spring-grpc 1.0.2
+```
+
+Đã trích xuất source từ:
+
+```
+~/.m2/repository
+```
+
+và kiểm tra các file:
+
+```
+DefaultGrpcServerFactory
+ShadedNettyGrpcServerFactory
+GrpcServerFactoryConfigurations
+GrpcServerProperties
+```
+
+=========================================================
+4. PHÁT HIỆN QUAN TRỌNG #1
+==========================
+
+Trong:
+
+```
+DefaultGrpcServerFactory
+```
+
+có method:
+
+```
+protected ServerCredentials credentials()
+```
+
+Logic:
+
+```
+if (keyManager == null)
+    return InsecureServerCredentials.create();
+
+else
+    return TlsServerCredentials
+```
+
+Nguồn:
+
+Điều này chứng minh:
+
+```
+Nếu keyManager == null
+thì Spring gRPC bắt buộc chạy plaintext.
+```
+
+=========================================================
+5. PHÁT HIỆN QUAN TRỌNG #2
+==========================
+
+Trong:
+
+```
+ShadedNettyGrpcServerFactory
+```
+
+server được tạo bằng:
+
+```
+NettyServerBuilder.forPort(
+    port,
+    credentials()
+)
+```
+
+Nguồn:
+
+Điều này chứng minh:
+
+```
+ServerCredentials thực sự được sử dụng.
+```
+
+=========================================================
+6. PHÁT HIỆN QUAN TRỌNG #3
+==========================
+
+Trong:
+
+```
+GrpcServerFactoryConfigurations
+```
+
+Spring tạo:
+
+```
+ShadedNettyGrpcServerFactory
+```
+
+bằng:
+
+```
+new ShadedNettyGrpcServerFactory(
+    ...
+    keyManager,
+    trustManager,
+    clientAuth
+)
+```
+
+Nguồn:
+
+=========================================================
+7. PHÁT HIỆN QUAN TRỌNG #4
+==========================
+
+keyManager được lấy từ:
+
+```
+SslBundle
+```
+
+Logic:
+
+```
+if (properties.getSsl().determineEnabled()) {
+
+    bundle = bundles.getBundle(...)
+
+    keyManager =
+        bundle.getManagers()
+            .getKeyManagerFactory()
+
+    trustManager =
+        bundle.getManagers()
+            .getTrustManagerFactory()
+}
+```
+
+Nguồn:
+
+Kết luận:
+
+```
+Spring gRPC không tự tạo TLS.
+```
+
+Nó phụ thuộc vào:
+
+```
+SslBundle
+    ->
+KeyManagerFactory
+    ->
+TlsServerCredentials
+```
+
+=========================================================
+8. PHÁT HIỆN QUAN TRỌNG #5
+==========================
+
+Trong:
+
+```
+GrpcServerProperties
+```
+
+cấu hình SSL hợp lệ là:
+
+```
+spring.grpc.server.ssl
+```
+
+Nguồn:
+
+Các thuộc tính:
+
+```
+enabled
+bundle
+clientAuth
+secure
+```
+
+Đặc biệt:
+
+```
+determineEnabled()
+```
+
+được định nghĩa:
+
+```
+enabled == true
+hoặc
+bundle != null
+```
+
+thì SSL mới được bật.
+
+Nguồn:
+
+=========================================================
+9. PHÁT HIỆN QUAN TRỌNG #6
+==========================
+
+Trust hiện tại cấu hình:
+
+```
+trust.self.mtls.enabled=true
+```
+
+Đây là property tự định nghĩa.
+
+Spring gRPC hoàn toàn không đọc property này.
+
+Spring chỉ đọc:
+
+```
+spring.grpc.server.ssl
+```
+
+Nguồn:
+
+=========================================================
+10. PHÁT HIỆN QUAN TRỌNG #7
+===========================
+
+Trust Service có cấu hình:
+
+```
+ExternalGrpcServerMtlsConfig
+```
+
+và tạo bean:
+
+```
+@Bean
+ServerCredentials
+```
+
+Thông qua:
+
+```
+GrpcExternalServerCredentialsProvider
+```
+
+Mục tiêu:
+
+```
+tự build TlsServerCredentials
+từ certificate trong database
+```
+
+=========================================================
+11. GIẢ THUYẾT BỊ BÁC BỎ
+========================
+
+Ban đầu giả định:
+
+```
+Spring gRPC sẽ tự sử dụng
+
+    @Bean ServerCredentials
+```
+
+Nhưng source cho thấy:
+
+```
+ShadedNettyGrpcServerFactory
+```
+
+không đọc bean đó.
+
+Nó chỉ đọc:
+
+```
+KeyManagerFactory
+TrustManagerFactory
+ClientAuth
+```
+
+được truyền từ:
+
+```
+GrpcServerFactoryConfigurations
+```
+
+Nguồn:
+
+Kết luận:
+
+```
+Bean ServerCredentials hiện tại
+nhiều khả năng không có tác dụng.
+```
+
+=========================================================
+12. NGUYÊN NHÂN KHẢ DĨ NHẤT
+===========================
+
+Trust Service hiện không cấu hình:
+
+```
+spring.grpc.server.ssl.bundle
+```
+
+nên:
+
+```
+determineEnabled() == false
+```
+
+dẫn tới:
+
+```
+keyManager == null
+trustManager == null
+```
+
+dẫn tới:
+
+```
+InsecureServerCredentials.create()
+```
+
+dẫn tới:
+
+```
+Trust chạy plaintext
+```
+
+trong khi:
+
+```
+Identity gửi TLS
+```
+
+nên xuất hiện:
+
+```
+HTTP/2 client preface string missing or corrupt
+```
+
+=========================================================
+13. ĐIỂM CẦN XÁC NHẬN CUỐI CÙNG
+===============================
+
+Dump nội dung bean:
+
+```
+shadedNettyGrpcServerFactory
+```
+
+và kiểm tra:
+
+```
+keyManager
+trustManager
+clientAuth
+```
+
+Nếu:
+
+```
+keyManager = null
+```
+
+thì nguyên nhân được xác nhận 100%.
+
+=========================================================
+14. ĐÁNH GIÁ KIẾN TRÚC
+======================
+
+Spring SSL Bundle được thiết kế cho:
+
+```
+PEM file
+    ->
+SslBundle
+    ->
+KeyManagerFactory
+```
+
+Trong khi Trust Service sử dụng:
+
+```
+Database
+    ->
+TrustSelfCertificateLoader
+    ->
+TrustSelfCertificateResolver
+    ->
+RAM
+```
+
+Đây là hai mô hình khác nhau.
+
+Có khả năng Spring gRPC 1.0.2 không hỗ trợ trực tiếp
+certificate runtime từ database theo cách hiện tại.
+
+Có thể cần:
+
+* tích hợp vào SslBundle
+  hoặc
+
+* tự khởi tạo external gRPC server bằng
+  NettyServerBuilder thay vì Spring gRPC autoconfiguration.
+
+=========================================================
+TRẠNG THÁI HIỆN TẠI
+===================
+
+Đã xác định:
+
+✓ Identity đang gửi TLS
+
+✓ Trust đang phản hồi như plaintext
+
+✓ Spring gRPC sử dụng KeyManagerFactory
+
+✓ Spring gRPC phụ thuộc vào SslBundle
+
+✓ trust.self.mtls.enabled không ảnh hưởng tới Spring gRPC
+
+✓ khả năng rất cao keyManager đang null
+
+Chưa xác nhận:
+
+✗ Giá trị thực tế của keyManager bên trong
+shadedNettyGrpcServerFactory lúc runtime.

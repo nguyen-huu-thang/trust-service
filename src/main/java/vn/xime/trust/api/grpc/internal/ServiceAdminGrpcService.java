@@ -2,7 +2,6 @@ package vn.xime.trust.api.grpc.internal;
 
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
-import org.springframework.stereotype.Component;
 import vn.xime.trust.api.grpc.mapper.ServiceGrpcMapper;
 import vn.xime.trust.application.dto.request.CreateServiceCommand;
 import vn.xime.trust.application.dto.response.ServiceDto;
@@ -11,7 +10,6 @@ import vn.xime.trust.grpc.internal.service.*;
 
 import java.util.List;
 
-@Component
 public class ServiceAdminGrpcService extends ServiceAdminGrpc.ServiceAdminImplBase {
 
     private final CreateServiceUseCase createUseCase;

@@ -2,7 +2,6 @@ package vn.xime.trust.api.grpc.internal;
 
 import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
-import org.springframework.stereotype.Component;
 import vn.xime.trust.api.grpc.mapper.KeyPolicyGrpcMapper;
 import vn.xime.trust.application.dto.request.CreateKeyPolicyCommand;
 import vn.xime.trust.application.dto.request.UpdateKeyPolicyCommand;
@@ -12,7 +11,6 @@ import vn.xime.trust.grpc.internal.keypolicy.*;
 
 import java.util.List;
 
-@Component
 public class KeyPolicyGrpcService extends KeyPolicyAdminGrpc.KeyPolicyAdminImplBase {
 
     private final CreatePolicyUseCase createUseCase;

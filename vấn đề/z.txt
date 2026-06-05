@@ -1,0 +1,28 @@
+1. Client TLS -> Server
+   lỗi "HTTP/2 client preface missing"
+
+=> nghi server plaintext
+
+2. Client plaintext -> Server
+   nếu thành công
+
+=> server chắc chắn plaintext
+
+3. Inspect GrpcServerFactory
+
+keyManager
+trustManager
+clientAuth
+
+4. Nếu keyManager=null
+
+=> TLS chưa được gắn vào runtime
+
+5. Chỉ khi runtime có:
+
+keyManager != null
+trustManager != null
+clientAuth = REQUIRE
+
+mới bắt đầu debug certificate,
+SAN, CA, hostname verification.

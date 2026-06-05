@@ -1,7 +1,6 @@
 package vn.xime.trust.api.grpc.internal;
 
 import io.grpc.stub.StreamObserver;
-import org.springframework.stereotype.Component;
 import vn.xime.trust.grpc.internal.key.*;
 import vn.xime.trust.domain.service.IdService;
 import vn.xime.trust.application.usecase.key.*;
@@ -11,7 +10,6 @@ import vn.xime.trust.api.grpc.mapper.KeyGrpcMapper;
 
 import java.util.List;
 
-@Component
 public class KeyAdminGrpcService extends KeyAdminGrpc.KeyAdminImplBase {
 
     private final InitKeyUseCase initKeyUseCase;

@@ -1,0 +1,605 @@
+=========================================================
+TRUST SERVICE
+mTLS MIGRATION POSTMORTEM
+SPRING gRPC → CUSTOM NETTY SERVER
+=================================
+
+Ngày:
+2026-06-05
+
+Trạng thái:
+RESOLVED
+
+=========================================================
+
+1. MỤC TIÊU
+   =========================================================
+
+Chuyển giao tiếp:
+
+```
+Identity Service
+        ⇄
+Trust Service
+```
+
+từ:
+
+```
+plaintext gRPC
+```
+
+sang:
+
+```
+mTLS gRPC
+```
+
+=========================================================
+2. TRIỆU CHỨNG BAN ĐẦU
+======================
+
+Identity bật TLS:
+
+```
+NettyChannelBuilder
+    .sslContext(...)
+```
+
+Trust vẫn khởi động bình thường.
+
+Tuy nhiên request RotateCertificate thất bại.
+
+Trust log:
+
+```
+HTTP/2 client preface string missing or corrupt
+```
+
+Hex dump:
+
+```
+16 03 01 ...
+```
+
+=========================================================
+3. PHÂN TÍCH HEX DUMP
+=====================
+
+TLS ClientHello luôn bắt đầu bằng:
+
+```
+16 03 01
+hoặc
+16 03 03
+```
+
+HTTP/2 plaintext không bắt đầu như vậy.
+
+Kết luận:
+
+```
+Identity đang gửi TLS
+```
+
+nhưng:
+
+```
+Trust đang mong plaintext
+```
+
+=========================================================
+4. GIẢ THUYẾT BAN ĐẦU
+=====================
+
+Nghi ngờ:
+
+* Root CA sai
+* SAN sai
+* Certificate sai
+* Hostname verification sai
+* mTLS handshake lỗi
+
+=========================================================
+5. THỰC TẾ
+==========
+
+Các giả thuyết trên đều sai.
+
+TLS handshake còn chưa bắt đầu.
+
+Hai phía đang nói hai protocol khác nhau:
+
+```
+Identity = TLS
+
+Trust = plaintext
+```
+
+=========================================================
+6. PHÁT HIỆN QUAN TRỌNG
+=======================
+
+Trust có bean:
+
+```
+ServerCredentials
+```
+
+kiểu:
+
+```
+TlsServerCredentials
+```
+
+Log:
+
+```
+BUILDING TLS SERVER CREDENTIALS
+```
+
+xuất hiện thành công.
+
+Điều này tạo cảm giác:
+
+```
+Trust đang chạy TLS
+```
+
+=========================================================
+7. RUNTIME INVESTIGATION
+========================
+
+Dump:
+
+```
+ShadedNettyGrpcServerFactory
+```
+
+Kết quả:
+
+```
+keyManager = null
+trustManager = null
+clientAuth = NONE
+```
+
+=========================================================
+8. KẾT LUẬN
+===========
+
+Spring gRPC runtime đang chạy:
+
+```
+InsecureServerCredentials
+```
+
+tức là:
+
+```
+plaintext
+```
+
+=========================================================
+9. PHÂN TÍCH SOURCE SPRING gRPC
+===============================
+
+DefaultGrpcServerFactory:
+
+```
+if (keyManager == null)
+    return InsecureServerCredentials
+```
+
+Spring gRPC không sử dụng:
+
+```
+@Bean ServerCredentials
+```
+
+của ứng dụng.
+
+Spring gRPC chỉ sử dụng:
+
+```
+KeyManagerFactory
+TrustManagerFactory
+SslBundle
+```
+
+=========================================================
+10. NGUYÊN NHÂN GỐC
+===================
+
+Trust Service lưu certificate trong:
+
+```
+Database
+    ↓
+Runtime Cache
+```
+
+Spring SSL Bundle được thiết kế cho:
+
+```
+PEM file
+    ↓
+SslBundle
+```
+
+Hai mô hình không tương thích tự nhiên.
+
+=========================================================
+11. QUYẾT ĐỊNH KIẾN TRÚC
+========================
+
+Không sử dụng:
+
+```
+Spring gRPC Server
+```
+
+cho External API.
+
+Thay bằng:
+
+```
+Custom NettyServerBuilder
+```
+
+=========================================================
+12. TRIỂN KHAI MỚI
+==================
+
+ExternalGrpcServerConfig
+
+```
+NettyServerBuilder
+
+    .forPort(
+        9090,
+        provider.buildServerCredentials()
+    )
+
+    .addService(...)
+```
+
+=========================================================
+13. SỰ CỐ THỨ HAI
+=================
+
+Sau khi tạo custom server:
+
+```
+Address already in use
+```
+
+Port:
+
+```
+9090
+```
+
+=========================================================
+14. NGUYÊN NHÂN
+===============
+
+Có hai server cùng tồn tại:
+
+Server #1
+
+```
+Spring gRPC Server
+```
+
+Server #2
+
+```
+Custom Netty Server
+```
+
+Cả hai cùng bind:
+
+```
+9090
+```
+
+=========================================================
+15. GIẢI PHÁP
+=============
+
+Loại bỏ:
+
+```
+spring-grpc-server-spring-boot-starter
+```
+
+khỏi pom.xml
+
+Kết quả:
+
+```
+chỉ còn custom server
+```
+
+=========================================================
+16. KẾT QUẢ
+===========
+
+Trust khởi động thành công.
+
+External gRPC server:
+
+```
+9090
+```
+
+khởi động thành công.
+
+=========================================================
+17. XÁC MINH TLS
+================
+
+Test:
+
+Bỏ:
+
+```
+.sslContext(...)
+```
+
+khỏi Identity.
+
+Kết quả:
+
+```
+PKIX path building failed
+```
+
+=========================================================
+18. Ý NGHĨA
+===========
+
+Identity không tin certificate của Trust.
+
+Điều này chứng minh:
+
+```
+Trust đang chạy TLS thật.
+```
+
+Nếu Trust vẫn plaintext thì lỗi phải là:
+
+```
+HTTP/2 client preface string missing
+```
+
+=========================================================
+19. XÁC MINH mTLS
+=================
+
+Test:
+
+Giữ:
+
+```
+trustManager(rootCa)
+```
+
+Bỏ:
+
+```
+keyManager(clientCert)
+```
+
+Identity:
+
+```
+verify được Trust
+```
+
+nhưng:
+
+```
+không gửi client certificate
+```
+
+=========================================================
+20. KẾT QUẢ
+===========
+
+Handshake thất bại:
+
+```
+TLSV1_ALERT_CERTIFICATE_REQUIRED
+```
+
+=========================================================
+21. Ý NGHĨA
+===========
+
+Trust yêu cầu:
+
+```
+Client Certificate
+```
+
+Identity không gửi.
+
+Trust từ chối kết nối.
+
+=========================================================
+22. ĐIỀU ĐÃ ĐƯỢC CHỨNG MINH
+===========================
+
+Test #1
+
+Không trustManager
+
+↓
+
+```
+PKIX path building failed
+```
+
+Chứng minh:
+
+```
+Identity verify Trust
+```
+
+---
+
+Test #2
+
+Không keyManager
+
+↓
+
+```
+TLSV1_ALERT_CERTIFICATE_REQUIRED
+```
+
+Chứng minh:
+
+```
+Trust verify Identity
+```
+
+=========================================================
+23. KẾT LUẬN CUỐI
+=================
+
+Identity verify Trust
+AND
+Trust verify Identity
+
+=> mTLS hoạt động hoàn chỉnh.
+
+=========================================================
+24. BÀI HỌC RÚT RA
+==================
+
+1.
+
+Đừng tin rằng:
+
+```
+TlsServerCredentials tồn tại
+```
+
+nghĩa là server đang TLS.
+
+Phải kiểm tra runtime thực tế.
+
+---
+
+2.
+
+Đừng debug certificate quá sớm.
+
+Trước tiên phải xác nhận:
+
+```
+server đang TLS hay plaintext.
+```
+
+---
+
+3.
+
+Khi gặp:
+
+```
+HTTP/2 client preface string missing
+```
+
+và nhận:
+
+```
+16 03 01
+```
+
+hãy nghĩ ngay:
+
+```
+TLS client
+↔
+plaintext server
+```
+
+---
+
+4.
+
+Đối với Trust Service:
+
+```
+Database-backed Certificate
+```
+
+phù hợp hơn với:
+
+```
+Custom Netty Server
+```
+
+so với:
+
+```
+Spring SSL Bundle
+```
+
+---
+
+5.
+
+Hai bài test quan trọng nhất:
+
+```
+PKIX path building failed
+```
+
+và
+
+```
+TLSV1_ALERT_CERTIFICATE_REQUIRED
+```
+
+đủ để chứng minh mTLS hoạt động hoàn chỉnh.
+
+=========================================================
+FINAL STATUS
+============
+
+Trust Service External API
+
+```
+mTLS ENABLED
+```
+
+Identity Service
+
+```
+mTLS ENABLED
+```
+
+Certificate Rotation
+
+```
+WORKING
+```
+
+Bootstrap → Runtime Certificate
+
+```
+WORKING
+```
+
+Mutual Authentication
+
+```
+VERIFIED
+```
+
+=========================================================
