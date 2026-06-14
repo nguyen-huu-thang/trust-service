@@ -3,6 +3,7 @@ package vn.xime.trust.api.grpc.external;
 import io.grpc.stub.StreamObserver;
 import org.springframework.stereotype.Component;
 
+import vn.xime.trust.api.grpc.error.GrpcErrorMapper;
 import vn.xime.trust.application.usecase.cert.GetRootCertificateUseCase;
 
 import vn.xime.trust.grpc.external.trust.TrustServiceGrpc;
@@ -48,7 +49,7 @@ public class TrustGrpcService extends TrustServiceGrpc.TrustServiceImplBase {
             // =========================
             // ERROR HANDLING
             // =========================
-            responseObserver.onError(e);
+            responseObserver.onError(GrpcErrorMapper.toStatus(e));
         }
     }
 }

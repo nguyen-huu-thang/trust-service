@@ -1,7 +1,6 @@
 package vn.xime.trust.api.grpc.mapper;
 
 import org.springframework.stereotype.Component;
-import io.grpc.Status;
 import vn.xime.trust.application.dto.response.AdminKeyDto;
 import vn.xime.trust.grpc.internal.key.KeyDto;
 
@@ -20,27 +19,5 @@ public class KeyGrpcMapper {
                 .setExpiresAt(dto.getExpiresAt().toEpochMilli())
                 .setIsDeleted(dto.isDeleted())
                 .build();
-    }
-
-    // ==================================================
-    // ERROR MAPPER
-    // ==================================================
-
-    public RuntimeException toStatus(Exception e) {
-        if (e instanceof IllegalArgumentException) {
-            return Status.INVALID_ARGUMENT
-                    .withDescription(e.getMessage())
-                    .asRuntimeException();
-        }
-
-        if (e instanceof IllegalStateException) {
-            return Status.NOT_FOUND
-                    .withDescription(e.getMessage())
-                    .asRuntimeException();
-        }
-
-        return Status.INTERNAL
-                .withDescription(e.getMessage())
-                .asRuntimeException();
     }
 }

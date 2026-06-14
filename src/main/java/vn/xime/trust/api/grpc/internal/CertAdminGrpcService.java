@@ -8,6 +8,7 @@ import vn.xime.trust.application.usecase.cert.*;
 import vn.xime.trust.application.dto.request.*;
 import vn.xime.trust.application.dto.response.*;
 
+import vn.xime.trust.api.grpc.error.GrpcErrorMapper;
 import vn.xime.trust.api.grpc.mapper.CertGrpcMapper;
 
 import java.util.List;
@@ -58,7 +59,7 @@ public class CertAdminGrpcService extends CertAdminGrpc.CertAdminImplBase {
             responseObserver.onCompleted();
 
         } catch (Exception e) {
-            responseObserver.onError(mapper.toStatus(e));
+            responseObserver.onError(GrpcErrorMapper.toStatus(e));
         }
     }
 
@@ -80,7 +81,7 @@ public class CertAdminGrpcService extends CertAdminGrpc.CertAdminImplBase {
             responseObserver.onCompleted();
 
         } catch (Exception e) {
-            responseObserver.onError(mapper.toStatus(e));
+            responseObserver.onError(GrpcErrorMapper.toStatus(e));
         }
     }
 
@@ -105,7 +106,7 @@ public class CertAdminGrpcService extends CertAdminGrpc.CertAdminImplBase {
             responseObserver.onCompleted();
 
         } catch (Exception e) {
-            responseObserver.onError(mapper.toStatus(e));
+            responseObserver.onError(GrpcErrorMapper.toStatus(e));
         }
     }
 
@@ -135,7 +136,7 @@ public class CertAdminGrpcService extends CertAdminGrpc.CertAdminImplBase {
             responseObserver.onCompleted();
 
         } catch (Exception e) {
-            responseObserver.onError(mapper.toStatus(e));
+            responseObserver.onError(GrpcErrorMapper.toStatus(e));
         }
     }
 
@@ -157,7 +158,7 @@ public class CertAdminGrpcService extends CertAdminGrpc.CertAdminImplBase {
             responseObserver.onCompleted();
 
         } catch (Exception e) {
-            responseObserver.onError(mapper.toStatus(e));
+            responseObserver.onError(GrpcErrorMapper.toStatus(e));
         }
     }
 
@@ -179,7 +180,7 @@ public class CertAdminGrpcService extends CertAdminGrpc.CertAdminImplBase {
             responseObserver.onCompleted();
 
         } catch (Exception e) {
-            responseObserver.onError(mapper.toStatus(e));
+            responseObserver.onError(GrpcErrorMapper.toStatus(e));
         }
     }
 
@@ -206,7 +207,7 @@ public class CertAdminGrpcService extends CertAdminGrpc.CertAdminImplBase {
             responseObserver.onCompleted();
 
         } catch (Exception e) {
-            responseObserver.onError(mapper.toStatus(e));
+            responseObserver.onError(GrpcErrorMapper.toStatus(e));
         }
     }
 }

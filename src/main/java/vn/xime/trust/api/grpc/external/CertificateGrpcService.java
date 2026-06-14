@@ -1,9 +1,9 @@
 package vn.xime.trust.api.grpc.external;
 
-import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
 import org.springframework.stereotype.Component;
 
+import vn.xime.trust.api.grpc.error.GrpcErrorMapper;
 import vn.xime.trust.grpc.external.certificate.*;
 
 import vn.xime.trust.application.usecase.cert.RotateCertificateUseCase;
@@ -66,12 +66,7 @@ public class CertificateGrpcService extends CertificateServiceGrpc.CertificateSe
             responseObserver.onCompleted();
 
         } catch (Exception e) {
-            responseObserver.onError(
-                Status.INTERNAL
-                    .withDescription(e.getMessage())
-                    .withCause(e)
-                    .asRuntimeException()
-            );
+            responseObserver.onError(GrpcErrorMapper.toStatus(e));
         }
     }
 }

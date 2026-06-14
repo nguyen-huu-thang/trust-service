@@ -6,6 +6,7 @@ import vn.xime.trust.domain.service.IdService;
 import vn.xime.trust.application.usecase.key.*;
 import vn.xime.trust.application.dto.request.*;
 import vn.xime.trust.application.dto.response.AdminKeyDto;
+import vn.xime.trust.api.grpc.error.GrpcErrorMapper;
 import vn.xime.trust.api.grpc.mapper.KeyGrpcMapper;
 
 import java.util.List;
@@ -54,7 +55,7 @@ public class KeyAdminGrpcService extends KeyAdminGrpc.KeyAdminImplBase {
             responseObserver.onCompleted();
 
         } catch (Exception e) {
-            responseObserver.onError(mapper.toStatus(e));
+            responseObserver.onError(GrpcErrorMapper.toStatus(e));
         }
     }
 
@@ -80,7 +81,7 @@ public class KeyAdminGrpcService extends KeyAdminGrpc.KeyAdminImplBase {
             responseObserver.onCompleted();
 
         } catch (Exception e) {
-            responseObserver.onError(mapper.toStatus(e));
+            responseObserver.onError(GrpcErrorMapper.toStatus(e));
         }
     }
 
@@ -107,7 +108,7 @@ public class KeyAdminGrpcService extends KeyAdminGrpc.KeyAdminImplBase {
             responseObserver.onCompleted();
 
         } catch (Exception e) {
-            responseObserver.onError(mapper.toStatus(e));
+            responseObserver.onError(GrpcErrorMapper.toStatus(e));
         }
     }
 
@@ -137,7 +138,7 @@ public class KeyAdminGrpcService extends KeyAdminGrpc.KeyAdminImplBase {
             responseObserver.onCompleted();
 
         } catch (Exception e) {
-            responseObserver.onError(mapper.toStatus(e));
+            responseObserver.onError(GrpcErrorMapper.toStatus(e));
         }
     }
 
@@ -164,7 +165,7 @@ public class KeyAdminGrpcService extends KeyAdminGrpc.KeyAdminImplBase {
             responseObserver.onCompleted();
 
         } catch (Exception e) {
-            responseObserver.onError(mapper.toStatus(e));
+            responseObserver.onError(GrpcErrorMapper.toStatus(e));
         }
     }
 }

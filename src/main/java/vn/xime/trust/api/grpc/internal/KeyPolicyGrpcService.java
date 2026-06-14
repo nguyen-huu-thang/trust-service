@@ -1,7 +1,7 @@
 package vn.xime.trust.api.grpc.internal;
 
-import io.grpc.Status;
 import io.grpc.stub.StreamObserver;
+import vn.xime.trust.api.grpc.error.GrpcErrorMapper;
 import vn.xime.trust.api.grpc.mapper.KeyPolicyGrpcMapper;
 import vn.xime.trust.application.dto.request.CreateKeyPolicyCommand;
 import vn.xime.trust.application.dto.request.UpdateKeyPolicyCommand;
@@ -76,7 +76,7 @@ public class KeyPolicyGrpcService extends KeyPolicyAdminGrpc.KeyPolicyAdminImplB
             responseObserver.onCompleted();
 
         } catch (Exception e) {
-            responseObserver.onError(toStatus(e));
+            responseObserver.onError(GrpcErrorMapper.toStatus(e));
         }
     }
 
@@ -101,7 +101,7 @@ public class KeyPolicyGrpcService extends KeyPolicyAdminGrpc.KeyPolicyAdminImplB
             responseObserver.onCompleted();
 
         } catch (Exception e) {
-            responseObserver.onError(toStatus(e));
+            responseObserver.onError(GrpcErrorMapper.toStatus(e));
         }
     }
 
@@ -129,7 +129,7 @@ public class KeyPolicyGrpcService extends KeyPolicyAdminGrpc.KeyPolicyAdminImplB
             responseObserver.onCompleted();
 
         } catch (Exception e) {
-            responseObserver.onError(toStatus(e));
+            responseObserver.onError(GrpcErrorMapper.toStatus(e));
         }
     }
 
@@ -156,7 +156,7 @@ public class KeyPolicyGrpcService extends KeyPolicyAdminGrpc.KeyPolicyAdminImplB
             responseObserver.onCompleted();
 
         } catch (Exception e) {
-            responseObserver.onError(toStatus(e));
+            responseObserver.onError(GrpcErrorMapper.toStatus(e));
         }
     }
 
@@ -183,7 +183,7 @@ public class KeyPolicyGrpcService extends KeyPolicyAdminGrpc.KeyPolicyAdminImplB
             responseObserver.onCompleted();
 
         } catch (Exception e) {
-            responseObserver.onError(toStatus(e));
+            responseObserver.onError(GrpcErrorMapper.toStatus(e));
         }
     }
 
@@ -237,7 +237,7 @@ public class KeyPolicyGrpcService extends KeyPolicyAdminGrpc.KeyPolicyAdminImplB
             responseObserver.onCompleted();
 
         } catch (Exception e) {
-            responseObserver.onError(toStatus(e));
+            responseObserver.onError(GrpcErrorMapper.toStatus(e));
         }
     }
 
@@ -262,17 +262,7 @@ public class KeyPolicyGrpcService extends KeyPolicyAdminGrpc.KeyPolicyAdminImplB
             responseObserver.onCompleted();
 
         } catch (Exception e) {
-            responseObserver.onError(toStatus(e));
+            responseObserver.onError(GrpcErrorMapper.toStatus(e));
         }
-    }
-
-    // ==================================================
-    // ERROR MAPPER
-    // ==================================================
-
-    private RuntimeException toStatus(Exception e) {
-        return Status.INVALID_ARGUMENT
-                .withDescription(e.getMessage())
-                .asRuntimeException();
     }
 }
